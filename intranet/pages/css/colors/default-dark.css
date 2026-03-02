@@ -1,0 +1,156 @@
+/*
+Template Name: Admin Pro Admin
+Author: Wrappixel
+Email: niravjoshi87@gmail.com
+File: scss
+*/
+/*
+Template Name: Admin Pro Admin
+Author: Wrappixel
+Email: niravjoshi87@gmail.com
+File: scss
+*/
+/*Theme Colors*/
+/*bootstrap Color*/
+/*Light colors*/
+/*Normal Color*/
+/*Extra Variable*/
+/*******************
+/*Top bar
+*******************/
+.topbar {
+  background: var(--topbar-bg); }
+  .topbar .top-navbar .navbar-header .navbar-brand .dark-logo {
+    display: none; }
+  .topbar .top-navbar .navbar-header .navbar-brand .light-logo {
+    display: inline-block;
+    color: var(--topbar-text); }
+  .topbar .top-navbar .navbar-nav > .nav-item > span {
+    color: var(--topbar-text); }
+  .topbar .navbar-light .navbar-nav .nav-item > a.nav-link {
+    color: var(--icons-color); }
+    .topbar .navbar-light .navbar-nav .nav-item > a.nav-link:hover, .topbar .navbar-light .navbar-nav .nav-item > a.nav-link:focus {
+      color: var(--sidebar-text) !important; }
+  .topbar .navbar-header {
+    background: var(--topbar-bg); }
+
+.logo-center .topbar .navbar-header {
+  text-align: center;
+  padding-left: 0px;
+  -webkit-box-shadow: none;
+  box-shadow: none; }
+
+.logo-center .topbar .top-navbar .navbar-header .navbar-brand .dark-logo {
+  display: none; }
+
+.logo-center .topbar .top-navbar .navbar-header .navbar-brand .light-logo {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.8); }
+
+/*******************
+/*General Elements
+*******************/
+
+a {
+  color: var(#007bff); }
+
+a.link:hover, a.link:focus {
+  color: var(#007bff) !important; }
+
+.bg-theme {
+  background-color: var(--topbar-bg) !important; }
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+  background-color: var(--topbar-bg);
+  border-color: var(--topbar-bg); }
+
+.right-sidebar .rpanel-title {
+  background: var(--topbar-bg) }
+
+.stylish-table tbody tr:hover, .stylish-table tbody tr.active {
+  border-left: 4px solid var(--table-row-hover-border); }
+
+.text-themecolor {
+  color: var(--option-title-color) !important; }
+
+.profile-tab li a.nav-link.active,
+.customtab li a.nav-link.active {
+  border-bottom: 2px var(--option-subtitle-color);
+  color: var(--option-subtitle-color); }
+
+.profile-tab li a.nav-link:hover,
+.customtab li a.nav-link:hover {
+  color: var(--option-subtitle-color); }
+
+/*******************
+/*Buttons
+*******************/
+.btn-themecolor,
+.btn-themecolor.disabled {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border: 1px solid var(--sidebar-bg); }
+  .btn-themecolor:hover,
+  .btn-themecolor.disabled:hover {
+    background: var(--sidebar-bg);
+    opacity: 0.7;
+    border: 1px solid var(--navbar-hover); }
+  .btn-themecolor.active, .btn-themecolor:focus,
+  .btn-themecolor.disabled.active,
+  .btn-themecolor.disabled:focus {
+    background: var(--navbar-hover); }
+
+/*******************
+/*sidebar navigation
+*******************/
+.card-no-border .left-sidebar,
+.card-no-border .sidebar-nav {
+  background: var(--sidebar-bg); }
+
+.mini-sidebar .sidebar-nav {
+  background: transparent; }
+
+@media (min-width: 768px) {
+  .mini-sidebar .sidebar-nav #sidebarnav > li > ul {
+    background: var(--sidebar-bg); } }
+
+.sidebar-nav {
+  background: var(--sidebar-bg); }
+
+.user-profile .profile-text a {
+  color: var(--sidebar-text) !important; }
+
+.card-no-border .sidebar-footer {
+  background: var(--sidebar-bg); }
+
+.label-themecolor {
+  background: var(--sidebar-bg); }
+
+.sidebar-nav > ul > li.active > a {
+  color: var(--sidebar-text);
+  border-color: var(--sidebar-text); }
+  .sidebar-nav > ul > li.active > a i {
+    color: var(--sidebar-text); }
+
+.sidebar-nav ul li a.active, .sidebar-nav ul li a:hover {
+  color: var(--sidebar-text);
+  background: var(--navbar-hover); }
+
+  .sidebar-nav ul li a.active i, .sidebar-nav ul li a:hover i {
+    color: var(--sidebar-text); }
+
+.sidebar-nav ul li.nav-small-cap {
+  color:  var(--sidebar-text); }
+
+@media (min-width: 768px) {
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a {
+    background: var(--sidebar-bg); } }
+
+.navbar-nav li a{
+    color: var(--topbar-text);
+}

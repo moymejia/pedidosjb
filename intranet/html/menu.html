@@ -1,0 +1,51 @@
+<h4 class="card-title header-titulo">Odrden de menus</h4>
+<form class="floating-labels m-t-40 margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(6,'Menus','Seguridad');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+	<input type="hidden" name="table" id="table" value="menu">
+	<input type="hidden" name="idmenu" id="idmenu" value="">
+	<div class="row">
+		<div class="form-group m-b-40 col-md-4">
+			<input type="text" class="form-control" id="nombre" name="nombre" required>
+			<span class="bar"></span>
+			<label for="nombre">Menu</label>
+        </div>
+		<div class="form-group m-b-40 col-md-4">
+			<input type="number" class="form-control" id="orden" name="orden" required step='1' min='1'>
+			<span class="bar"></span>
+			<label for="orden">Orden de aparición</label>
+        </div>
+    </div>
+    <div class="row">
+		<div class="form-group m-b-40 col-md-12">
+			<button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
+			<button type="reset" class="btn btn-inverse waves-effect waves-light" onclick="objeto('botones_edicion').style.display = 'none';objeto('clave').value = '';">Cancelar</button>
+			<span id="botones_edicion" style="display: none;">
+			</span>
+		</div>
+	</div>
+</form>
+
+<hr>
+<h4 class="card-title">menus del sistema</h4>
+<!---->
+<div class="table-responsive m-t-40">
+	<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+		<thead>
+			<tr>
+				<th>Acciones</th>
+				<th>ID</th>
+				<th>Menu</th>
+				<th>Orden</th>
+			</tr>
+		</thead>
+		<tbody>
+			[tabla_menus]
+		</tbody>
+	</table>
+</div>

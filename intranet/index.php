@@ -1,0 +1,19 @@
+<?php
+if (empty($_SERVER['HTTPS'])) {
+    header("Location: pages/login.php");
+}
+session_start();
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="0;url=pages/login.html">
+<title>Opticalia</title>
+<script language="javascript">
+    window.location.href = "pages/login.php"
+</script>
+</head>
+<body>
+Go to <a href="pages/login.html">pages/login.php</a>
+</body>
+</html>

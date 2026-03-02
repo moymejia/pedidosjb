@@ -1,0 +1,95 @@
+<h4 class="card-title">Configuraciones del sistema</h4>
+<form class="m-t-40" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(5,'Configuracion','Seguridad');
+	};
+	guardar_registro(this);
+	return false;" id="formulario_registro">
+	<input type="hidden" name="table" id="table" value="configuracion">
+	<div class="row">
+		<div class="form-group m-b-40 col-md-4">
+			<label for="clave">Clave</label>
+			<input type="text" class="form-control" id="clave" name="clave" readonly>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-40 col-md-4">
+			<label for="valor">Valor</label>
+			<textarea class="form-control" id="valor" name="valor" rows="3" required></textarea>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-4">
+			<label for="imagen">Imagen</label>
+			<input type="file" class="form-control" id="imagen" name="imagen">
+			<span class="bar"></span>
+		</div>
+	</div>
+	<!-- 
+	<div class="row">
+		<div class="form-group m-b-40 col-md-4"></div>
+		<div class="form-group m-b-40 col-md-4">
+			<label for="" style="margin-top: -40px;">[sl]= salto de linea</label>
+		</div>
+    </div>
+	-->
+	<div class="row">
+		<div class="form-group m-b-40 col-md-12">
+			<label for="comentario">Comentario</label>
+			<input type="text" class="form-control" id="comentario" name="comentario" required>
+			<span class="bar"></span>
+
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group m-b-40 col-md-8">
+			<button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
+			<button type="reset" class="btn btn-inverse waves-effect waves-light"
+				onclick="objeto('botones_edicion').style.display = 'none';objeto('clave').value = '';">Cancelar</button>
+			<span id="botones_edicion" style="display: none;">
+				<button type="button" class="btn btn-warning waves-effect waves-light" onclick="
+					callback_cargar_imagen= function(){
+						element('miniatura_clave').src = '../img/prdMin_'+element('clave').value+'.jpg?x='+Date.now(); 	
+					}
+					upload_file('clave','imagen','configuracion','cargar_imagen',callback_cargar_imagen);
+					">Guardar Imagen</button>
+			</span>
+		</div>
+		<div class="form-group m-b-5 col-md-4">
+			<img src="" alt="" id="miniatura_clave" style="width: 6em;">
+		</div>
+	</div>
+</form>
+
+<hr>
+<h4 class="card-title">configuraciones del sistema</h4>
+<!---->
+<div class="table-responsive m-t-40">
+	<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0"
+		width="100%">
+		<thead>
+			<tr>
+				<th>Acciones</th>
+				<th>Clave</th>
+				<th>Valor</th>
+				<th>Comentario</th>
+			</tr>
+		</thead>
+		<tbody>
+			[tabla_configuraciones]
+		</tbody>
+	</table>
+</div>
+<script>
+	// Selecciona el campo de archivo
+	var input = document.getElementById('imagen');
+	// Selecciona la etiqueta del archivo
+	var label = document.getElementById('archivoLabel');
+
+	// Agrega un listener para el cambio en el campo de archivo
+	input.addEventListener('change', function (event) {
+		// Obtiene el nombre del archivo
+		var fileName = event.target.files[0].name;
+		// Actualiza el texto de la etiqueta del archivo con el nombre
+		label.innerText = fileName;
+	});
+</script>

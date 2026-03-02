@@ -1,0 +1,129 @@
+:root {
+    --border-card: #337ab7;
+    /************************************
+     Barra superior
+    *************************************/
+    --topbar-bg: #f8f8f8;   
+    --topbar-text: #337ab7;     
+
+    /************************************
+     Barra lateral
+    *************************************/
+    --sidebar-bg: #f8f8f8;  
+    --navbar-hover: #eee;  
+    --icons-color: #337ab7;
+    --sidebar-text: #337ab7;      
+
+    /************************************
+     Body
+    *************************************/ 
+    --option-title-color: #000000;   
+    --form-labels: #000000;                 
+    --datatable-color: #d9edf7;             
+    --datatable-header: #78CFF2;           
+    --datatable-hover: #eee;             
+    --datatable-text-color: #337ab7; 
+    --input-boxshadow-color: 120, 207, 242;
+
+    /************************************
+    Alertas y notificaciones
+    *************************************/
+    --info-message: #5bc0de;       
+    --color-text-info-message: #ffffff; 
+
+    --success-message: #337ab7;     
+    --color-text-succes-message: #ffffff; 
+    
+    --warning-message: #f0ad4e;    
+    --color-text-warning-message: #ffffff; 
+    
+    --error-message: #FF3838;
+    --color-text-error-message: #FFFFFF;
+
+    /************************************
+            Botones
+    *************************************/
+    --btn-border: #cbc1c1;
+
+    /* Primary */
+    --btn-primary-bg: #f0ad4e;
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover-bg: #ec971f;
+
+    /* Inverse */
+    --btn-inverse-bg: #ffffff;
+    --btn-inverse-text: #000000;
+    --btn-inverse-hover-bg: #f2f2f2;
+
+    /* Secondary */
+    --btn-secondary-bg: #5cb85c;
+    --btn-secondary-text: #ffffff;
+    --btn-secondary-hover-bg: #5cb85c;
+
+    /* Success */
+    --btn-success-bg: #ffffff;
+    --btn-success-text: #000000;
+    --btn-success-hover-bg: #f2f2f2;
+    --box-shadow-success: none;
+
+    /* Danger */
+    --btn-danger-bg: #f77171;
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover-bg: #FF3838;
+
+    /* Warning */
+    --btn-warning-bg: #f0ad4e;
+    --btn-warning-text: #ffffff;
+    --btn-warning-hover-bg: #ec971f;
+
+    /* Info */
+    --btn-info-bg: #5bc0de;
+    --btn-info-text: #ffffff;
+    --btn-info-hover-bg: #31b0d5;
+
+
+}
+
+
+.capitalize{
+    text-transform: capitalize;
+}
+
+#encabezado_sistema{
+    display: inline-block;
+    margin-top: 1em;
+    color: black;
+    font-size: 1.5em;
+    font-family: monospace;
+}
+
+.table td, .table th {
+    padding: .25rem !important;
+}
+
+.dt-button{
+    display: none;
+}
+
+.pull-left{
+    float: left;
+}
+
+.pull-right{
+    float: right;
+}
+
+.dataTables_filter{
+    float: left;
+}
+
+.header-titulo {
+    background-color: #337ab7; 
+    width: 100%;
+    padding: 12px 16px;
+    font-weight: bold;
+}
+
+.margen-formulario{
+    padding: 20px;
+}

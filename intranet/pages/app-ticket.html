@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Favicon icon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon.png">
+    <title>A.S.I. Tickets</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="../assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Footable CSS -->
+    <link href="../assets/plugins/footable/css/footable.bootstrap.min.css" rel="stylesheet">
+    <!-- Page CSS -->
+    <link href="css/pages/contact-app-page.css" rel="stylesheet">
+    <link href="css/pages/footable-page.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/style.css" rel="stylesheet">
+    <!-- You can change the theme colors from here -->
+    <link href="css/colors/default-dark.css" id="theme" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+</head>
+
+<body class="fix-header card-no-border fix-sidebar">
+    <!-- ============================================================== -->
+    <!-- Preloader - style you can find in spinners.css -->
+    <!-- ============================================================== -->
+    <div class="preloader">
+        <div class="loader">
+            <div class="loader__figure"></div>
+            <p class="loader__label">Admin Pro</p>
+        </div>
+    </div>
+    <!-- ============================================================== -->
+    <!-- Main wrapper - style you can find in pages.scss -->
+    <!-- ============================================================== -->
+    <div id="main-wrapper">
+        <!-- ============================================================== -->
+        <!-- Topbar header - style you can find in pages.scss -->
+        <!-- ============================================================== -->
+        <header class="topbar">
+            <nav class="navbar top-navbar navbar-expand-md navbar-light">
+                <!-- ============================================================== -->
+                <!-- Logo -->
+                <!-- ============================================================== -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="">
+                        <!-- Logo icon --><b>
+                            <!--You can put here icon as well // <i class="wi wi-sunset"></i> //-->
+                            <!-- Dark Logo icon -->
+                            <img src="../assets/images/logo-light.png" alt="homepage" class="dark-logo" style="max-height: 40px;max-width: 40px;"/>
+                            <!-- Light Logo icon -->
+                            <img src="../assets/images/logo-light.png" alt="homepage" class="light-logo" style="max-height: 40px;max-width: 40px;"/>
+                        </b>
+                        <!--End Logo icon -->
+                        <!-- Logo text --><span>
+                         <!-- dark Logo text -->
+                         <img src="../assets/images/logo.png" alt="homepage" class="dark-logo"  />
+                         <!-- Light Logo text -->    
+                         <img src="../assets/images/logo.png" class="light-logo" alt="homepage" /></span> </a>
+                </div>
+                <!-- ============================================================== -->
+                <!-- End Logo -->
+                <!-- ============================================================== -->
+                <div class="navbar-collapse">
+                    <!-- ============================================================== -->
+                    <!-- User profile and search -->
+                    <!-- ============================================================== -->
+                    <ul class="navbar-nav my-lg-0">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <!-- ============================================================== -->
+        <!-- End Topbar header -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- Left Sidebar - style you can find in sidebar.scss  -->
+        <!-- ============================================================== -->
+        <aside class="left-sidebar">
+            <!-- Sidebar scroll-->
+            <div class="scroll-sidebar">
+                <!-- Sidebar navigation-->
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav">
+                        <li class="nav-devider"></li>
+                        <li class="nav-small-cap">PERSONAL</li>
+                        <li> <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false"><i class="mdi mdi-gauge"></i><span class="hide-menu">Configuracion <span class="label label-rouded label-themecolor pull-right">4</span></span></a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="">Usuarios</a></li>
+                                <li><a href="">Clientes</a></li>
+                                <li><a href="">Permisos</a></li>
+                                <li><a href="">Areas de accion</a></li>
+                                <li><a href="">Acciones</a></li>
+                            </ul>
+                        </li>
+                        <li> <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false"><i class="mdi mdi-bullseye"></i><span class="hide-menu">Operacion</span></a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="">Tickets</a></li>
+                            </ul>
+                        </li>
+                        <li> <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false"><i class="mdi mdi-email"></i><span class="hide-menu">Inventario</span></a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="">Productos</a></li>
+                                <li><a href="">Tipos de movimiento</a></li>
+                                <li><a href="">Mpvimientos de inventario</a></li>
+                            </ul>
+                        </li>
+                        <li> <a class="has-arrow waves-effect waves-dark" href="#" aria-expanded="false"><i class="mdi mdi-chart-bubble"></i><span class="hide-menu">Reportes<span class="label label-rouded label-danger pull-right">25</span></span></a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="">Reporte de acciones por usuario</a></li>
+                                <li><a href="">Reporte de acciones por cliente</a></li>
+                                <li><a href="">Reporte de tickets</a></li>
+                                <li><a href="">Reporte de acciones realizadas</a></li>
+                                <li><a href="">Bitacora</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End Sidebar navigation -->
+            </div>
+            <!-- End Sidebar scroll-->
+        </aside>
+        <!-- ============================================================== -->
+        <!-- End Left Sidebar - style you can find in sidebar.scss  -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- Page wrapper  -->
+        <!-- ============================================================== -->
+        <div class="page-wrapper">
+            <!-- ============================================================== -->
+            <!-- Container fluid  -->
+            <!-- ============================================================== -->
+            <div class="container-fluid">
+                <!-- ============================================================== -->
+                <!-- Bread crumb and right sidebar toggle -->
+                <!-- ============================================================== -->
+                <div class="row page-titles">
+                    <div class="col-md-5 align-self-center">
+                        <h3 class="text-themecolor">Tickets</h3>
+                    </div>
+                    <div class="col-md-7 align-self-center">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                            <li class="breadcrumb-item">Apps</li>
+                            <li class="breadcrumb-item active">Tickets</li>
+                        </ol>
+                    </div>
+                </div>
+                <!-- ============================================================== -->
+                <!-- End Bread crumb and right sidebar toggle -->
+                <!-- ============================================================== -->
+                <!-- ============================================================== -->
+                <!-- Start Page Content -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Tickets de soporte</h4>
+                                <h6 class="card-subtitle">Lista de tickets activos en  proceso</h6>
+                                <div class="row m-t-40">
+                                    <!-- Column -->
+                                    <div class="col-md-6 col-lg-3 col-xlg-3">
+                                        <div class="card">
+                                            <div class="box bg-info text-center">
+                                                <h1 class="font-light text-white">120</h1>
+                                                <h6 class="text-white">Tickets en total</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Column -->
+                                    <div class="col-md-6 col-lg-3 col-xlg-3">
+                                        <div class="card">
+                                            <div class="box bg-primary text-center">
+                                                <h1 class="font-light text-white">40</h1>
+                                                <h6 class="text-white">Contestados</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Column -->
+                                    <div class="col-md-6 col-lg-3 col-xlg-3">
+                                        <div class="card">
+                                            <div class="box bg-success text-center">
+                                                <h1 class="font-light text-white">45</h1>
+                                                <h6 class="text-white">Resueltos</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Column -->
+                                    <div class="col-md-6 col-lg-3 col-xlg-3">
+                                        <div class="card">
+                                            <div class="box bg-dark text-center">
+                                                <h1 class="font-light text-white">35</h1>
+                                                <h6 class="text-white">Pendientes</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Column -->
+                                </div>
+                                <button type="button" class="btn btn-info btn-rounded m-t-10 float-right" data-toggle="modal" data-target="#add-contact">Agregar nuevo ticket</button>
+                                <!-- Add Contact Popup Model -->        
+                                <div id="add-contact" class="modal fade in" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                                <h4 class="modal-title" id="myModalLabel">Registrar nuevo ticket</h4> </div>
+                                            <div class="modal-body">
+                                                <from class="form-horizontal form-material">
+                                                    <div class="form-group">
+                                                        <div class="col-md-12 m-b-20">
+                                                            <input type="text" class="form-control" placeholder="Nombre"> </div>
+                                                        <div class="col-md-12 m-b-20">
+                                                            <input type="text" class="form-control" placeholder="No. de cliente"> </div>
+                                                        <div class="col-md-12 m-b-20">
+                                                            <input type="text" class="form-control" placeholder="Telefono"> </div>
+                                                        <div class="col-md-12 m-b-20">
+                                                            <input type="text" class="form-control" placeholder="Descripcion del problema"> </div>
+                                                        <div class="col-md-12 m-b-20">
+                                                            <input type="text" class="form-control" placeholder="Detalles adicionales"> </div>
+                                                        <div class="col-md-12 m-b-20">
+                                                            <div class="fileupload btn btn-danger btn-rounded waves-effect waves-light"><span><i class="ion-upload m-r-5"></i>Agregar imagen de respaldo</span>
+                                                                <input type="file" class="upload"> </div>
+                                                        </div>
+                                                    </div>
+                                                </from>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info waves-effect" data-dismiss="modal">Guardar</button>
+                                                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancelar</button>
+                                            </div>
+                                        </div>
+                                        <!-- /.modal-content -->
+                                    </div>
+                                    <!-- /.modal-dialog -->
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="demo-foo-addrow" class="table table-bordered m-t-30 table-hover contact-list" data-paging="true" data-paging-size="7">
+                                        <thead>
+                                            <tr>
+                                                <th>No.</th>
+                                                <th>Nombre</th>
+                                                <th>Correo</th>
+                                                <th>Telefono</th>
+                                                <th>Estado</th>
+                                                <th>Dias en curso</th>
+                                                <th>Fecha de inicio</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/4.jpg" alt="user" width="40" class="img-circle" /> Genelia Deshmukh</a>
+                                                </td>
+                                                <td>genelia@gmail.com</td>
+                                                <td>+123 456 789</td>
+                                                <td><span class="label label-danger">Pendiente</span> </td>
+                                                <td>23</td>
+                                                <td>12-10-2014</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/5.jpg" alt="user" width="40" class="img-circle" /> Arijit Singh</a>
+                                                </td>
+                                                <td>arijit@gmail.com</td>
+                                                <td>+234 456 789</td>
+                                                <td><span class="label label-info">Proceso</span> </td>
+                                                <td>26</td>
+                                                <td>10-09-2014</td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/6.jpg" alt="user" width="40" class="img-circle" /> Govinda jalan</a>
+                                                </td>
+                                                <td>govinda@gmail.com</td>
+                                                <td>+345 456 789</td>
+                                                <td><span class="label label-success">Revision</span></td>
+                                                <td>28</td>
+                                                <td>1-10-2013</td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/7.jpg" alt="user" width="40" class="img-circle" /> Hritik Roshan</a>
+                                                </td>
+                                                <td>hritik@gmail.com</td>
+                                                <td>+456 456 789</td>
+                                                <td><span class="label label-inverse">Facturacion</span></td>
+                                                <td>25</td>
+                                                <td>2-10-2017</td>
+                                            </tr>
+                                            <tr>
+                                                <td>5</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/8.jpg" alt="user" width="40" class="img-circle" /> John Abraham</a>
+                                                </td>
+                                                <td>john@gmail.com</td>
+                                                <td>+567 456 789</td>
+                                                <td><span class="label label-danger">Pendiente</span></td>
+                                                <td>23</td>
+                                                <td>10-9-2015</td>
+                                            </tr>
+                                            <tr>
+                                                <td>6</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/1.jpg" alt="user" width="40" class="img-circle" /> Pawandeep kumar</a>
+                                                </td>
+                                                <td>pawandeep@gmail.com</td>
+                                                <td>+678 456 789</td>
+                                                <td><span class="label label-warning">Trabajando</span></td>
+                                                <td>29</td>
+                                                <td>10-5-2013</td>
+                                            </tr>
+                                            <tr>
+                                                <td>7</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/2.jpg" alt="user" width="40" class="img-circle" /> Ritesh Deshmukh</a>
+                                                </td>
+                                                <td>ritesh@gmail.com</td>
+                                                <td>+123 456 789</td>
+                                                <td><span class="label label-danger">Pendiente</span></td>
+                                                <td>35</td>
+                                                <td>05-10-2012</td>
+                                            </tr>
+                                            <tr>
+                                                <td>8</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/2.jpg" alt="user" width="40" class="img-circle" /> Salman Khan</a>
+                                                </td>
+                                                <td>salman@gmail.com</td>
+                                                <td>+234 456 789</td>
+                                                <td><span class="label label-info">Proceso</span></td>
+                                                <td>27</td>
+                                                <td>11-10-2014</td>
+                                            </tr>
+                                            <tr>
+                                                <td>9</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/3.jpg" alt="user" width="40" class="img-circle" /> Govinda jalan</a>
+                                                </td>
+                                                <td>govinda@gmail.com</td>
+                                                <td>+345 456 789</td>
+                                                <td><span class="label label-success">Revision</span></td>
+                                                <td>18</td>
+                                                <td>12-5-2017</td>
+                                            </tr>
+                                            <tr>
+                                                <td>10</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/4.jpg" alt="user" width="40" class="img-circle" /> Sonu Nigam</a>
+                                                </td>
+                                                <td>sonu@gmail.com</td>
+                                                <td>+456 456 789</td>
+                                                <td><span class="label label-inverse">Facturacion</span></td>
+                                                <td>36</td>
+                                                <td>18-5-2009</td>
+                                            </tr>
+                                            <tr>
+                                                <td>11</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/5.jpg" alt="user" width="40" class="img-circle" /> Varun Dhawan</a>
+                                                </td>
+                                                <td>varun@gmail.com</td>
+                                                <td>+567 456 789</td>
+                                                <td><span class="label label-danger">Pendiente</span></td>
+                                                <td>43</td>
+                                                <td>12-10-2010</td>
+                                            </tr>
+                                            <tr>
+                                                <td>12</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/6.jpg" alt="user" width="40" class="img-circle" /> Genelia Deshmukh</a>
+                                                </td>
+                                                <td>genelia@gmail.com</td>
+                                                <td>+123 456 789</td>
+                                                <td><span class="label label-danger">Pendiente</span> </td>
+                                                <td>23</td>
+                                                <td>12-10-2014</td>
+                                            </tr>
+                                            <tr>
+                                                <td>13</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/7.jpg" alt="user" width="40" class="img-circle" /> Arijit Singh</a>
+                                                </td>
+                                                <td>arijit@gmail.com</td>
+                                                <td>+234 456 789</td>
+                                                <td><span class="label label-info">Proceso</span> </td>
+                                                <td>26</td>
+                                                <td>10-09-2014</td>
+                                            </tr>
+                                            <tr>
+                                                <td>14</td>
+                                                <td>
+                                                    <a href="javascript:void(0)"><img src="../assets/images/users/8.jpg" alt="user" width="40" class="img-circle" /> Govinda jalan</a>
+                                                </td>
+                                                <td>govinda@gmail.com</td>
+                                                <td>+345 456 789</td>
+                                                <td><span class="label label-success">Revision</span></td>
+                                                <td>28</td>
+                                                <td>1-10-2013</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ============================================================== -->
+                <!-- End PAge Content -->
+                <!-- ============================================================== -->
+                <!-- ============================================================== -->
+                <!-- Right sidebar -->
+                <!-- ============================================================== -->
+                <!-- .right-sidebar -->
+                <div class="right-sidebar">
+                    <div class="slimscrollright">
+                        <div class="rpanel-title"> Service Panel <span><i class="ti-close right-side-toggle"></i></span> </div>
+                        <div class="r-panel-body">
+                            <ul id="themecolors" class="m-t-20">
+                                <li><b>With Light sidebar</b></li>
+                                <li><a href="javascript:void(0)" data-theme="default" class="default-theme">1</a></li>
+                                <li><a href="javascript:void(0)" data-theme="green" class="green-theme">2</a></li>
+                                <li><a href="javascript:void(0)" data-theme="red" class="red-theme">3</a></li>
+                                <li><a href="javascript:void(0)" data-theme="blue" class="blue-theme">4</a></li>
+                                <li><a href="javascript:void(0)" data-theme="purple" class="purple-theme">5</a></li>
+                                <li><a href="javascript:void(0)" data-theme="megna" class="megna-theme">6</a></li>
+                                <li class="d-block m-t-30"><b>With Dark sidebar</b></li>
+                                <li><a href="javascript:void(0)" data-theme="default-dark" class="default-dark-theme working">7</a></li>
+                                <li><a href="javascript:void(0)" data-theme="green-dark" class="green-dark-theme">8</a></li>
+                                <li><a href="javascript:void(0)" data-theme="red-dark" class="red-dark-theme">9</a></li>
+                                <li><a href="javascript:void(0)" data-theme="blue-dark" class="blue-dark-theme">10</a></li>
+                                <li><a href="javascript:void(0)" data-theme="purple-dark" class="purple-dark-theme">11</a></li>
+                                <li><a href="javascript:void(0)" data-theme="megna-dark" class="megna-dark-theme ">12</a></li>
+                            </ul>
+                            <ul class="m-t-20 chatonline">
+                                <li><b>Chat option</b></li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/1.jpg" alt="user-img" class="img-circle"> <span>Varun Dhavan <small class="text-success">online</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/2.jpg" alt="user-img" class="img-circle"> <span>Genelia Deshmukh <small class="text-warning">Away</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/3.jpg" alt="user-img" class="img-circle"> <span>Ritesh Deshmukh <small class="text-danger">Busy</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/4.jpg" alt="user-img" class="img-circle"> <span>Arijit Sinh <small class="text-muted">Offline</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/5.jpg" alt="user-img" class="img-circle"> <span>Govinda Star <small class="text-success">online</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/6.jpg" alt="user-img" class="img-circle"> <span>John Abraham<small class="text-success">online</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/7.jpg" alt="user-img" class="img-circle"> <span>Hritik Roshan<small class="text-success">online</small></span></a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)"><img src="../assets/images/users/8.jpg" alt="user-img" class="img-circle"> <span>Pwandeep rajan <small class="text-success">online</small></span></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- ============================================================== -->
+                <!-- End Right sidebar -->
+                <!-- ============================================================== -->
+            </div>
+            <!-- ============================================================== -->
+            <!-- End Container fluid  -->
+            <!-- ============================================================== -->
+            <!-- ============================================================== -->
+            <!-- footer -->
+            <!-- ============================================================== -->
+
+            <!-- ============================================================== -->
+            <!-- End footer -->
+            <!-- ============================================================== -->
+        </div>
+        <!-- ============================================================== -->
+        <!-- End Page wrapper  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- End Wrapper -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- All Jquery -->
+    <!-- ============================================================== -->
+    <script src="../assets/plugins/jquery/jquery.min.js"></script>
+    <!-- Bootstrap tether Core JavaScript -->
+    <script src="../assets/plugins/bootstrap/js/popper.min.js"></script>
+    <script src="../assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+    <!-- slimscrollbar scrollbar JavaScript -->
+    <script src="js/perfect-scrollbar.jquery.min.js"></script>
+    <!--Wave Effects -->
+    <script src="js/waves.js"></script>
+    <!--Menu sidebar -->
+    <script src="js/sidebarmenu.js"></script>
+    <!--stickey kit -->
+    <script src="../assets/plugins/sticky-kit-master/dist/sticky-kit.min.js"></script>
+    <script src="../assets/plugins/sparkline/jquery.sparkline.min.js"></script>
+    <!--Custom JavaScript -->
+    <script src="js/custom.min.js"></script>
+    <!-- Footable -->
+    <script src="../assets/plugins/moment/moment.js" type="text/javascript"></script>
+    <script src="../assets/plugins/footable/js/footable.min.js"></script>
+    <!--FooTable init-->
+    <script src="js/footable-init.js"></script>
+    <!-- ============================================================== -->
+    <!-- Style switcher -->
+    <!-- ============================================================== -->
+    <script src="../assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
+</body>
+
+</html>

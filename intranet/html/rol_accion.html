@@ -1,0 +1,44 @@
+<h4 class="card-title m-b-5 header-titulo">Permisos por rol</h4>
+<form class="margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(8,'Permisos por rol','Seguridad');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+	<input type="hidden" name="idrol" id="idrol">
+	<input type="hidden" name="idaccion" id="idaccion">
+	<input type="hidden" name="idopcion" id="idopcion">
+	<input type="hidden" name="table" id="table" value="rol_accion">
+	<div class="row">
+		<div class="form-group m-b-5 col-md-4">
+			<input type="text" class="form-control" id="rol" name="rol" required readOnly>
+			<span class="bar"></span>
+			<label for="rol">Rol de usuario</label>
+        </div>
+	</div>
+	<div class="row">
+		<div class="form-group m-b-5 col-md-12">
+			<div class="row" id="permisos"></div>
+		</div>
+	</div>
+</form>
+
+<hr>
+<h4 class="card-title m-b-5">Seleccione rol de usuario</h4>
+<!---->
+<div class="table-responsive">
+	<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+		<thead>
+			<tr>
+				<th>Acciones</th>
+				<th>Id.</th>
+				<th>Rol</th>
+			</tr>
+		</thead>
+		<tbody>
+			[tabla_roles]
+		</tbody>
+	</table>
+</div>

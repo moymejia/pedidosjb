@@ -1,0 +1,35 @@
+<h4 class="card-title header-titulo">Consulta de bitacora</h4>
+<form class=" m-t-40 margen-formulario" onsubmit="download_div_content('usuario,fecha_desde,fecha_hasta','bitacora','consultar_bitacora','div_reporte'); return false;" id="formulario_registro">
+	<input type="hidden" name="table" id="table" value="bitacora">
+	<div class="row">
+		<div class="form-group m-b-40 col-md-4">
+            <select class="form-control" id="usuario" name="usuario" >
+                [usuarios_activos]
+            </select>
+			<span class="bar"></span>
+			<label for="usuario">Usuario</label>
+        </div>
+        <div class="form-group m-b-40 col-md-4">
+			<input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
+            <span class="bar"></span>
+			<label for="fecha_desde">Desde</label>
+		</div>
+		<div class="form-group m-b-40 col-md-4">
+			<input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+            <span class="bar"></span>
+			<label for="fecha_hasta">Hasta</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group m-b-40 col-md-12">
+			<button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Mostrar Reporte</button>
+			<button type="reset" class="btn btn-inverse waves-effect waves-light" onclick="objeto('botones_edicion').style.display = 'none';">Limpiar</button>
+			<span id="botones_edicion" style="display: none;">
+			</span>
+		</div>
+	</div>
+</form>
+<hr>
+<!---->
+<div id='div_reporte' style="overflow:auto;">
+</div>
