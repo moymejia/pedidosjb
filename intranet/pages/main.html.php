@@ -61,7 +61,18 @@ $idubicacion = $row['idubicacion'];
 <![endif]-->
 </head>
 
-<body class="fix-header card-no-border fix-sidebar" onload="" >
+<body class="fix-header card-no-border fix-sidebar" onload="
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.has('idopcion')) {
+        mostrar_opcion(
+            params.get('idopcion'),
+            params.get('opcion'),
+            params.get('menu'),
+            restore_data_local_storage
+        );
+    }
+" >
     <div>
         <!-- EL TOKEN -->
     </div>

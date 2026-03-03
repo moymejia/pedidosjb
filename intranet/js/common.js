@@ -12,7 +12,7 @@ function inicializar() {
     return true;
 }
 
-function mostrar_opcion(idopcion, opcion, menu) {
+function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
     element("idopcion_actual").value = idopcion;
     delete callback_download;
     callback_download = function () {
@@ -24,7 +24,7 @@ function mostrar_opcion(idopcion, opcion, menu) {
         activate_select2();
         activate_switch();
     };
-    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal");
+    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal", callback_retorno);
     document.getElementById("contenedor_principal").innerHTML = "";
     document.getElementById("menu_actual").innerHTML = menu;
     document.getElementById("opcion_actual").innerHTML = opcion;
@@ -787,4 +787,85 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
 
     ajax_tofunction(datos, crud_url + "?operacion=" + operation, onRresponse);
     return true;
+}
+
+function show_external_option(idopcion, opcion, menu, prohibidos = null) {
+
+    let datos = {};
+
+    let idsProhibidos = [];
+
+    if (prohibidos) {
+        idsProhibidos = prohibidos.split(',').map(id => id.trim());
+    }
+
+    idsProhibidos.push("table");
+
+    let notSelector = idsProhibidos
+        .map(id => `:not(#${CSS.escape(id)})`)
+        .join('');
+
+    const elementos = document.querySelectorAll(
+        `input${notSelector}, select${notSelector}, textarea${notSelector}`
+    );
+
+    elementos.forEach(function (el) {
+
+        const key = el.id || el.name;
+        if (!key) return;
+
+        if (el.type === "checkbox") {
+            datos[key] = el.checked ? 1 : 0;
+
+        } else if (el.type === "radio") {
+            if (el.checked) {
+                datos[key] = el.value;
+            }
+
+        } else {
+            datos[key] = el.value;
+        }
+    });
+
+    localStorage.setItem(
+        "datos_json_externo",
+        JSON.stringify(datos)
+    );
+
+    const url = window.location.pathname +
+        "?idopcion=" + encodeURIComponent(idopcion) +
+        "&opcion=" + encodeURIComponent(opcion) +
+        "&menu=" + encodeURIComponent(menu);
+
+    window.open(url, "_blank");
+}
+
+function restore_data_local_storage() {
+    const datosGuardados = localStorage.getItem("datos_json_externo");
+
+    if (!datosGuardados) return;
+
+    const datos = JSON.parse(datosGuardados);
+
+    Object.keys(datos).forEach(function (key) {
+
+        const elemento = document.getElementById(key);
+
+        if (!elemento) return;
+
+        if (elemento.type === "checkbox") {
+            elemento.checked = datos[key] == 1;
+        }
+        else if (elemento.type === "radio") {
+            const radio = document.querySelector(
+                "input[type='radio'][name='" + elemento.name + "'][value='" + datos[key] + "']"
+            );
+            if (radio) radio.checked = true;
+        }
+        else {
+            elemento.value = datos[key];
+        }
+
+    });
+
 }
