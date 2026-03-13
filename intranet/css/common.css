@@ -1,100 +1,110 @@
 :root {
-    --border-card: #337ab7;
     /************************************
-     Barra superior
+        Base UI
     *************************************/
-    --topbar-bg: #f8f8f8;   
-    --topbar-text: #337ab7;     
+    --border-card: #3A3A3C;
 
     /************************************
-     Barra lateral
+    Barra superior
     *************************************/
-    --sidebar-bg: #f8f8f8;  
-    --navbar-hover: #eee;  
-    --icons-color: #337ab7;
-    --sidebar-text: #337ab7;      
+    --topbar-bg: #1C1C1E;
+    --topbar-text: #0A84FF;
 
     /************************************
-     Body
-    *************************************/ 
-    --option-title-color: #000000;   
-    --form-labels: #000000;                 
-    --datatable-color: #d9edf7;             
-    --datatable-header: #78CFF2;           
-    --datatable-hover: #eee;             
-    --datatable-text-color: #337ab7; 
-    --input-boxshadow-color: 120, 207, 242;
-
-    /************************************
-    Alertas y notificaciones
+    Barra lateral
     *************************************/
-    --info-message: #5bc0de;       
-    --color-text-info-message: #ffffff; 
+    --sidebar-bg: #1C1C1E;
+    --navbar-hover: #3A3A3C;
+    --icons-color: #0A84FF;
+    --sidebar-text: #FFFFFF;
 
-    --success-message: #337ab7;     
-    --color-text-succes-message: #ffffff; 
-    
-    --warning-message: #f0ad4e;    
-    --color-text-warning-message: #ffffff; 
-    
-    --error-message: #FF3838;
+    /************************************
+    Body
+    *************************************/
+    --fondoformulario: #2B2B2C;
+    --color-card-titile:#2B2B2C;
+    --brg-card: #2C2C2E;
+    --title-form-card: #0A84FF;
+    --option-title-color: #FFFFFF;
+    --form-labels: #FFFFFF;
+
+    --datatable-color: #0A84FF;
+    --datatable-header: #0A84FF;
+    --datatable-hover: #3A3A3C;
+    --datatable-text-color: #FFFFFF;
+
+    --input-boxshadow-color: 10,132,255;
+
+    /************************************
+    Alertas
+    *************************************/
+    --info-message: #64D2FF;
+    --color-text-info-message: #000000;
+
+    --success-message: #30D158;
+    --color-text-succes-message: #000000;
+
+    --warning-message: #FFD60A;
+    --color-text-warning-message: #000000;
+
+    --error-message: #FF453A;
     --color-text-error-message: #FFFFFF;
 
     /************************************
-            Botones
+    Botones
     *************************************/
-    --btn-border: #cbc1c1;
+    --btn-border: #48484A;
 
     /* Primary */
-    --btn-primary-bg: #f0ad4e;
-    --btn-primary-text: #ffffff;
-    --btn-primary-hover-bg: #ec971f;
+    --btn-primary-bg: #FF453A;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover-bg: #FF453A;
 
     /* Inverse */
-    --btn-inverse-bg: #ffffff;
-    --btn-inverse-text: #000000;
-    --btn-inverse-hover-bg: #f2f2f2;
+    --btn-inverse-bg: #5E5CE6;
+    --btn-inverse-text: #FFFFFF;
+    --btn-inverse-hover-bg: #5E5CE6;
 
     /* Secondary */
-    --btn-secondary-bg: #5cb85c;
-    --btn-secondary-text: #ffffff;
-    --btn-secondary-hover-bg: #5cb85c;
+    --btn-secondary-bg: #5E5CE6;
+    --btn-secondary-text: #FFFFFF;
+    --btn-secondary-hover-bg: #7D7AFF;
 
     /* Success */
-    --btn-success-bg: #ffffff;
-    --btn-success-text: #000000;
-    --btn-success-hover-bg: #f2f2f2;
+    --btn-success-bg: #30D158;
+    --btn-success-text: #fff;
+    --btn-success-hover-bg: #28C148;
     --box-shadow-success: none;
 
     /* Danger */
-    --btn-danger-bg: #f77171;
-    --btn-danger-text: #ffffff;
-    --btn-danger-hover-bg: #FF3838;
+    --btn-danger-bg: #FF453A;
+    --btn-danger-text: #FFFFFF;
+    --btn-danger-hover-bg: #FF3B30;
 
     /* Warning */
-    --btn-warning-bg: #f0ad4e;
-    --btn-warning-text: #ffffff;
-    --btn-warning-hover-bg: #ec971f;
+    --btn-warning-bg: #e4bd2f;
+    --btn-warning-text: #fff;
+    --btn-warning-hover-bg: #e4bd2f;
 
     /* Info */
-    --btn-info-bg: #5bc0de;
-    --btn-info-text: #ffffff;
-    --btn-info-hover-bg: #31b0d5;
+    --btn-info-bg: #2FA4D9;
+    --btn-info-text: #fff;
+    --btn-info-hover-bg: #238BB8;
 
     /*LOGIN*/
     --color-primary:#1aa5a0;
     --color-primary-hover:#148c88;
 
-    --color-bg-start:rgba(111,211,197,0.85);
-    --color-bg-end:rgba(159,224,197,0.9);
+    --color-bg-start:rgba(147, 148, 148, 0.85);
+    --color-bg-end:rgba(0, 0, 0, 0.9);
 
     --color-input-bg:#e6f4f3;
     --color-input-focus:#d8efed;
 
     --color-text-light:white;
-    --color-text-muted:#878585;
+    --color-text-muted:#3A3A3C;
 
-    --card-bg:white;
+    --card-bg:#767678;
 
 
 }
@@ -133,7 +143,7 @@
 }
 
 .header-titulo {
-    background-color: #337ab7; 
+    background-color: var(--title-form-card); 
     width: 100%;
     padding: 12px 16px;
     font-weight: bold;

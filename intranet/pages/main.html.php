@@ -256,7 +256,7 @@ $idubicacion = $row['idubicacion'];
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                        <div class="card-body" id="contenedor_principal" style="min-height: 600px; border: 1px solid var(--border-card); padding:20px;">
+                        <div class="card-body" id="contenedor_principal" style="min-height: 600px; border: 3px solid var(--border-card); padding:20px; background-color: var(--brg-card)">
                             </div>
                         </div>
                     </div>

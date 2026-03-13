@@ -70,7 +70,7 @@ File: scss
    font-weight: 300; }
  
    table{
-     color: #67757c; }
+     color: #fff; }
  
  html {
    position: relative;
@@ -803,7 +803,7 @@ File: scss
  
  .sidebar-nav {
    background: #fff;
-   padding: 15px 0 0 0px; }
+   padding: 10px 0 0 0px; }
    .sidebar-nav ul {
      margin: 0px;
      padding: 0px; }
@@ -1084,7 +1084,7 @@ File: scss
      display: none; }
  
  .page-wrapper {
-   background: #f4f6f9;
+   background: var(--fondoformulario);
    padding-bottom: 60px;
    position: relative; }
  
@@ -1355,7 +1355,7 @@ File: scss
   Breadcrumb and page title
  *******************/
  .page-titles {
-   background: #f4f6f9;
+   background: var(--color-card-titile);
    margin-bottom: 20px;
    padding: 0px; }
    .page-titles h3 {
@@ -1375,7 +1375,7 @@ File: scss
        color: #a6b7bf;
        font-size: 11px; }
      .page-titles .breadcrumb .breadcrumb-item.active {
-       color: #99abb4; }
+       color: var(--form-labels); }
  
  .p-relative {
    position: relative; }
@@ -5927,7 +5927,7 @@ File: scss
      display: inline-block;
      line-height: 40px; }
    .mini-sidebar .page-wrapper {
-     margin-left: 10px; }
+     margin-left: 0px; }
    .flex-wrap {
      -ms-flex-wrap: nowrap !important;
      flex-wrap: nowrap !important;
