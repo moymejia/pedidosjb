@@ -81,6 +81,21 @@
     --btn-info-text: #ffffff;
     --btn-info-hover-bg: #31b0d5;
 
+    /*LOGIN*/
+    --color-primary:#1aa5a0;
+    --color-primary-hover:#148c88;
+
+    --color-bg-start:rgba(111,211,197,0.85);
+    --color-bg-end:rgba(159,224,197,0.9);
+
+    --color-input-bg:#e6f4f3;
+    --color-input-focus:#d8efed;
+
+    --color-text-light:white;
+    --color-text-muted:#878585;
+
+    --card-bg:white;
+
 
 }
 

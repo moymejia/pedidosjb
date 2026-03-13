@@ -21,6 +21,7 @@ if (!isset($_SESSION)) {
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon.png">
     <title>Pedidos jb</title>
     <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link href="../assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- page css -->
     <link href="css/pages/login-register-lock.css" rel="stylesheet">
@@ -55,67 +56,53 @@ if (!isset($_SESSION)) {
     <!-- Main wrapper - style you can find in pages.scss -->
     <!-- ============================================================== -->
     <section id="wrapper">
-        <div class="login-register" style="background-image:url(../assets/images/background/login-register.jpg);">
-            <div class="login-box card">
-                <div class="card-body">
-                    <form class="form-horizontal form-material" id="loginform" onsubmit="return login(); return false;">
-                        <input type="hidden" id="token" name="token" value='uno'>
-                        <img src="../img/logo.jpg" alt="Logo" style="width:90px; height:auto; display:block; margin:0 auto;">
-                        <br>
-                        <h3 class="box-title m-b-20" style="text-align:center;  bottom:10px; ">Acceder</h3>
 
-                        <div class="form-group ">
-                            <div class="col-xs-12">
-                                <input class="form-control" type="text" required="" name="usuario" id="usuario" placeholder="Usuario"> </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-xs-12">
-                                <input class="form-control" type="password" required="" name="clave" id="clave" placeholder="Clave"> </div>
-                        </div>
-                        <div class="form-group row" style="display: none;">
-                            <div class="col-md-12">
-                                <div class="checkbox checkbox-info float-left p-t-0">
+        <div class="login-bg">
 
-                                </div> <a href="javascript:void(0)" id="to-recover" class="text-muted float-right"><i class="fa fa-lock m-r-5"></i> Recuperar clave</a> </div>
-                        </div>
-                        <div class="form-group text-center">
-                            <div class="col-xs-12 p-b-20">
-                                <button class="btn btn-block btn-lg btn-info btn-rounded" type="submit">Log In</button>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-12 col-md-12 m-t-10 text-center">
-                                <div class="social">
+            <div class="login-card">
 
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group m-b-0">
-                            <div class="col-sm-12 text-center">
+                <!-- HEADER CON IMAGEN -->
+                <div class="login-header">
+                    <div class="header-overlay">
 
-                            </div>
-                        </div>
-                    </form>
-                    <form class="form-horizontal" id="recoverform" action="index.html">
-                        <div class="form-group ">
-                            <div class="col-xs-12">
-                                <h3>Recuperar clave</h3>
-                                <p class="text-muted">Ingrese su correo electronico y se le enviaran instrucciones.</p>
-                            </div>
-                        </div>
-                        <div class="form-group ">
-                            <div class="col-xs-12">
-                                <input class="form-control" type="text" required="" placeholder="Email"> </div>
-                        </div>
-                        <div class="form-group text-center m-t-20">
-                            <div class="col-xs-12">
-                                <button class="btn btn-primary btn-lg btn-block text-uppercase waves-effect waves-light" type="submit">Recuperar</button>
-                            </div>
-                        </div>
-                    </form>
+                        <h1>Bienvenido a PedidosJB</h1>
+                        <h3>Sistema de gestión de pedidos</h3>
+
+                    </div>
                 </div>
+
+
+                <!-- FORMULARIO -->
+                <div class="login-body">
+
+                    <form id="loginform" onsubmit="return login(); return false;">
+
+                        <input type="hidden" id="token" name="token" value="uno">
+
+                        <div class="input-group-custom">
+                            <i class="bi bi-person input-icon"></i>
+                            <input class="login-input" type="text" id="usuario" name="usuario" placeholder="Usuario" required>
+                        </div>
+                        <br>
+                        <div class="input-group-custom">
+                            <i class="bi bi-lock input-icon"></i>
+                            <input class="login-input" type="password" id="clave" name="clave" placeholder="Clave" required>
+                        </div>
+                        <br>
+                        <button class="login-btn" type="submit">
+                            Ingresar
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <p class="login-watermark">By WiseTech Solutions</p>
+
             </div>
+
         </div>
+
     </section>
 
     <!-- ============================================================== -->

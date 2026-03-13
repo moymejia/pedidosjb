@@ -96,66 +96,122 @@ $idubicacion = $row['idubicacion'];
         <!-- ============================================================== -->
         <header class="topbar">
             <nav class="navbar top-navbar navbar-expand-md navbar-light">
-                <!-- ============================================================== -->
-                <!-- Logo -->
-                <!-- ============================================================== -->
 
-                <!-- ============================================================== -->
-                <!-- End Logo -->
-                <!-- ============================================================== -->
                 <div class="navbar-collapse">
-                    <!-- ============================================================== -->
-                    <!-- toggle and nav items -->
-                    <!-- ============================================================== -->
+
+                    <!-- BOTON MENU + ENCABEZADO -->
                     <ul class="navbar-nav mr-auto">
-                        <!-- This is  -->
-                        <li class="nav-item"> <a class="nav-link nav-toggler hidden-md-up waves-effect waves-dark" href="javascript:void(0)"><i class="ti-menu"></i></a> </li>
-                        <li class="nav-item"> <a class="nav-link sidebartoggler hidden-sm-down waves-effect waves-dark" href="javascript:void(0)"><i class="ti-menu"></i></a> </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link nav-toggler hidden-md-up waves-effect hidden-md-up waves-dark" href="javascript:void(0)">
+                                <i class="ti-menu"></i>
+                            </a>
+                        </li>
+
                         <li class="nav-item hidden-sm-down"></li>
-                        <span id='encabezado_sistema'><?php echo $encabezado_sistema ?></span>
+
+                        <span id="encabezado_sistema">
+                            <?php echo $encabezado_sistema ?>
+                        </span>
+
                     </ul>
-                    <!-- ============================================================== -->
-                    <!-- User profile and search -->
-                    <!-- ============================================================== -->
+
+
+                    <!-- MENU -->
+                    <aside class="left-sidebar">
+
+                        <nav class="sidebar-nav">
+
+                            <ul id="sidebarnav">
+
+                            <li class="nav-item">
+                            <a class="nav-link nav-toggler hidden-md-up waves-effect hidden-md-up waves-dark" href="javascript:void(0)">
+                                <i class="ti-menu"></i>
+                            </a>
+                        </li>
+                            
+                                
+                                <li class="user-profile">
+                                    <a class="has-arrow waves-effect waves-dark" href="">
+                                        <i class="mdi mdi-account-circle"></i>
+                                        <span class="hide-menu">
+                                            <?php echo $nombre ?>
+                                        </span>
+                                    </a>
+                                </li>
+
+                                <input type="hidden" id="idopcion_actual">
+
+                                <?php
+
+                                    $idrol = $mysql->getvalue("SELECT idrol FROM usuario WHERE usuario = '$usuario'",'idrol');
+
+                                    $result = $mysql->getresult("SELECT idmenu, menu, icono FROM view_permisos WHERE idrol = $idrol GROUP BY idmenu ORDER BY orden_menu");
+
+                                    while ($row = $mysql->getrowresult($result)) {
+
+                                        $menu       = $row['menu'];
+                                        $icono_menu = $row['icono'];
+                                        $idmenu     = $row['idmenu'];
+
+                                        $cantidad_opciones = $mysql->getvalue("SELECT COUNT(DISTINCT idopcion) FROM view_permisos WHERE idrol = $idrol AND idmenu = $idmenu");
+
+                                        if ($cantidad_opciones > 0) {
+
+                                            echo "
+                                            <li>
+                                                <a class='has-arrow waves-effect waves-dark' href='#'>
+                                                    <i class='$icono_menu'></i>
+                                                    <span class='hide-menu'>$menu</span>
+                                                </a>
+
+                                                <ul class='collapse'>
+                                            ";
+
+                                            $result_opciones = $mysql->getresult("SELECT idopcion, opcion FROM view_permisos WHERE idrol = '$idrol' AND idmenu = '$idmenu' GROUP BY idopcion ORDER BY orden_opcion
+                                            ");
+
+                                            while ($row_opcion = $mysql->getrowresult($result_opciones)) {
+
+                                                $opcion   = $row_opcion['opcion'];
+                                                $idopcion = $row_opcion['idopcion'];
+
+                                                echo "
+                                                    <li>
+                                                        <a href='#'
+                                                        onclick=\"mostrar_opcion($idopcion,'$opcion','$menu');\">
+                                                            $opcion
+                                                        </a>
+                                                    </li>
+                                                ";
+                                            }
+
+                                            echo "
+                                                </ul>
+                                            </li>
+                                            ";
+                                        }
+                                    }
+                                ?>
+
+                            </ul>
+
+                        </nav>
+
+                    </aside>
+
+
+                    <!-- BOTON SALIR -->
                     <ul class="navbar-nav my-lg-0">
-                        <li><a href="../" class="m-r-10"><i class="ti-user"></i> Salir</a></li>
-                    </ul>
-                    <ul class="navbar-nav my-lg-0" style="display: none;">
-                        <!-- ============================================================== -->
-                        <!-- Language -->
-                        <!-- ============================================================== -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="flag-icon flag-icon-us"></i></a>
-                            <div class="dropdown-menu dropdown-menu-right animated bounceInDown"> <a class="dropdown-item" href="#"><i class="flag-icon flag-icon-in"></i> India</a> <a class="dropdown-item" href="#"><i class="flag-icon flag-icon-fr"></i> French</a> <a class="dropdown-item" href="#"><i class="flag-icon flag-icon-cn"></i> China</a> <a class="dropdown-item" href="#"><i class="flag-icon flag-icon-de"></i> Dutch</a> </div>
-                        </li>
-                        <!-- ============================================================== -->
-                        <!-- Profile -->
-                        <!-- ============================================================== -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
-                            <div class="dropdown-menu dropdown-menu-right animated flipInY">
-                                <ul class="dropdown-user">
-                                    <li>
-                                        <div class="dw-user-box">
-                                            <div class="u-img"><img src="../assets/images/users/1.jpg" alt="user"></div>
-                                            <div class="u-text">
-                                                <h4>Steave Jobs</h4>
-                                                <p class="text-muted">varun@gmail.com</p><a href="pages-profile.html" class="btn btn-rounded btn-danger btn-sm">View Profile</a></div>
-                                        </div>
-                                    </li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#"><i class="ti-user"></i> My Profile</a></li>
-                                    <li><a href="#"><i class="ti-wallet"></i> My Balance</a></li>
-                                    <li><a href="#"><i class="ti-email"></i> Inbox</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#"><i class="ti-settings"></i> Account Setting</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#"><i class="fa fa-power-off"></i> Logout</a></li>
-                                </ul>
-                            </div>
+                        <li>
+                            <a href="../" class="m-r-10">
+                                <i class="ti-user"></i> Salir
+                            </a>
                         </li>
                     </ul>
+
                 </div>
+
             </nav>
         </header>
         <!-- ============================================================== -->
@@ -164,49 +220,7 @@ $idubicacion = $row['idubicacion'];
         <!-- ============================================================== -->
         <!-- Left Sidebar - style you can find in sidebar.scss  -->
         <!-- ============================================================== -->
-        <aside class="left-sidebar">
-            <!-- Sidebar scroll-->
-            <div class="scroll-sidebar">
-                <!-- Sidebar navigation-->
-                <nav class="sidebar-nav">
-                    <ul id="sidebarnav">
-                        <li class="user-profile"> <a class="has-arrow waves-effect waves-dark" href="" aria-expanded="false"><i class="mdi mdi-account-circle"></i><span class="hide-menu"> <?php echo $nombre ?> </span></a>
-
-                        </li>
-                        <li class="nav-devider"></li>
-                        <li class="nav-small-cap">OPCIONES</li>
-                        <input type='hidden' id='idopcion_actual'>
-                        <?php
-$idrol  = $mysql->getvalue("SELECT idrol FROM usuario WHERE usuario = '$usuario' ", 'idrol');
-$result = $mysql->getresult("SELECT idmenu, menu,  icono FROM view_permisos WHERE idrol = 1 GROUP BY idmenu ORDER BY orden_menu ");
-while ($row = $mysql->getrowresult($result)) {
-    $menu              = $row['menu'];
-    $icono_menu        = $row['icono'];
-    $idmenu            = $row['idmenu'];
-    $cantidad_opciones = $mysql->getvalue("SELECT COUNT(DISTINCT idopcion) opciones FROM view_permisos WHERE idrol = $idrol AND idmenu = $idmenu  ", "opciones");
-    if ($cantidad_opciones > 0) {
-        echo "<li> <a class=\"has-arrow waves-effect waves-dark\" href=\"#\" aria-expanded=\"false\"><i class=\"$icono_menu\"></i><span class=\"hide-menu\">$menu</span></a>
-                                                            <ul aria-expanded=\"false\" class=\"collapse\">";
-        $result_opciones = $mysql->getresult("SELECT idopcion, opcion FROM view_permisos WHERE idrol = '$idrol' and idmenu = '$idmenu' GROUP BY idopcion  ORDER BY  orden_opcion ");
-        while ($row_opcion = $mysql->getrowresult($result_opciones)) {
-            $opcion   = $row_opcion['opcion'];
-            $idopcion = $row_opcion['idopcion'];
-            echo "<li><a href=\"#\" class='nav-toggler' onclick=\"mostrar_opcion($idopcion, '$opcion','$menu');\">$opcion</a></li>";
-        }
-        echo "</ul>
-                                                            </li>";
-    }
-}
-?>
-                            <!-- -->
-
-                            <!-- -->
-                    </ul>
-                </nav>
-                <!-- End Sidebar navigation -->
-            </div>
-            <!-- End Sidebar scroll-->
-        </aside>
+     
         <!-- ============================================================== -->
         <!-- End Left Sidebar - style you can find in sidebar.scss  -->
         <!-- ============================================================== -->

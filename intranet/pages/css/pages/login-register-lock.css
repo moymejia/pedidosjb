@@ -1,50 +1,169 @@
-/*
-Template Name: Admin pro Admin
-Author: Wrappixel
-Email: niravjoshi87@gmail.com
-File: scss
-*/
-/*
-Template Name: Admin Pro Admin
-Author: Wrappixel
-Email: niravjoshi87@gmail.com
-File: scss
-*/
-/*Theme Colors*/
-/*bootstrap Color*/
-/*Light colors*/
-/*Normal Color*/
-/*Extra Variable*/
-/*******************
-Login register and recover password Page
-******************/
-.login-register {
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-  height: 100%;
-  width: 100%;
-  padding: 10% 0;
-  position: fixed; }
+/* RESET */
 
-.login-box {
-  width: 400px;
-  margin: 0 auto; }
-  .login-box .footer {
-    width: 100%;
-    left: 0px;
-    right: 0px; }
-  .login-box .social {
-    display: block;
-    margin-bottom: 30px; }
+body{
+  margin:0;
+  font-family:'Segoe UI', sans-serif;
+}
 
-#recoverform {
-  display: none; }
 
-.login-sidebar {
-  padding: 0px;
-  margin-top: 0px; }
-  .login-sidebar .login-box {
-    right: 0px;
-    position: absolute;
-    height: 100%; }
+/* FONDO */
+
+.login-bg{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:
+    linear-gradient(var(--color-bg-start), var(--color-bg-end)),
+    url("../../../img/fondo_login.png") center/cover no-repeat;
+}
+
+
+/* TARJETA */
+
+.login-card{
+  width:500px;
+  min-height:560px;
+  background:var(--card-bg);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 25px 60px rgba(0,0,0,.25);
+  animation:fadeIn .6s ease;
+  position:relative;
+}
+
+
+/* HEADER */
+
+.login-header{
+  height:240px;
+  background:url("../../../img/fondo_login.png") center/cover;
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+
+/* OVERLAY */
+
+.header-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  color:var(--color-text-light);
+
+  background:linear-gradient(
+    rgba(26,165,160,.65),
+    rgba(20,140,136,.75)
+  );
+
+  padding:20px;
+}
+
+.header-overlay h3{margin:0;font-weight:600}
+.header-overlay p{font-size:13px;opacity:.9}
+
+
+/* LOGO */
+
+.login-logo{
+  width:70px;
+  margin-top:10px;
+}
+
+
+/* BODY */
+
+.login-body{
+  padding:45px;
+  text-align:center;
+}
+
+
+/* CONTENEDOR INPUT */
+
+.input-group-custom{
+
+  display:flex;
+  align-items:center;
+
+  width:85%;
+  margin:0 auto 15px;
+
+  background:var(--color-input-bg);
+  border-radius:20px;
+  padding:8px 15px;
+
+}
+
+
+/* ICONO */
+
+.input-icon{
+
+  color:var(--color-primary);
+  font-size:18px;
+  margin-right:10px;
+
+}
+
+
+/* INPUT */
+
+.login-input{
+
+  flex:1;
+  border:none;
+  outline:none;
+  background:transparent;
+  font-size:14px;
+
+}
+
+
+/* BOTON */
+
+.login-btn{
+  background:var(--color-primary);
+  border:none;
+  color:var(--color-text-light);
+  padding:10px 30px;
+  border-radius:20px;
+  transition:.3s;
+}
+
+.login-btn:hover{
+  background:var(--color-primary-hover);
+  transform:scale(1.05);
+}
+
+
+/* ANIMACION */
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(25px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:480px){
+  .login-card{width:90%}
+}
+
+
+/* WATERMARK */
+
+.login-watermark{
+  text-align:center;
+  font-size:11px;
+  color:var(--color-text-muted);
+  opacity:.7;
+}

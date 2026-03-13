@@ -902,70 +902,150 @@ File: scss
  When click on sidebar toggler and also for tablet
  *****************/
  @media (min-width: 768px) {
-   .mini-sidebar .sidebar-nav #sidebarnav li {
-     position: relative; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li > ul {
-     position: absolute;
-     left: 70px;
-     top: 46px;
-     width: 220px;
-     padding-bottom: 10px;
-     z-index: 1001;
-     background: #edf0f5;
-     display: none;
-     padding-left: 1px; }
-   .mini-sidebar .user-profile .profile-img {
-     width: 45px; }
-     .mini-sidebar .user-profile .profile-img .setpos {
-       top: -35px; }
-   .mini-sidebar.fix-sidebar .left-sidebar {
-     position: fixed; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul {
-     height: auto !important;
-     overflow: auto; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul,
-   .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.collapse {
-     display: block; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li > a.has-arrow:after {
-     display: none; }
-   .mini-sidebar .left-sidebar {
-     width: 70px; }
-   .mini-sidebar .sidebar-nav #sidebarnav .user-profile > a {
-     padding: 12px 20px; }
-   .mini-sidebar .scroll-sidebar {
-     padding-bottom: 0px;
-     position: absolute; }
-   .mini-sidebar .hide-menu,
-   .mini-sidebar .nav-small-cap,
-   .mini-sidebar .sidebar-footer,
-   .mini-sidebar .user-profile .profile-text,
-   .mini-sidebar > .label {
-     display: none; }
-   .mini-sidebar .nav-devider {
-     width: 70px; }
-   .mini-sidebar .sidebar-nav {
-     background: transparent; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li > a {
-     padding: 12px 24px;
-     width: 70px; }
-   .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a {
-     width: 290px;
-     background: #edf0f5; }
-     .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a .hide-menu {
-       display: inline; }
-     .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a .label {
-       display: none; } }
- 
- @media (max-width: 767px) {
-   .mini-sidebar .left-sidebar {
-     position: fixed; }
-   .mini-sidebar .left-sidebar,
-   .mini-sidebar .sidebar-footer {
-     left: -240px; }
-   .mini-sidebar.show-sidebar .left-sidebar,
-   .mini-sidebar.show-sidebar .sidebar-footer {
-     left: 0px; } }
- 
+
+  /* evitar que cree otra barra */
+  .left-sidebar{
+    position: relative;
+    width: auto;
+    height: auto;
+    padding-top: 0;
+    background: var(--topbar-bg);
+    box-shadow: none;
+    margin-left: 60px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav{
+    display:flex;
+    align-items:center;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li{
+    position:relative;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li.nav-small-cap{
+    display:none;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li.two-column > ul{
+    width:400px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li.two-column > ul > li{
+    width:49%;
+    vertical-align:top;
+    display:inline-block;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li.three-column > ul{
+    width:550px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav li.three-column > ul > li{
+    width:32.5%;
+    vertical-align:top;
+    display:inline-block;
+  }
+
+  /* dropdown */
+  .mini-sidebar .sidebar-nav #sidebarnav > li > ul{
+    position:absolute;
+    top:57px;
+    width:220px;
+    padding-bottom:10px;
+    z-index:1001;
+    background:#edf0f5;
+    display:none;
+    padding-left:1px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul,
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.collapse{
+    display:block;
+    max-height:400px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li > a.has-arrow:after{
+    display:none;
+  }
+
+  .mini-sidebar .scroll-sidebar{
+    padding-bottom:0px;
+    position:relative;
+    margin:0 auto;
+    max-width:1280px;
+    padding:0 15px;
+  }
+
+  .mini-sidebar .sidebar-nav{
+    background:transparent;
+  }
+
+  /* reemplazo del float */
+  .mini-sidebar .sidebar-nav > ul{
+    display:flex;
+    align-items:center;
+  }
+
+  .mini-sidebar .sidebar-nav > ul > li{
+    margin-bottom:0px;
+  }
+
+  .mini-sidebar .sidebar-nav > ul li:last-child ul{
+    right:0px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li > a{
+    padding:11px 15px;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a{
+    background:#edf0f5;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a .hide-menu{
+    display:inline;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > a .label{
+    display:none;
+  }
+
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar-nav > ul > li > a i {
+    display: none; }
+  .mini-sidebar .sidebar-nav #sidebarnav > li > a {
+    padding: 20px 15px; } }
+
+@media (max-width: 767px) {
+  .mini-sidebar .left-sidebar {
+    position: fixed;
+    padding-top: 70px; }
+  .mini-sidebar .left-sidebar {
+    left: -240px; }
+  .mini-sidebar.show-sidebar .left-sidebar {
+    left: 0px; }
+  .topbar .top-navbar {
+    padding: 0px; }
+  .sidebar-nav ul li.nav-small-cap {
+    display: block; } }
+
+
+    /* ocultar hamburguesa en desktop */
+@media (min-width:768px){
+  .nav-toggler{
+    display:none !important;
+  }
+}
+
+/* mostrar hamburguesa en móvil */
+@media (max-width:767px){
+  .nav-toggler{
+    display:inline-block !important;
+  }
+}
  /*
  Template Name: Admin pro Admin
  Author: Wrappixel
@@ -5847,7 +5927,7 @@ File: scss
      display: inline-block;
      line-height: 40px; }
    .mini-sidebar .page-wrapper {
-     margin-left: 70px; }
+     margin-left: 10px; }
    .flex-wrap {
      -ms-flex-wrap: nowrap !important;
      flex-wrap: nowrap !important;
