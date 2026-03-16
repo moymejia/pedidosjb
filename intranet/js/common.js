@@ -869,3 +869,70 @@ function restore_data_local_storage() {
     });
 
 }
+
+
+function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
+    var table = document.getElementById(idtabla);
+
+    if (!table) {
+        console.error("No se encontró la tabla con id:", idtabla);
+        return;
+    }
+
+    // generar fecha y hora
+    var now = new Date();
+    var fechaHora =
+        now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        String(now.getDate()).padStart(2, "0") + "_" +
+        String(now.getHours()).padStart(2, "0") +
+        String(now.getMinutes()).padStart(2, "0") +
+        String(now.getSeconds()).padStart(2, "0");
+
+    var finalFilename = filename.replace(".xlsx", "") + "_" + fechaHora + ".xlsx";
+
+    try {
+
+        var wb = XLSX.utils.table_to_book(table, {
+            sheet: "Hoja 1",
+            raw: true
+        });
+
+        var ws = wb.Sheets[wb.SheetNames[0]];
+
+        if (ws && ws["!ref"]) {
+
+            var range = XLSX.utils.decode_range(ws["!ref"]);
+
+            for (var r = 1; r <= range.e.r; r++) {
+
+                for (var c = 0; c <= range.e.c; c++) {
+
+                    var addr = XLSX.utils.encode_cell({ r: r, c: c });
+                    var cell = ws[addr];
+
+                    if (!cell || cell.v == null || cell.v === "") continue;
+
+                    var value = String(cell.v)
+                        .replace(/[Q$,]/g, "") // quitar moneda y comas
+                        .trim();
+
+                    var n = Number(value);
+
+                    if (isNaN(n)) continue;
+
+                    cell.t = "n";
+                    cell.v = n;
+
+                    delete cell.w;
+                    delete cell.z;
+                }
+            }
+        }
+
+        XLSX.writeFile(wb, finalFilename);
+
+    } catch (error) {
+        console.error("Error exportando la tabla:", error);
+    }
+}

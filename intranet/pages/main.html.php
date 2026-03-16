@@ -53,6 +53,7 @@ $idubicacion = $row['idubicacion'];
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
+    <script src="../js/xlsx.full.min.js?x=<?php echo $version ?>"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
