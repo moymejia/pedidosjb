@@ -1,0 +1,98 @@
+<h4 class="card-title m-b-5 header-titulo">Mantenimiento Clientes</h4>
+<form class="margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(7,'pedidos','cliente');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+
+	<input type="hidden" name="table" id="table" value="cliente">
+	<input type="hidden" name="idcliente" id="idcliente">
+	<input type="hidden" name="idjs" id="idjs">
+
+	<div class="row">
+		<div class="form-group m-b-5 col-md-2">
+			<label for="codigo">Codigo:</label>
+			<input type="text" class="form-control" id="codigo" name="codigo" required>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-4">
+			<label for="nombre">Nombre:</label>
+			<input type="text" class="form-control" id="nombre" name="nombre" required>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-6">
+			<label for="establecimiento">Establecimiento:</label>
+			<input type="text" class="form-control" id="establecimiento" name="establecimiento">
+			<span class="bar"></span>
+		</div>
+
+	</div>
+	<div class="row">
+		<div class="form-group m-b-5 col-md-6">
+			<label for="direccion">Direccion:</label>
+			<input type="text" class="form-control" id="direccion" name="direccion">
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-3">
+			<label for="telefono">Telefono:</label>
+			<input type="text" class="form-control" id="telefono" name="telefono">
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-3">
+			<label for="nit">NIT:</label>
+			<input type="text" class="form-control" id="nit" name="nit" required>
+			<span class="bar"></span>
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group m-b-5 col-md-12">
+			<label for="observaciones">observaciones</label>
+			<input type="text" class="form-control" id="observaciones" name="observaciones">
+			<span class="bar"></span>
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group col-md-3">
+			<label for="limite_credito">Limite de credito:</label>
+			<input type="number" step="0.01" min="0" class="form-control" id="limite_credito" name="limite_credito"
+				required>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group col-md-3">
+			<label for="dias_credito">Dias de credito:</label>
+			<input type="number" min="0" class="form-control" id="dias_credito" name="dias_credito" required>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group m-b-5 col-md-3">
+			<label for="estado">Estado:</label>
+			<input type="text" class="form-control" id="estado" name="estado" value="ACTIVO" readonly>
+			<span class="bar"></span>
+		</div>
+		<div class="form-group col-md-3 m-t-30">
+			<button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
+			<button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+				onclick="objeto('botones_edicion').style.display = 'none';objeto('idcliente').value = '';objeto('idcliente').readOnly = false;">Cancelar</button>
+			<span id="botones_edicion" style="display: none;">
+				<button type="button" class="btn btn-info waves-effect waves-light" onclick="
+					delete callback_download;
+					callback_download = function(){
+						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+						if(objeto('estado').value != 'PROTEGIDO'){ 
+							notify_success('El usuario esta ahora '+objeto('estado').value);
+							return mostrar_opcion(7,'pedidos','cliente');
+						}
+					}
+					download_input_value('idcliente','cliente','cambiar_estado','estado');
+					">Cambiar estado</button>
+			</span>
+		</div>
+	</div>
+</form>
+<hr>
+<!-- -->
+<div class="table-responsive" id="lista_clientes">
+	[tabla_clientes]
+</div>

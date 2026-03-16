@@ -25,7 +25,7 @@ CREATE TABLE cliente (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idcliente),

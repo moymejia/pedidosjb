@@ -1,0 +1,33 @@
+INSERT INTO pedidosjb_seguridad.menu
+(idmenu, nombre, icono, orden, estado)
+VALUES(7, 'Clientes', 'mdi mdi-folder', 1, 'ACTIVO');
+
+INSERT INTO pedidosjb_seguridad.opcion
+(idopcion, idmenu, nombre, entity, funcion, orden, estado)
+VALUES(7, 7, 'Clientes', 'cliente', 'cargar_opcion', 7, 'ACTIVO');
+
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(22, 7, 'opcion_cliente', 'SI', 'idcliente', NULL, NULL, 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(23, 7, 'crea_cliente', 'NO', 'idcliente', NULL, NULL, 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(24, 7, 'modifica_cliente', 'NO', 'idcliente', NULL, NULL, 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(25, 7, 'cambiar_estado_cliente', 'NO', 'idcliente', NULL, NULL, 'ACTIVO');
+
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 22, 'NO');
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 23, 'NO');
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 24, 'NO');
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 25, 'NO');
