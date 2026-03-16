@@ -10,7 +10,6 @@
 
 	<input type="hidden" name="table" id="table" value="cliente">
 	<input type="hidden" name="idcliente" id="idcliente">
-	<input type="hidden" name="idjs" id="idjs">
 
 	<div class="row">
 		<div class="form-group m-b-5 col-md-2">
@@ -76,7 +75,7 @@
 			<button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
 				onclick="objeto('botones_edicion').style.display = 'none';objeto('idcliente').value = '';objeto('idcliente').readOnly = false;">Cancelar</button>
 			<span id="botones_edicion" style="display: none;">
-				<button type="button" class="btn btn-info waves-effect waves-light" onclick="
+				<button type="button" class="btn btn-info waves-effect waves-light m-t-10" onclick="
 					delete callback_download;
 					callback_download = function(){
 						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');

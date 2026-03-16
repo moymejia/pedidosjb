@@ -1,0 +1,51 @@
+<h4 class="card-title m-b-5 header-titulo">Mantenimiento Tipo de Contacto</h4>
+<form class="margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(39,'pedidos','tipo_contacto');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+
+    <input type="hidden" name="table" id="table" value="tipo_contacto">
+    <input type="hidden" name="idtipo_contacto" id="idtipo_contacto">
+
+    <div class="row">
+        <div class="form-group m-b-5 col-md-9">
+            <label for="descripcion">Descripcion:</label>
+            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="estado">Estado:</label>
+            <input type="text" class="form-control" id="estado" name="estado" value="ACTIVO" readonly>
+            <span class="bar"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12 m-t-30">
+            <button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
+            <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                onclick="objeto('botones_edicion').style.display = 'none';objeto('idtipo_contacto').value = '';objeto('idtipo_contacto').readOnly = false;">Cancelar</button>
+            <span id="botones_edicion" style="display: none;">
+                <button type="button" class="btn btn-info waves-effect waves-light" onclick="
+					delete callback_download;
+					callback_download = function(){
+						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+						if(objeto('estado').value != 'PROTEGIDO'){ 
+							notify_success('El usuario esta ahora '+objeto('estado').value);
+							return mostrar_opcion(39,'pedidos','tipo_contacto');
+						}
+					}
+					download_input_value('idtipo_contacto','tipo_contacto','cambiar_estado','estado');
+					">Cambiar estado</button>
+            </span>
+        </div>
+    </div>
+</form>
+<hr>
+<!-- -->
+<div class="table-responsive" id="lista_tipo_contacto">
+    [tabla_tipo_contacto]
+</div>

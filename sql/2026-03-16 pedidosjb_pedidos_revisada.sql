@@ -55,7 +55,7 @@ CREATE TABLE tipo_contacto (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idtipo_contacto),
@@ -90,7 +90,7 @@ CREATE TABLE cliente_contacto (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idcliente_contacto),
@@ -135,7 +135,7 @@ CREATE TABLE temporada (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idtemporada),
@@ -165,7 +165,7 @@ CREATE TABLE talla (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idtalla),
@@ -196,7 +196,7 @@ CREATE TABLE set_talla (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idset_talla),
@@ -228,7 +228,7 @@ CREATE TABLE set_talla_detalle (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idset_talla_detalle),
@@ -272,7 +272,7 @@ CREATE TABLE marca (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idmarca),
@@ -309,7 +309,7 @@ CREATE TABLE tipo_pago (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idtipo_pago),
@@ -339,7 +339,7 @@ CREATE TABLE forma_pago (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idforma_pago),
@@ -377,7 +377,7 @@ CREATE TABLE producto (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idproducto),
@@ -422,7 +422,7 @@ CREATE TABLE producto_precio (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idproducto_precio),
@@ -472,7 +472,7 @@ CREATE TABLE pedido (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idpedido),
@@ -537,7 +537,7 @@ CREATE TABLE pedido_detalle (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idpedido_detalle),
@@ -600,7 +600,7 @@ CREATE TABLE despacho (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (iddespacho),
@@ -641,7 +641,7 @@ CREATE TABLE despacho_detalle (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (iddespacho_detalle),
@@ -695,7 +695,7 @@ CREATE TABLE despacho_pago (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (iddespacho_pago),
@@ -763,7 +763,7 @@ CREATE TABLE cliente_anticipo (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idcliente_anticipo),
@@ -817,7 +817,7 @@ CREATE TABLE cliente_anticipo_aplicacion (
 
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_creacion VARCHAR(25) NOT NULL,
-    fecha_modificacion DATETIME DEFAULT NULL,
+    fecha_modificacion DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(25) DEFAULT NULL,
 
     PRIMARY KEY (idcliente_anticipo_aplicacion),
