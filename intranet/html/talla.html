@@ -1,0 +1,49 @@
+<h4 class="card-title m-b-5 header-titulo">Mantenimiento Tallas</h4>
+<form class="margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion(41,'pedidos','talla');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+
+    <input type="hidden" name="table" id="table" value="talla">
+    <input type="hidden" name="idtalla" id="idtalla">
+
+    <div class="row">
+        <div class="form-group m-b-5 col-md-4">
+            <label for="numero">Numero:</label>
+            <input type="texto" class="form-control" id="numero" name="numero" required>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-4">
+            <label for="estado">Estado:</label>
+            <input type="text" class="form-control" id="estado" name="estado" value="ACTIVO" readonly>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group col-md-4 m-t-30">
+            <button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
+            <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                onclick="objeto('botones_edicion').style.display = 'none';objeto('idtalla').value = '';objeto('idtalla').readOnly = false;">Cancelar</button>
+            <span id="botones_edicion" style="display: none;">
+                <button type="button" class="btn btn-info waves-effect waves-light m-t-10" onclick="
+					delete callback_download;
+					callback_download = function(){
+						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+						if(objeto('estado').value != 'PROTEGIDO'){ 
+							notify_success('La talla esta ahora '+objeto('estado').value);
+							return mostrar_opcion(41,'pedidos','talla');
+						}
+					}
+					download_input_value('idtalla','talla','cambiar_estado','estado');
+					">Cambiar estado</button>
+            </span>
+        </div>
+    </div>
+</form>
+<hr>
+<!-- -->
+<div class="table-responsive" id="lista_talla">
+    [tabla_talla]
+</div>
