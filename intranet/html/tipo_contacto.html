@@ -34,7 +34,7 @@
 					callback_download = function(){
 						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
 						if(objeto('estado').value != 'PROTEGIDO'){ 
-							notify_success('El usuario esta ahora '+objeto('estado').value);
+							notify_success('El tipo de contacto esta ahora '+objeto('estado').value);
 							return mostrar_opcion(39,'pedidos','tipo_contacto');
 						}
 					}
