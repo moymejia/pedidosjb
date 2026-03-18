@@ -1,0 +1,51 @@
+INSERT INTO pedidosjb_seguridad.opcion
+(idopcion, idmenu, nombre, entity, funcion, orden, estado)
+VALUES(44, 7, 'Marca', 'marca', 'cargar_opcion', 13, 'ACTIVO');
+
+
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(210, 44, 'opcion_marca', 'SI', 'idmarca', NULL, NULL, 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(211, 44, 'crear_marca', 'NO', 'idmarca', 'nombre', NULL, 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(212, 44, 'modificar_marca', 'NO', 'idmarca', 'nombre', '', 'ACTIVO');
+INSERT INTO pedidosjb_seguridad.accion
+(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES(213, 44, 'cambiar_estado_marca', 'NO', 'idmarca', 'estado', NULL, 'ACTIVO');
+
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 210, 'NO');
+
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 211, 'NO');
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 212, 'NO');
+INSERT INTO pedidosjb_seguridad.rol_accion
+(idrol, idaccion, indFavorito)
+VALUES(1, 213, 'NO');
+
+-- pedidosjb_pedidos.view_marca_set_talla source
+
+CREATE OR REPLACE
+ALGORITHM = UNDEFINED VIEW `pedidosjb_pedidos`.`view_marca_set_talla` AS
+select
+    `m`.`idmarca` AS `idmarca`,
+    `m`.`nombre` AS `nombre`,
+    `m`.`estado` AS `estado`,
+    `m`.`idset_talla_preferido` AS `idset_talla_preferido`,
+    `st`.`idset_talla` AS `idset_talla`,
+    `st`.`grupo` AS `grupo`
+from
+    (`pedidosjb_pedidos`.`marca` `m`
+join `pedidosjb_pedidos`.`set_talla` `st` on
+    ((`m`.`idset_talla_preferido` = `st`.`idset_talla`)))
+order by
+    `m`.`idmarca` desc;
+
+
