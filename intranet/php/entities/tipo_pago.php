@@ -109,14 +109,14 @@ class tipo_pago extends table
         }
 
         if ($PARAMETROS['idtipo_pago'] == '') { //es un nuevo tipo de pago
+            $security = new security($this->ACCIONES['crear_tipo_pago']);
             if (mysql::exists('tipo_pago', " descripcion = '{$PARAMETROS['descripcion']}'")) { //verifica que el tipo de pago nuevo no exista ya
                 $this->last_error = 'El tipo de pago ya esta registrado';
                 utils::report_error(validation_error, $PARAMETROS['idtipo_pago'], $this->last_error);
 
                 return false;
             }
-
-            $security                  = new security($this->ACCIONES['crear_tipo_pago']);
+            
             $valores_necesarios        = ["descripcion"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -134,6 +134,7 @@ class tipo_pago extends table
                 return false;
             }
         } else {
+            $security = new security($this->ACCIONES['modificar_tipo_pago']); //modificar registro de tipo de pago
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('tipo_pago', " descripcion = '{$PARAMETROS['descripcion']}' AND idtipo_pago != '{$PARAMETROS['idtipo_pago']}'")) { //verifica que un tipo de pago existente no tenga el mismo descripcion que el que se quiere modificar
                     $this->last_error = 'Un tipo de pago existente ya tiene ese descripcion.';
@@ -141,8 +142,7 @@ class tipo_pago extends table
 
                     return false;
                 }
-
-                $security                      = new security($this->ACCIONES['modificar_tipo_pago']); //modificar registro de tipo de pago
+                
                 $valores_necesarios            = ["idtipo_pago", "descripcion", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();

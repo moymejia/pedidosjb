@@ -4,6 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
+require_once '../wisetech/set_talla.php';
 
 class marca extends table
 {
@@ -49,10 +50,15 @@ class marca extends table
         return mysql::getoptions("SELECT idset_talla id, grupo descripcion FROM set_talla WHERE estado = 'ACTIVO' ");
     }
 
+    public function option_activos()
+    {   
+        return mysql::getoptions("SELECT idmarca AS id, nombre AS descripcion FROM marca WHERE estado = 'ACTIVO' ");
+    }
+
     public function cargar_opcion()
     {
         $DATA   = [];
-        $DATA['set_tallas_activos'] = $this->options_set_tallas_activos();
+        $DATA['set_tallas_activos'] = (new set_talla())->options_activos();
         $result = mysql::getresult("SELECT idmarca, nombre, estado, idset_talla_preferido, idset_talla, grupo FROM view_marca_set_talla");
         $tabla_marca = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>

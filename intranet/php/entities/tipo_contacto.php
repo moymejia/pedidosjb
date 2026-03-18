@@ -106,6 +106,7 @@ class tipo_contacto extends table
         }
 
         if ($PARAMETROS['idtipo_contacto'] == '') { //es un tipo de contacto nuevo
+            $security = new security($this->ACCIONES['crear_tipo_contacto']);
             //valida que el tipo de contacto no este registrado ya.
             if (mysql::exists('tipo_contacto', " descripcion = '{$PARAMETROS['descripcion']}'")) { //verifica que tipo de contacto nuevo no exista ya 
                 $this->last_error = 'El actual tipo de contacto ya esta registrado';
@@ -114,7 +115,6 @@ class tipo_contacto extends table
                 return false;
             }
 
-            $security                  = new security($this->ACCIONES['crear_tipo_contacto']);
             $valores_necesarios        = ["descripcion", "estado"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -133,6 +133,7 @@ class tipo_contacto extends table
             }
 
         } else {
+            $security = new security($this->ACCIONES['modificar_tipo_contacto']);
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('tipo_contacto', " descripcion = '{$PARAMETROS['descripcion']}' AND idtipo_contacto != '{$PARAMETROS['idtipo_contacto']}'")) {
                     $this->last_error = 'Un tipo de contacto existente ya tiene esa descripcion.';
@@ -141,7 +142,6 @@ class tipo_contacto extends table
                     return false;
                 }
 
-                $security                      = new security($this->ACCIONES['modificar_tipo_contacto']); //modificar registro del tipo de contacto
                 $valores_necesarios            = ["idtipo_contacto", "descripcion", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();

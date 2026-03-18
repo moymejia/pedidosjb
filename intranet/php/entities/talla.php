@@ -109,6 +109,8 @@ class talla extends table
         }
 
         if ($PARAMETROS['idtalla'] == '') { //es una nueva talla
+            $security = new security($this->ACCIONES['crear_talla']);
+
             if (mysql::exists('talla', " numero = '{$PARAMETROS['numero']}'")) { //verifica que la talla nueva no exista ya
                 $this->last_error = 'La talla ya esta registrada';
                 utils::report_error(validation_error, $PARAMETROS['idtalla'], $this->last_error);
@@ -116,7 +118,6 @@ class talla extends table
                 return false;
             }
 
-            $security                  = new security($this->ACCIONES['crear_talla']);
             $valores_necesarios        = ["numero"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -134,6 +135,7 @@ class talla extends table
                 return false;
             }
         } else {
+            $security = new security($this->ACCIONES['modificar_talla']); //modificar registro de talla
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('talla', " numero = '{$PARAMETROS['numero']}' AND idtalla != '{$PARAMETROS['idtalla']}'")) { //verifica que una talla existente no tenga el mismo numero que el que se quiere modificar
                     $this->last_error = 'Una talla existente ya tiene ese numero.';
@@ -142,7 +144,6 @@ class talla extends table
                     return false;
                 }
 
-                $security                      = new security($this->ACCIONES['modificar_talla']); //modificar registro de talla
                 $valores_necesarios            = ["idtalla", "numero", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
@@ -197,5 +198,10 @@ class talla extends table
 
             return false;
         }
+    }
+
+    public function get_idtalla($numero)
+    {
+        return mysql::getvalue("SELECT idtalla FROM talla WHERE numero = '$numero'");
     }
 }

@@ -17,10 +17,10 @@ class cliente extends table
     {
         parent::__construct(prefijo . '_pedidos', 'cliente');
 
-        $this->ACCIONES['opcion_cliente']         = 22;
-        $this->ACCIONES['crear_cliente']          = 23;
-        $this->ACCIONES['modificar_cliente']      = 24;
-        $this->ACCIONES['cambiar_estado_cliente'] = 25;
+        $this->ACCIONES['opcion_cliente']         = 36;
+        $this->ACCIONES['crear_cliente']          = 37;
+        $this->ACCIONES['modificar_cliente']      = 38;
+        $this->ACCIONES['cambiar_estado_cliente'] = 39;
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {
@@ -164,6 +164,7 @@ class cliente extends table
         }
 
         if ($PARAMETROS['idcliente'] == '') { //es cliente nuevo
+            $security                  = new security($this->ACCIONES['crear_cliente']);
             //valida que el codigo asignado no este siendo usado por otro cliente.
             if (mysql::exists('cliente', " codigo = '{$PARAMETROS['codigo']}'")) { //verifica que el codigo de cliente nuevo no exista ya 
                 $this->last_error = 'Ya existe un cliente con el codigo: ' . $PARAMETROS['codigo'];
@@ -180,7 +181,6 @@ class cliente extends table
                 return false;
             }
 
-            $security                  = new security($this->ACCIONES['crear_cliente']);
             $valores_necesarios        = [ "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -199,6 +199,7 @@ class cliente extends table
             }
 
         } else {
+            $security = new security($this->ACCIONES['modificar_cliente']);
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('cliente', " nombre = '{$PARAMETROS['nombre']}' AND idcliente != '{$PARAMETROS['idcliente']}'")) {
                     $this->last_error = 'El nombre del cliente modificar ya existe en el sistema.';
@@ -214,7 +215,7 @@ class cliente extends table
                     return false;
                 }
 
-                $security                      = new security($this->ACCIONES['modificar_cliente']); //modificar registro de cliente
+                 //modificar registro de cliente
                 $valores_necesarios            = ["idcliente", "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();

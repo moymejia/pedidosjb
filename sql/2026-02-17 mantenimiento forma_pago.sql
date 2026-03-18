@@ -13,6 +13,6 @@ VALUES
 INSERT INTO pedidosjb_seguridad.rol_accion
 (idrol, idaccion, indFavorito)
 VALUES(1, 206, 'NO'),
-VALUES(1, 207, 'NO'),
-VALUES(1, 208, 'NO'),
-VALUES(1, 209, 'NO');
+(1, 207, 'NO'),
+(1, 208, 'NO'),
+(1, 209, 'NO');

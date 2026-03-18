@@ -4,7 +4,7 @@ VALUES(42, 7, 'Tipo de pago', 'tipo_pago', 'cargar_opcion', 11, 'ACTIVO');
 
 INSERT INTO pedidosjb_seguridad.accion
 (idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(202, 42, 'opcion_tipo_pago', 'NO', 'idtipo_pago', NULL, NULL, 'ACTIVO');
+VALUES(202, 42, 'opcion_tipo_pago', 'SI', 'idtipo_pago', NULL, NULL, 'ACTIVO');
 INSERT INTO pedidosjb_seguridad.accion
 (idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
 VALUES(203, 42, 'crear_tipo_pago', 'NO', 'idtipo_pago', 'descripcion', NULL, 'ACTIVO');

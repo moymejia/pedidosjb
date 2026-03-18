@@ -109,14 +109,14 @@ class forma_pago extends table
         }
 
         if ($PARAMETROS['idforma_pago'] == '') { //es una nueva forma de pago
+            $security = new security($this->ACCIONES['crear_forma_pago']);
             if (mysql::exists('forma_pago', " descripcion = '{$PARAMETROS['descripcion']}'")) { //verifica que la forma de pago nueva no exista ya
                 $this->last_error = 'La forma de pago ya esta registrada';
                 utils::report_error(validation_error, $PARAMETROS['idforma_pago'], $this->last_error);
 
                 return false;
             }
-
-            $security                  = new security($this->ACCIONES['crear_forma_pago']);
+            
             $valores_necesarios        = ["descripcion"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -134,6 +134,7 @@ class forma_pago extends table
                 return false;
             }
         } else {
+            $security = new security($this->ACCIONES['modificar_forma_pago']); //modificar registro de forma de pago
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('forma_pago', " descripcion = '{$PARAMETROS['descripcion']}' AND idforma_pago != '{$PARAMETROS['idforma_pago']}'")) { //verifica que una forma de pago existente no tenga la misma descripcion que la que se quiere modificar
                     $this->last_error = 'La forma de pago ya esta registrada';
@@ -142,7 +143,6 @@ class forma_pago extends table
                     return false;
                 }
 
-                $security                      = new security($this->ACCIONES['modificar_forma_pago']); //modificar registro de forma de pago
                 $valores_necesarios            = ["idforma_pago", "descripcion", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();

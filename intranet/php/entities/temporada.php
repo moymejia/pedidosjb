@@ -132,6 +132,7 @@ class temporada extends table
         
 
         if ($PARAMETROS['idtemporada'] == '') { //es una nueva temporada
+            $security = new security($this->ACCIONES['crear_temporada']);
             if (mysql::exists('temporada', " nombre = '{$PARAMETROS['nombre']}'")) { //verifica que la temporada nueva no exista ya
                 $this->last_error = 'La temporada ya esta registrada';
                 utils::report_error(validation_error, $PARAMETROS['idtemporada'], $this->last_error);
@@ -139,7 +140,6 @@ class temporada extends table
                 return false;
             }
 
-            $security                  = new security($this->ACCIONES['crear_temporada']);
             $valores_necesarios        = ["nombre", "fecha_inicio", "fecha_fin", "estado"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -157,6 +157,7 @@ class temporada extends table
                 return false;
             }
         } else {
+            $security = new security($this->ACCIONES['modificar_temporada']);
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('temporada', " nombre = '{$PARAMETROS['nombre']}' AND idtemporada != '{$PARAMETROS['idtemporada']}'")) { //verifica que una temporada existente no tenga el mismo nombre que el que se quiere modificar
                     $this->last_error = 'Una temporada existente ya tiene ese nombre.';
@@ -165,7 +166,6 @@ class temporada extends table
                     return false;
                 }
 
-                $security                      = new security($this->ACCIONES['modificar_temporada']); //modificar registro del tipo de contacto
                 $valores_necesarios            = ["idtemporada", "nombre", "fecha_inicio", "fecha_fin", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
@@ -221,5 +221,10 @@ class temporada extends table
 
             return false;
         }
+    }
+
+    public function option_activos()
+    {
+        return mysql::getoptions("SELECT idtemporada AS id, nombre AS descripcion FROM temporada WHERE estado = 'ACTIVO' ");
     }
 }
