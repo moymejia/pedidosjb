@@ -54,8 +54,8 @@ class pedido extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'cerrar_pedido') {
-                if (table::validate_parameter_existence(['idpedido','monto_total'], $PARAMETROS, false)) {
-                    if ($options = $this->cerrar_pedido($PARAMETROS['idpedido'], $PARAMETROS['monto_total'])) {
+                if (table::validate_parameter_existence(['idpedido'], $PARAMETROS, false)) {
+                    if ($options = $this->cerrar_pedido($PARAMETROS['idpedido'])) {
                         self::end_success($options);
                     } else {
                         self::end_error($this->last_error);
@@ -77,8 +77,9 @@ class pedido extends table{
         $DATA['set_tallas']     = (new set_talla())->options_activos();
         $DATA['transportes']    = (new transporte())->option_activas();
 
-        $result = mysql::getresult("SELECT idpedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, fecha_desde,fecha_hasta, observaciones_pedido,
-            idtransporte, transporte, monto_descuento FROM view_pedidos ORDER BY idpedido DESC");
+        $result = mysql::getresult("SELECT idpedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, 
+            fecha_desde,fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento 
+            FROM view_pedidos ORDER BY idpedido DESC");
 
         $tabla = '
         <table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
@@ -215,7 +216,7 @@ class pedido extends table{
         }
     }
 
-    public function cerrar_pedido($idpedido, $monto_total)
+    public function cerrar_pedido($idpedido)
     {
         $security = new security($this->ACCIONES['cerrar_pedido']);
         $usuario  = $security->get_actual_user();
@@ -228,9 +229,39 @@ class pedido extends table{
             return false;
         }
 
+        $result = mysql::getresult("SELECT SUM(cantidad) AS total_pares, SUM(subtotal) AS monto_total FROM pedido_detalle WHERE idpedido = $idpedido");
+
+        if(!$result){
+            $this->last_error = "Error al calcular totales del pedido.";
+            $this->report_error(bd_error, $idpedido, $this->last_error);
+            return false;
+        }
+
+        $row = mysql::getrowresult($result);
+
+        $total_pares = $row['total_pares'] ? (int)$row['total_pares'] : 0;
+        $monto_total = $row['monto_total'] ? (float)$row['monto_total'] : 0;
+
+        if($total_pares <= 0){
+            $this->last_error = "No se puede cerrar un pedido sin productos.";
+            $this->report_error(validation_error, $idpedido, $this->last_error);
+            return false;
+        }
+
+        $pedido = mysql::getrow("SELECT monto_descuento FROM pedido WHERE idpedido = $idpedido");
+
+        $monto_descuento = $pedido && $pedido['monto_descuento'] ? (float)$pedido['monto_descuento'] : 0;
+
+        $monto_total = $monto_total - $monto_descuento;
+
+        if($monto_total < 0){
+            $monto_total = 0;
+        }
+
         $DATOS = [];
         $DATOS['idpedido']             = $idpedido;
         $DATOS['estado']               = 'CERRADO';
+        $DATOS['total_pares']          = $total_pares;
         $DATOS['monto_total']          = $monto_total;
         $DATOS['fecha_modificacion']   = date('Y-m-d H:i:s');
         $DATOS['usuario_modificacion'] = $usuario;
@@ -238,7 +269,7 @@ class pedido extends table{
         $llaves = ['idpedido'];
 
         if(table::update_record($DATOS, $llaves)){
-            $security->registrar_bitacora($this->ACCIONES['cerrar_pedido'], $idpedido, $usuario);
+            $security->registrar_bitacora($this->ACCIONES['cerrar_pedido'], $idpedido, "Pedido cerrado | Pares: $total_pares | Total: $monto_total | Descuento: $monto_descuento");
             return true;
 
         }else{
@@ -247,7 +278,6 @@ class pedido extends table{
             return false;
         }
     }
-
 
     public function estado($idpedido)
     {

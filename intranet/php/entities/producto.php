@@ -31,8 +31,6 @@ class producto extends table{
                     self::end_error("Faltan parámetros");
                 }
             }
-
-        
         }
     }
 
@@ -41,21 +39,8 @@ class producto extends table{
         $modelo = addslashes($modelo);
         $idmarca = (int)$idmarca;
     
-        $result = mysql::getresult("SELECT 
-                idproducto, 
-                modelo, 
-                linea, 
-                idcolor,
-                color, 
-                idmarca, 
-                marca, 
-                material, 
-                precio,
-                idproducto_precio
-            FROM view_producto_modelo 
-            WHERE modelo = '$modelo' 
-            AND idmarca = '$idmarca' 
-            ORDER BY color ASC");
+        $result = mysql::getresult("SELECT idproducto, modelo, linea, idcolor, color, idmarca, marca, material, precio, idproducto_precio
+            FROM view_producto_modelo WHERE modelo = '$modelo' AND idmarca = '$idmarca' ORDER BY color ASC");
     
         if(!$result || mysql::num_rows($result) == 0){
             $this->last_error = "No se encontro el modelo.";
@@ -76,13 +61,12 @@ class producto extends table{
                     'colores' => []
                 ];
             }
-    
-            // 🔥 USAR ID REAL
+
             $colorKey = $row['idcolor'];
     
             if(!isset($colores_map[$colorKey])){
                 $colores_map[$colorKey] = [
-                    'id' => $row['idcolor'], // 👈 IMPORTANTE
+                    'id' => $row['idcolor'], 
                     'idproducto' => $row['idproducto'],
                     'nombre' => $row['color'],
                     'material_default' => '',
@@ -97,7 +81,7 @@ class producto extends table{
                 $materialObj = [
                     'nombre' => $row['material'],
                     'precio' => (float)$row['precio'],
-                    'idproducto_precio' => $row['idproducto_precio'] // 🔥 CLAVE
+                    'idproducto_precio' => $row['idproducto_precio'] 
                 ];
     
                 $existe = false;

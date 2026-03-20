@@ -134,14 +134,8 @@ class pedido_detalle extends table{
                 utils::report_error(validation_error, $idproducto, $this->last_error);
                 return false;
             }
-
             $ruta_bd = "img/producto/" . $nombre_archivo;
-
-            $security->registrar_bitacora(
-                $this->ACCIONES['crear_detalle'],
-                $idproducto,
-                "Imagen guardada correctamente"
-            );
+            $security->registrar_bitacora($this->ACCIONES['crear_detalle'],$idproducto,"Imagen guardada correctamente");
         }
 
         foreach ($PARAMETROS as $key => $valor) {
@@ -207,11 +201,7 @@ class pedido_detalle extends table{
                 $llaves = ['idpedido', 'idproducto_precio', 'idtalla'];
 
                 if (table::update_record($DATOS, $llaves)) {
-
-                    $security->registrar_bitacora(
-                        $this->ACCIONES['modificar_detalle'],
-                        $idpedido . '-' . $idproducto . '-' . $idtalla
-                    );
+                    $security->registrar_bitacora($this->ACCIONES['modificar_detalle'],$idpedido . '-' . $idproducto . '-' . $idtalla);
 
                 } else {
                     $this->last_error = "Error al actualizar talla $idtalla.";

@@ -372,7 +372,6 @@
         $areaTallas.appendChild(wrapper);
       };
       
-      // 🔥 IMPORTANTE: cargar set real
       upload_action('idset_talla','set_talla','obtener_grupo',callback_obtener_tallas);
   
     };

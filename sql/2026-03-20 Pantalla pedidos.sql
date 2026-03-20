@@ -44,6 +44,9 @@ REFERENCES pedido(idpedido)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
+ALTER TABLE pedido
+ADD COLUMN total_pares INT NOT NULL DEFAULT 0;
+
 
 CREATE OR REPLACE VIEW pedidosjb_pedidos.view_producto_modelo AS
 SELECT 
