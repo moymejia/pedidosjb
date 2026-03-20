@@ -78,7 +78,7 @@ class pedido extends table{
         $DATA['transportes']    = (new transporte())->option_activas();
 
         $result = mysql::getresult("SELECT idpedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, 
-            fecha_desde,fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento 
+            fecha_desde,fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
             FROM view_pedidos ORDER BY idpedido DESC");
 
         $tabla = '
@@ -163,6 +163,7 @@ class pedido extends table{
         $DATOS['fecha_desde']           = $PARAMETROS['fecha_desde'];
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
         $DATOS['idtemporada']           = $PARAMETROS['idtemporada'];
+        $DATOS['email']                 = $PARAMETROS['email'];
         $DATOS['idset_talla']           = $PARAMETROS['idset_talla'];
         $DATOS['observaciones_pedido']  = $PARAMETROS['observaciones_pedido'];
         $DATOS['idtransporte']          = $PARAMETROS['idtransporte'];
@@ -248,10 +249,9 @@ class pedido extends table{
             return false;
         }
 
+        $monto_subtotal = $monto_total;
         $pedido = mysql::getrow("SELECT monto_descuento FROM pedido WHERE idpedido = $idpedido");
-
         $monto_descuento = $pedido && $pedido['monto_descuento'] ? (float)$pedido['monto_descuento'] : 0;
-
         $monto_total = $monto_total - $monto_descuento;
 
         if($monto_total < 0){
@@ -261,6 +261,7 @@ class pedido extends table{
         $DATOS = [];
         $DATOS['idpedido']             = $idpedido;
         $DATOS['estado']               = 'CERRADO';
+        $DATOS['monto_subtotal']       = $monto_subtotal;
         $DATOS['total_pares']          = $total_pares;
         $DATOS['monto_total']          = $monto_total;
         $DATOS['fecha_modificacion']   = date('Y-m-d H:i:s');
