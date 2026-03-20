@@ -4,7 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
-require_once '../wisetech/set_talla.php';
+require_once '../entities/set_talla.php';
 
 class marca extends table
 {

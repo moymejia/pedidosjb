@@ -20,6 +20,18 @@ class set_talla extends table
 
         if (isset($PARAMETROS['operacion'])) {
 
+            if ($PARAMETROS['operacion'] == 'obtener_grupo') {
+                if (table::validate_parameter_existence(['idset_talla'], $PARAMETROS, false)) {
+                    if($resultado = self::obtener_grupo($PARAMETROS['idset_talla'])){
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Faltan parámetros");
+                }
+            }
+
         }
     }
 
