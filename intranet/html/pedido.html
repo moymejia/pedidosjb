@@ -139,27 +139,33 @@
                                 </small>
                             </div>
 
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>transporte</label>
                                 <select class="form-control" id="idtransporte" name="idtransporte">
                                     [transportes]
                                 </select>
                             </div>
 
-                            <div class="form-group m-b-6 col-md-2">
+                            <div class="form-group m-b-6 col-md-3">
                                 <label for="monto_descuento">Descuento</label>
                                 <input type="number" class="form-control" id="monto_descuento" name="monto_descuento">
                                 <span class="bar"></span>
                             </div>
 
-                            <div class="form-group col-md-5">
-                                <label>Observaciones generales</label>
-                                <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
-                                ></textarea>
+                            <div class="form-group m-b-6 col-md-3">
+                                <label for="email">Correo electrónico</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                                <span class="bar"></span>
                             </div>
                         </div>
 
                         <div class="form-row">
+
+                            <div class="form-group col-md-9">
+                                <label>Observaciones generales</label>
+                                <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
+                                ></textarea>
+                            </div>
                             
                             <div class="form-group col-md-3">
                                 <br>
@@ -168,13 +174,13 @@
                                     notify_success('Pedido guardado exitosamente');
                                     showElements('detalles_del_pedido');
                                     hideElements('lista_pedidos');
-                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento');
+                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email');
                                 }
-                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,idtransporte,monto_descuento','pedido','guardar','idpedido',callback_guardar_pedido);
+                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,idtransporte,monto_descuento,email','pedido','guardar','idpedido',callback_guardar_pedido);
                                 ">Guardar</button>
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="
-                                        clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento');
+                                        clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento,email');
                                     ">Limpiar</button>
                             </div>
                         </div>

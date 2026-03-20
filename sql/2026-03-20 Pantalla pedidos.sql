@@ -44,6 +44,12 @@ REFERENCES pedido(idpedido)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
+ALTER TABLE pedido
+ADD COLUMN total_pares INT NOT NULL DEFAULT 0;
+
+ALTER TABLE pedido
+ADD COLUMN email VARCHAR(150) NULL;
+
 
 CREATE OR REPLACE VIEW pedidosjb_pedidos.view_producto_modelo AS
 SELECT 
@@ -105,34 +111,37 @@ INNER JOIN talla t
 WHERE st.estado = 'ACTIVO'
 AND std.estado = 'ACTIVO';
 
-CREATE OR REPLACE VIEW pedidosjb_pedidos.view_pedido_detalle AS
-SELECT
-    pd.idpedido_detalle,
-    pd.idpedido,
-    pd.imagen,
-    pd.idproducto,
-    pd.idproducto_precio,
-    p.modelo AS codigo,
-    p.linea AS descripcion,
-    c.idcolor,
-    c.nombre AS color,
-    m.nombre AS marca,
-    pp.material,
-    pd.precio_venta,
-    pd.cantidad,
-    pd.subtotal,
-    t.idtalla,
-    t.numero AS talla
-FROM pedido_detalle pd
-INNER JOIN producto p 
-    ON pd.idproducto = p.idproducto
-INNER JOIN color c
-    ON p.idcolor = c.idcolor
-INNER JOIN producto_precio pp 
-    ON pp.idproducto_precio = pd.idproducto_precio
-INNER JOIN talla t 
-    ON pd.idtalla = t.idtalla
-INNER JOIN marca m 
-    ON p.idmarca = m.idmarca;
+CREATE OR REPLACE
+ALGORITHM = UNDEFINED VIEW `pedidosjb_pedidos`.`view_pedidos` AS
+select
+    `p`.`idpedido` AS `idpedido`,
+    `p`.`idcliente` AS `idcliente`,
+    `p`.`idtemporada` AS `idtemporada`,
+    `p`.`idmarca` AS `idmarca`,
+    `p`.`idset_talla` AS `idset_talla`,
+    `p`.`idtransporte` AS `idtransporte`,
+    `p`.`email` AS `email`,
+    `p`.`monto_descuento` AS `monto_descuento`,
+    `c`.`nombre` AS `cliente`,
+    `t`.`nombre` AS `temporada`,
+    `m`.`nombre` AS `marca`,
+    `st`.`descripcion` AS `set_talla`,
+    `tr`.`nombre` AS `transporte`,
+    `p`.`estado` AS `estado`,
+    `p`.`fecha_desde` AS `fecha_desde`,
+    `p`.`fecha_hasta` AS `fecha_hasta`,
+    `p`.`observaciones_pedido` AS `observaciones_pedido`
+from
+    (((((`pedidosjb_pedidos`.`pedido` `p`
+join `pedidosjb_pedidos`.`cliente` `c` on
+    ((`p`.`idcliente` = `c`.`idcliente`)))
+join `pedidosjb_pedidos`.`temporada` `t` on
+    ((`p`.`idtemporada` = `t`.`idtemporada`)))
+join `pedidosjb_pedidos`.`marca` `m` on
+    ((`p`.`idmarca` = `m`.`idmarca`)))
+join `pedidosjb_pedidos`.`set_talla` `st` on
+    ((`p`.`idset_talla` = `st`.`idset_talla`)))
+left join `pedidosjb_pedidos`.`transporte` `tr` on
+    ((`p`.`idtransporte` = `tr`.`idtransporte`)));
 
 

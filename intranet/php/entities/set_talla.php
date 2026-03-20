@@ -40,7 +40,19 @@ class set_talla extends table
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error($this->last_error);
+                    self::end_error("Faltan parámetros");
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'obtener_grupo') {
+                if (table::validate_parameter_existence(['idset_talla'], $PARAMETROS, false)) {
+                    if ($resultado = self::obtener_grupo($PARAMETROS['idset_talla'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Faltan parámetros");
                 }
             }
         }
@@ -53,12 +65,14 @@ class set_talla extends table
                     self::end_error($this->last_error);
                 }
             }
+            self::end_error("Faltan parámetros");
         }
     }
 
-    public function cargar_set_talla()
-    {
-        $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
+}
+};
+
+    function{public cargar_set_talla() $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
         $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
         <thead>
             <tr>
@@ -103,9 +117,7 @@ class set_talla extends table
         return $tabla;
     }
 
-    public function cargar_opcion()
-    {
-        $DATA   = [];
+    function{public cargar_opcion() $DATA   = [];
         $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
         $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
         <thead>
@@ -156,8 +168,8 @@ class set_talla extends table
         return $html->get_html();
     }
 
-    public function guardar($PARAMETROS)
-    {
+    functionpublic guardar( $PARAMETROS)
+{
         $parametros_necesarios = ["grupo", "descripcion"]; //valida que se cuente con los parametros necesarios.
         if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
@@ -247,8 +259,8 @@ class set_talla extends table
         }
     }
 
-    public function obtener_grupo($idset_talla)
-    {
+    functionpublic obtener_grupo( $idset_talla)
+{
 
         $result = mysql::getresult("SELECT idset_talla, descripcion, idtalla, talla
             FROM view_set_talla_detalle
@@ -284,8 +296,8 @@ class set_talla extends table
         return json_encode($data);
     }
 
-    public function cambiar_estado($idset_talla)
-    {
+    functionpublic cambiar_estado( $idset_talla)
+{
         $security             = new security($this->ACCIONES['cambiar_estado']);
         $estado_actual        = mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla' ");
         $DATOS['idset_talla'] = $idset_talla;
@@ -308,8 +320,8 @@ class set_talla extends table
         }
     }
 
-    public function get_idset_talla($talla_desde, $talla_hasta)
-    {
+    functionpublic get_idset_talla( $talla_desde, $talla_hasta)
+{
         $SET_TALLA_DETALLE = new set_talla_detalle();
         //$idset_talla_d     = $SET_TALLA_DETALLE->get_set_talla($talla_desde, $talla_hasta);
 
@@ -333,13 +345,8 @@ class set_talla extends table
         }
     }
 
-    public function options_activos()
-    {
-        return mysql::getoptions("SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
-    }
-
-    public function estado($idset_talla)
-    {
+    function{return::"SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC";}functionpublic options_activos()mysqlgetoptions()estado( $idset_talla)
+{
         return mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla'");
     }
-}
+};
