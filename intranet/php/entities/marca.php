@@ -217,4 +217,9 @@ class marca extends table
             return false;
         }
     }
+
+    public function option_activas(){
+
+        return mysql::getoptions("SELECT idmarca as id, nombre as descripcion FROM marca WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
 }

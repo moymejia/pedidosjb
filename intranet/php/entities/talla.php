@@ -204,4 +204,9 @@ class talla extends table
     {
         return mysql::getvalue("SELECT idtalla FROM talla WHERE numero = '$numero'");
     }
+
+    public function option_activas(){
+        
+        return mysql::getoptions("SELECT idtalla as id, numero as descripcion FROM talla WHERE estado = 'ACTIVO' ORDER BY numero ASC");
+    }
 }

@@ -1,0 +1,396 @@
+<header>
+    <style>
+        #pedidoApp .card-header strong {
+            font-weight: 600;
+        }
+    
+        #pedidoApp .table td,
+        #pedidoApp .table th {
+            vertical-align: top;
+        }
+    
+        #pedidoApp .shoe-thumb {
+            width: 64px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+    
+        #pedidoApp .size-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+            grid-gap: 10px;
+        }
+    
+        #pedidoApp .size-box {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+    
+        #pedidoApp .size-box:hover {
+            border-color: #adb5bd;
+            box-shadow: 0 0 0 0.1rem rgba(0,123,255,.08);
+        }
+    
+        #pedidoApp .size-box label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+    
+        #pedidoApp .size-box input {
+            text-align: center;
+        }
+    
+        #pedidoApp .sizes-compact {
+            line-height: 1.35;
+        }
+    
+        #pedidoApp .sizes-compact .sizes-labels,
+        #pedidoApp .sizes-compact .sizes-values {
+            white-space: nowrap;
+        }
+    
+        #pedidoApp .readonly-like {
+            background: #fff;
+        }
+    
+        #pedidoApp .sticky-summary {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</header>
+
+
+<body>
+
+    <input type="hidden" id="jsid" name="jsid" value="pedido">
+    <input type="hidden" name="table" id="table" value="pedido">
+    <input type="hidden" class="form-control form-control-sm" id="idpedido" name="idpedido" value="" readonly>
+    <input type="hidden" class="form-control form-control-sm" id="idpedido_detalle" name="idpedido_detalle" value="" readonly>
+
+    <h4 class="card-title header-titulo">Pedidos</h4>
+
+    <!-- Pantalla de Toma de Pedidos -->
+    <div class="container-fluid 0px" id="pedidoApp">
+
+        <div class="card shadow-sm border-0">
+
+            <form class="" onsubmit="">
+                <!-- Encabezado -->
+                <div class="card mb-3 border">
+                    
+                    <div class="card-header bg-success">
+                        <strong>Datos generales</strong>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="form-row">
+
+                            <div class="form-group col-md-3">
+                                <label>Cliente</label>
+                                <select class="form-control" id="idcliente" name="idcliente">
+                                    [clientes]
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>Marca</label>
+                                <select class="form-control" id="idmarca" name="idmarca">
+                                    [marcas]
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>Entrega desde</label>
+                                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>Entrega hasta</label>
+                                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+                            </div>
+
+                            <div class="form-group col-md-3">
+                                <label>Temporada</label>
+                                <select class="form-control" id="idtemporada" name="idtemporada">
+                                    [temporadas]
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Set de tallas</label>
+                                <select class="form-control" id="idset_talla" name="idset_talla">
+                                    [set_tallas]
+                                </select>
+                                <small class="form-text text-muted" id="setTallasHelp">
+                                    Seleccione un set para habilitar el ingreso por talla.
+                                </small>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>transporte</label>
+                                <select class="form-control" id="idtransporte" name="idtransporte">
+                                    [transportes]
+                                </select>
+                            </div>
+
+                            <div class="form-group m-b-6 col-md-2">
+                                <label for="monto_descuento">Descuento</label>
+                                <input type="number" class="form-control" id="monto_descuento" name="monto_descuento">
+                                <span class="bar"></span>
+                            </div>
+
+                            <div class="form-group col-md-5">
+                                <label>Observaciones generales</label>
+                                <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            
+                            <div class="form-group col-md-3">
+                                <br>
+                                <button type="button" id="btn_guardar_pedido" class="btn btn-success waves-effect waves-light m-r-10" onclick="
+                                callback_guardar_pedido =function(){
+                                    notify_success('Pedido guardado exitosamente');
+                                    showElements('detalles_del_pedido');
+                                    hideElements('lista_pedidos');
+                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento');
+                                }
+                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,idtransporte,monto_descuento','pedido','guardar','idpedido',callback_guardar_pedido);
+                                ">Guardar</button>
+                                <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
+                                    onclick="
+                                        clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento');
+                                    ">Limpiar</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+            <!-- Resumen -->
+            <div class="" id="detalles_del_pedido" style="display: none;">
+                <div class="row mb-3">
+
+                    <div class="col-md-3 mb-2">
+                        <div class="border rounded p-3 h-100 bg-dark">
+                            <div class="small text-muted">Total líneas</div>
+                            <div class="h4 mb-0" id="resumenLineas">0</div>
+                        </div>
+                    </div>
+    
+                    <div class="col-md-3 mb-2">
+                        <div class="border rounded p-3 h-100 bg-dark">
+                            <div class="small text-muted">Cantidad de pares</div>
+                            <div class="h4 mb-0" id="resumenPares">0</div>
+                        </div>
+                    </div>
+    
+                    <div class="col-md-3 mb-2">
+                        <div class="border rounded p-3 h-100 bg-dark">
+                            <div class="small text-muted">Monto total</div>
+                            <div class="h4 mb-0" id="resumenMonto">Q 0.00</div>
+                        </div>
+                    </div>
+    
+                    <div class="col-md-3 mb-2">
+                        <div class="border rounded p-3 h-100 bg-dark">
+                            <div class="small text-muted">Set activo</div>
+                            <div class="h6 mb-0 pt-2" id="resumenSet">Sin seleccionar</div>
+                        </div>
+                    </div>
+    
+                </div>
+    
+                <!-- Ingreso de producto -->
+                <div class="card border mb-3">
+    
+                    <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+                        <strong>Agregar producto</strong>
+                        <small class="">Ingrese el estilo y complete la corrida</small>
+                    </div>
+    
+                    <div class="card-body">
+    
+                        <div class="form-row">
+    
+                            <div class="form-group col-md-2">
+                                <label>Código de estilo</label>
+    
+                                <div class="input-group">
+    
+                                    <input type="text" class="form-control" id="modelo" placeholder="Ej: ST-1001">
+    
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="button" id="btnBuscarEstilo">
+                                            Cargar
+                                        </button>
+                                    </div>
+    
+                                </div>
+    
+                            </div>
+    
+                            <div class="form-group col-md-4">
+                                <label>Descripción estilo</label>
+                                <input type="text" class="form-control" id="descripcionEstilo" readonly>
+                            </div>
+    
+                            <div class="form-group col-md-2">
+                                <label>Color</label>
+                                <select class="form-control" id="color"></select>
+                            </div>
+    
+                            <div class="form-group col-md-2">
+                                <label>Material</label>
+                                <select class="form-control" id="material"></select>
+                            </div>
+    
+                            <div class="form-group col-md-2">
+                                <label>Precio</label>
+                                <input type="number" class="form-control text-right" id="precio" step="0.01" min="0">
+                            </div>
+    
+                        </div>
+
+                        <div class="form_row">
+                            <div class="form-group col-md-4">
+                                <label for="principios_activos">Imagen</label>
+                                <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept="image/*">
+                                <span class="bar"></span>
+                            </div>
+                        </div>
+
+                        <br>
+                        <div class="alert alert-info py-2 mb-3" id="alertaProducto">
+                            Seleccione un <strong>set de tallas</strong> y cargue un
+                            <strong>estilo</strong> para habilitar el ingreso de cantidades.
+                        </div>
+    
+                        <div id="areaTallas" class="mb-3"></div>
+    
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary mr-2" id="btnLimpiarLinea">
+                                Limpiar línea
+                            </button>
+    
+                            <button type="button" class="btn btn-primary" id="btnAgregarLinea">
+                                Agregar producto
+                            </button>
+                        </div>
+    
+                    </div>
+    
+                </div>
+    
+                <!-- Detalle -->
+                <div class="card border">
+    
+                    <div class="card-header bg-dark">
+                        <strong>Detalle del pedido</strong>
+                    </div>
+    
+                    <div class="card-body p-0">
+    
+                        <div class="table-responsive">
+    
+                            <table class="table table-sm table-bordered table-hover mb-0 align-middle">
+    
+                                <thead class="thead-light">
+    
+                                    <tr>
+                                        <th style="min-width:110px;">Estilo</th>
+                                        <th style="min-width:130px;">Color</th>
+                                        <th style="min-width:120px;">Marca</th>
+                                        <th style="min-width:120px;">Material</th>
+                                        <th style="min-width:120px;" class="text-right">Precio</th>
+                                        <th style="min-width:110px;">Imagen</th>
+                                        <th style="min-width:190px;">Tallas</th>
+                                        <th style="min-width:90px;" class="text-center">Cantidad</th>
+                                        <th style="min-width:140px;" class="text-right">Subtotal</th>
+                                        <th style="min-width:140px;">Acciones</th>
+                                    </tr>
+    
+                                </thead>
+    
+                                <tbody id="detallePedidoBody">
+    
+                                    <tr id="filaSinDatos">
+                                        <td colspan="12" class="text-center text-muted py-4">
+                                            No hay productos agregados.
+                                        </td>
+                                    </tr>
+    
+                                </tbody>
+    
+                            </table>
+    
+                        </div>
+                            
+                    </div>
+                    
+                </div>
+                
+                <div class="row px-3">
+                    <div class="col-12 d-flex justify-content-end pe-3">
+                        
+                        <button type="button" id="btn_eliminar_pedido" 
+                            class="btn btn-danger btn-sm waves-effect waves-light me-10"
+                            onclick="
+                                if(!confirm('¿Está seguro de eliminar este pedido?')) return;
+                
+                                callback_eliminar_pedido = function(){
+                                    notify_success('Pedido eliminado correctamente');
+                                    return mostrar_opcion(8,'pedido','Mantenimientos'); 
+                                }
+                
+                                upload_action('idpedido','pedido','eliminar',callback_eliminar_pedido);
+                            ">
+                            Eliminar Pedido
+                        </button>
+                
+                        <button type="button" id="btn_guardar_pedido" 
+                            class="btn btn-success waves-effect waves-light px-5"
+                            onclick="
+                                if(!confirm('¿Está seguro de cerrar este pedido?')) return;
+                
+                                callback_cerrar_pedido = function(){
+                                    notify_success('Pedido cerrado exitosamente');
+                                    return mostrar_opcion(8,'pedido','Mantenimientos'); 
+                                }
+                
+                                upload_action('idpedido','pedido','cerrar_pedido',callback_cerrar_pedido);
+                            ">
+                            Cerrar pedido
+                        </button>
+                
+                    </div>
+                </div>
+                <BR></BR>
+            </div>
+            <div class="table-responsive" id="lista_pedidos">
+                [tabla_pedidos]
+            </div>
+
+        </div>
+
+    </div>
+
+</body>

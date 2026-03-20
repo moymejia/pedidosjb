@@ -81,9 +81,45 @@ class set_talla extends table
         }
     }
 
-    public function options_activos()
-    {
-        return mysql::getoptions("SELECT idset_talla id, grupo descripcion FROM set_talla WHERE estado = 'ACTIVO' ");
+    public function obtener_grupo($idset_talla){
+
+        $result = mysql::getresult("SELECT idset_talla, descripcion, idtalla, talla
+            FROM view_set_talla_detalle
+            WHERE idset_talla = '".intval($idset_talla)."'
+            ORDER BY orden ASC
+        ");
+    
+        if(mysql::num_rows($result) == 0){
+            $this->last_error = "No se encontraron tallas para el set.";
+            utils::report_error(bd_error, $idset_talla, $this->last_error);
+            return false;
+        }
+    
+        $data = [
+            'id' => 0,
+            'nombre' => '',
+            'tallas' => []
+        ];
+    
+        while($row = mysql::getrowresult($result)){
+    
+            if($data['id'] == 0){
+                $data['id'] = (int)$row['idset_talla'];
+                $data['nombre'] = $row['descripcion'];
+            }
+    
+            $data['tallas'][] = [
+                'id' => $row['idtalla'],
+                'numero' => $row['talla']
+            ];
+        }
+    
+        return json_encode($data);
+    }
+
+    public function options_activos(){
+
+        return mysql::getoptions("SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
     }
 
 }

@@ -275,4 +275,9 @@ class cliente extends table
             return false;
         }
     }
+
+    public function option_activas(){
+
+        return mysql::getoptions("SELECT idcliente id, nombre descripcion FROM cliente WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
 }

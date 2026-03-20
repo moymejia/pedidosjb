@@ -60,11 +60,10 @@ class rol extends table
                 $str_data .= $key . "=" . $value . "&";
             }
 
-            $clase_fila = ($estado == 'INACTIVO') ? "style='background-color:#fdecea;'" : "";
             
             $boton_editar = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
             
-            $tabla_roles .= "<tr $clase_fila>
+            $tabla_roles .= "<tr>
                 <td>$boton_editar</td>
                 <td>$idrol</td>
 				<td>$nombre</td>

@@ -139,30 +139,45 @@ class rol_accion extends table
             $idopcion = $OPCION['idopcion'];
             $opcion   = $OPCION['opcion'];
             $permisos_actuales .= "<div class=\"card m-b-10\">
-				<div class=\"card-header\">
-					<span style='display: inline-block;cursor: pointer;border: solid thin lightgray;padding: 5px;' title='Click para quitar' onclick=\"
-						delete callback_upload;
-						callback_upload = function(){
-							notify_success('Permiso retirado correctamente');
-							delete callback_download;
-							download_div_content('idrol','rol_accion','cargar_permisos','permisos');
-						}
-						element('idopcion').value = $idopcion
-						upload_action('idrol,idopcion','rol_accion','retirar_opcion');
-						\">
-							<span style='text-transform:uppercase;font-weight:bold;'>$opcion</span>
-							<small>quitar</small>
-						</span>
-						<span style='display: inline-block;cursor: pointer;border: solid thin lightgray;padding: 5px;' class='pull-right' onclick=\"
-							if(element('acciones_$idopcion').style.display == '') {hideElement('acciones_$idopcion')}else{showElement('acciones_$idopcion')} \">
-							Detalles
-						</span>
-				</div>
-				<div class=\"card-body collapse show\" id=\"acciones_$idopcion\" style='display:none'>
-					[acciones]
-				</div>
-			</div>
-			";
+                <div class=\"card-header\" style=\"background:var(--icons-color); color:white;\">
+                    
+                    <span style='display:inline-block; cursor:pointer; border:solid thin lightgray; padding:5px;' 
+                        title='Click para quitar' 
+                        onclick=\"
+                            delete callback_upload;
+                            callback_upload = function(){
+                                notify_success('Permiso retirado correctamente');
+                                delete callback_download;
+                                download_div_content('idrol','rol_accion','cargar_permisos','permisos');
+                            }
+                            element('idopcion').value = $idopcion
+                            upload_action('idrol,idopcion','rol_accion','retirar_opcion');
+                        \">
+
+                        <span style='text-transform:uppercase;font-weight:bold;'>$opcion</span>
+                        <small>quitar</small>
+
+                    </span>
+
+                    <span style='display:inline-block; cursor:pointer; border:solid thin lightgray; padding:5px;' 
+                        class='pull-right'
+                        onclick=\"
+                            if(element('acciones_$idopcion').style.display == '') {
+                                hideElement('acciones_$idopcion')
+                            } else {
+                                showElement('acciones_$idopcion')
+                            }
+                        \">
+                        Detalles
+                    </span>
+
+                </div>
+
+                <div class=\"card-body collapse show\" id=\"acciones_$idopcion\" style='display:none'>
+                    [acciones]
+                </div>
+
+            </div>";
 
             $acciones = '';
             $ACCIONES = mysql::getresult("SELECT idaccion, accion, 'activo' estado FROM view_permisos WHERE idopcion = $idopcion AND idrol = $idrol AND indOpcion = 'NO'

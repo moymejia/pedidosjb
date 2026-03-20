@@ -1096,7 +1096,7 @@ File: scss
    .card .card-subtitle {
      font-weight: 300;
      margin-bottom: 15px;
-     color: #99abb4; }
+     color: var(--topbar-bg); }
    .card .card-title {
      position: relative; }
  
@@ -1639,7 +1639,7 @@ File: scss
    position: absolute;
    right: 0;
    border-top: 1px solid rgba(120, 130, 140, 0.13);
-   background: #ffffff; }
+   background: var(--topbar-bg); }
  
  /*******************
   scrollbar

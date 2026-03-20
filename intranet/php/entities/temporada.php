@@ -223,8 +223,10 @@ class temporada extends table
         }
     }
 
-    public function option_activos()
-    {
-        return mysql::getoptions("SELECT idtemporada AS id, nombre AS descripcion FROM temporada WHERE estado = 'ACTIVO' ");
+    public function option_activos(){ 
+        
+        return mysql::getoptions("SELECT idtemporada as id, nombre as descripcion FROM temporada WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
     }
+
+    
 }

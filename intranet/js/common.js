@@ -23,8 +23,18 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
         }
         activate_select2();
         activate_switch();
+        if (objeto("jsid") != undefined) {            
+            var jsid = element("jsid").value;
+            var script = document.createElement('script');
+            script.src = '../js/'+jsid+'.js'  ; 
+            script.type = 'text/javascript';
+            script.async = true; // o true, según lo que necesites
+            document.head.appendChild(script);
+
+        }
+
     };
-    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal", callback_retorno);
+    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal",callback_retorno);
     document.getElementById("contenedor_principal").innerHTML = "";
     document.getElementById("menu_actual").innerHTML = menu;
     document.getElementById("opcion_actual").innerHTML = opcion;
