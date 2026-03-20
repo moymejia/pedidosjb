@@ -69,20 +69,19 @@ class set_talla extends table
         }
     }
 
-}
-};
-
-    function{public cargar_set_talla() $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
+    public function cargar_set_talla()
+    {
+        $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
         $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
-        <thead>
-            <tr>
-                <th>Acciones</th>
-                <th>Grupo</th>
-                <th>Descripcion</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody id="tabla_todos">';
+            <thead>
+                <tr>
+                    <th>Acciones</th>
+                    <th>Grupo</th>
+                    <th>Descripcion</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
             $grupo       = $row['grupo'];
@@ -95,21 +94,21 @@ class set_talla extends table
             }
 
             $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"
-                clearElements('formulario_registro_set_talla');
-                editar_registro('$str_data',this.parentNode.parentNode);
-                hideElements('div_tabla');
-                showElements('div_tabs,tab_set_talla,tab_set_talla_detalle,tab_nueva_talla');
-                $('#a_set_talla').tab('show');
-                goTop();
-            \">
-            <span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Seleccionar</button>";
+                    clearElements('formulario_registro_set_talla');
+                    editar_registro('$str_data',this.parentNode.parentNode);
+                    hideElements('div_tabla');
+                    showElements('div_tabs,tab_set_talla,tab_set_talla_detalle,tab_nueva_talla');
+                    $('#a_set_talla').tab('show');
+                    goTop();
+                \">
+                <span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Seleccionar</button>";
 
             $tabla .= "<tr>
-                <td>$boton_editar</td>
-                <td>$grupo</td>
-                <td>$descripcion</td>
-                <td>$estado</td>
-            </tr>";
+                    <td>$boton_editar</td>
+                    <td>$grupo</td>
+                    <td>$descripcion</td>
+                    <td>$estado</td>
+                </tr>";
         }
 
         $tabla .= "</tbody></table>";
@@ -117,18 +116,20 @@ class set_talla extends table
         return $tabla;
     }
 
-    function{public cargar_opcion() $DATA   = [];
+    public function cargar_opcion()
+    {
+        $DATA   = [];
         $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
         $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
-        <thead>
-            <tr>
-                <th>Acciones</th>
-                <th>Grupo</th>
-                <th>Descripcion</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody id="tabla_todos">';
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Grupo</th>
+                        <th>Descripcion</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
             $grupo       = $row['grupo'];
@@ -168,8 +169,8 @@ class set_talla extends table
         return $html->get_html();
     }
 
-    functionpublic guardar( $PARAMETROS)
-{
+    public function guardar($PARAMETROS)
+    {
         $parametros_necesarios = ["grupo", "descripcion"]; //valida que se cuente con los parametros necesarios.
         if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
@@ -259,8 +260,8 @@ class set_talla extends table
         }
     }
 
-    functionpublic obtener_grupo( $idset_talla)
-{
+    public function obtener_grupo($idset_talla)
+    {
 
         $result = mysql::getresult("SELECT idset_talla, descripcion, idtalla, talla
             FROM view_set_talla_detalle
@@ -296,8 +297,8 @@ class set_talla extends table
         return json_encode($data);
     }
 
-    functionpublic cambiar_estado( $idset_talla)
-{
+    public function cambiar_estado($idset_talla)
+    {
         $security             = new security($this->ACCIONES['cambiar_estado']);
         $estado_actual        = mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla' ");
         $DATOS['idset_talla'] = $idset_talla;
@@ -320,8 +321,8 @@ class set_talla extends table
         }
     }
 
-    functionpublic get_idset_talla( $talla_desde, $talla_hasta)
-{
+    public function get_idset_talla($talla_desde, $talla_hasta)
+    {
         $SET_TALLA_DETALLE = new set_talla_detalle();
         //$idset_talla_d     = $SET_TALLA_DETALLE->get_set_talla($talla_desde, $talla_hasta);
 
@@ -345,8 +346,13 @@ class set_talla extends table
         }
     }
 
-    function{return::"SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC";}functionpublic options_activos()mysqlgetoptions()estado( $idset_talla)
-{
+    public function estado($idset_talla)
+    {
         return mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla'");
     }
-};
+
+    public function options_activos()
+    {
+        return mysql::getvalue("SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
+    }
+}

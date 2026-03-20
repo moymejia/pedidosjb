@@ -1,0 +1,186 @@
+<div id="div_tabs">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card bg-dark">
+
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" id="tab_set_talla">
+                        <a class="nav-link active" data-toggle="tab" id="a_set_talla" href="#set_talla_tab"
+                            role="tab">Set de tallas</a>
+                    </li>
+                    <li class="nav-item" id="tab_set_talla_detalle" style="display: none;">
+                        <a class="nav-link" data-toggle="tab" id="a_set_talla_detalle" href="#set_talla_detalle_tab"
+                            role="tab">Tallas del set</a>
+                    </li>
+                    <li class="nav-item" id="tab_nueva_talla">
+                        <a class="nav-link" data-toggle="tab" id="a_nueva_talla" href="#nueva_talla_tab"
+                            role="tab">Talla</a>
+                    </li>
+                </ul>
+
+
+                <div class="tab-content">
+
+                    <div class="tab-pane active" id="set_talla_tab">
+                        <br>
+
+                        <form onsubmit="
+                            delete callback_guardar_registro_correcto;
+                            callback_guardar_registro_correcto = function(){
+                                return mostrar_opcion(45,'Set de Tallas','Clientes');
+                            };
+                            guardar_registro(this);
+                            return false;
+                        " id="formulario_registro_set_talla">
+
+                            <input type="hidden" name="table" id="table_set_talla" value="set_talla">
+                            <input type="hidden" name="idset_talla" id="idset_talla">
+
+                            <h4>Formulario de set de tallas</h4>
+
+                            <div class="row">
+                                <div class="form-group col-md-4">
+                                    <label>Grupo</label>
+                                    <input type="text" class="form-control" name="grupo" id="grupo" required>
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label>Descripción</label>
+                                    <input type="text" class="form-control" name="descripcion" id="descripcion">
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label>Estado</label>
+                                    <input type="text" class="form-control" name="estado" id="estado" value="ACTIVO"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group m-b-5 col-md-12">
+                                    <button type="submit" class="btn btn-success waves-effect waves-light m-r-10"
+                                        onclick="">Guardar</button>
+                                    <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                                        onclick="
+                                        clearElements('formulario_registro_set_talla,talla');
+                                        objeto('idtalla').value = ''
+                                        showElements('div_tabla');
+                                        hideElements('botones_edicion,tab_set_talla_detalle');
+                                        $('#a_set_talla').tab('show');
+                                        goTop();">Cancelar</button>
+                                    <span id="botones_edicion" style="display: none;">
+                                        <button type="button" class="btn btn-info waves-effect waves-light m-t-3"
+                                            onclick="
+                                            delete callback_download;
+                                            callback_download = function(){
+                                                if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+                                                if(objeto('estado').value != 'PROTEGIDO'){
+                                                    notify_success('El set de tallas esta ahora '+objeto('estado').value); 
+                                                    return mostrar_opcion(45,'pedidos','temporada');
+                                                }
+                                            }
+                                            download_input_value('idset_talla','set_talla','cambiar_estado','estado');
+                                            ">Cambiar estado</button>
+                                    </span>
+                                </div>
+                            </div>
+                            <br>
+                        </form>
+
+                        <div id="div_tabla">
+                            <div id="lista_set_talla">
+                                [tabla_set_talla]
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="set_talla_detalle_tab" role="tabpanel">
+                        <br>
+
+                        <h4>Tallas del set</h4>
+                        <br>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-primary" onclick="
+                                showElements('div_tabs,tab_nueva_talla');
+                                $('#a_nueva_talla').tab('show');
+                            ">
+                                <span class="btn-label">
+                                    <i class="fas fa-plus"></i>
+                                </span>Nueva talla
+                            </button>
+                        </div>
+
+
+                        <div class="form-group m-b-5 col-md-12">
+                            <div class="row" id="talla"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="nueva_talla_tab" role="tabpanel">
+                        <br>
+                        <form class="margen-formulario" onsubmit="
+                            callback_guardar_registro_correcto = function(){
+                                clearElements('numero');
+                                if (objeto('idtalla').value != '') {
+                                    objeto('botones_edicion_talla').style.display = 'none';
+                                }
+                                objeto('idtalla').value = '';
+                                download_div_content('numero,estado','talla','cargar_tabla_talla','tabla_talla');
+                                download_div_content('idset_talla','set_talla_detalle','cargar_talla','talla');
+                            };
+                            guardar_registro(this);
+                            return false;
+                            " id="formulario_registro_talla">
+
+                            <input type="hidden" name="table" id="table_talla" value="talla">
+                            <input type="hidden" name="idtalla" id="idtalla">
+
+                            <div class="row">
+                                <div class="form-group m-b-5 col-md-6">
+                                    <label for="numero">Numero:</label>
+                                    <input type="texto" class="form-control" id="numero" name="numero" required>
+                                    <span class="bar"></span>
+                                </div>
+                                <div class="form-group m-b-5 col-md-6">
+                                    <label for="estado_talla">Estado:</label>
+                                    <input type="text" class="form-control" id="estado_talla" name="estado_talla"
+                                        value="ACTIVO" readonly>
+                                    <span class="bar"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group m-b-5 col-md-12 m-t-10">
+                                    <button type="submit" class="btn btn-success waves-effect waves-light m-r-10"
+                                        onclick="">Guardar</button>
+                                    <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                                        onclick="objeto('botones_edicion_talla').style.display = 'none';objeto('idtalla').value = '';objeto('idtalla').readOnly = false;">Cancelar</button>
+                                    <span id="botones_edicion_talla" style="display: none;">
+                                        <button type="button" class="btn btn-info waves-effect waves-light m-t-3"
+                                            onclick="
+                                            delete callback_download;
+                                            callback_download = function(){
+                                                if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+                                                if(objeto('estado').value != 'PROTEGIDO'){ 
+                                                    notify_success('La talla esta ahora '+objeto('estado_talla').value);
+                                                    clearElements('numero');
+                                                    objeto('estado_talla').value = 'ACTIVO';
+                                                    objeto('idtalla').value = '';
+                                                    download_div_content('numero,estado_talla','talla','cargar_tabla_talla','tabla_talla');
+                                                }
+                                            }
+                                            download_input_value('idtalla','talla','cambiar_estado','estado_talla');
+                                            objeto('botones_edicion_talla').style.display = 'none';
+                                            ">Cambiar estado</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                        <br>
+                        <div id="tabla_talla">
+                            [tabla_talla]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

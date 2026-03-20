@@ -4,6 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
+require_once '../entities/set_talla.php';
 
 class talla extends table
 {
@@ -32,7 +33,7 @@ class talla extends table
 
             if ($PARAMETROS['operacion'] == 'cambiar_estado') {
                 if (table::validate_parameter_existence(['idtalla'], $PARAMETROS, false)) {
-                    if($resultado = self::cambiar_estado($PARAMETROS['idtalla'])){
+                    if ($resultado = self::cambiar_estado($PARAMETROS['idtalla'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -42,12 +43,63 @@ class talla extends table
                 }
             }
         }
+
+        if (isset($PARAMETROS['operacion'])) {
+            if ($PARAMETROS['operacion'] == 'cargar_tabla_talla') {
+                if ($resultado = $this->cargar_tabla_talla()) {
+                    self::end_success($resultado);
+                } else {
+                    self::end_error($this->last_error);
+                }
+            }
+        }
+    }
+
+    public function cargar_tabla_talla()
+    {
+        $result = mysql::getresult("SELECT idtalla, numero, estado AS estado_talla FROM talla ORDER BY idtalla DESC");
+
+        $tabla = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" width="100%">
+            <thead style="background-color: var(--datatable-color); color: white;">
+                <tr>
+                    <th>Acciones</th>
+                    <th>Numero</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+        <tbody>';
+
+        while ($row = mysql::getrowresult($result)) {
+            $numero   = $row['numero'];
+            $estado   = $row['estado_talla'];
+            $str_data = '';
+
+            foreach ($row as $key => $value) {
+                $str_data .= $key . '=' . $value . '&';
+            }
+
+            $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"
+                    editar_registro('$str_data',this.parentNode.parentNode);
+                    showElements('botones_edicion_talla');
+                    goTop();\"
+                ><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
+
+            $tabla .= "<tr>
+                <td>$boton_editar</td>
+                <td style='text-align: center;'>$numero</td>
+                <td>$estado</td>
+            </tr>";
+        }
+
+        $tabla .= '</tbody></table>';
+
+        return $tabla;
     }
 
     public function cargar_opcion()
     {
-        $DATA   = [];
-        $result = mysql::getresult("SELECT idtalla, numero, estado FROM talla ORDER BY idtalla DESC");
+        $DATA        = [];
+        $result      = mysql::getresult("SELECT idtalla, numero, estado FROM talla ORDER BY idtalla DESC");
         $tabla_talla = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
@@ -59,8 +111,8 @@ class talla extends table
 		<tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
-            $numero = $row['numero'];
-            $estado = $row['estado'];
+            $numero   = $row['numero'];
+            $estado   = $row['estado'];
             $row_data = $row;
             $str_data = "";
 
@@ -68,8 +120,8 @@ class talla extends table
                 $str_data .= $key . "=" . $value . "&";
             }
 
-            $boton_editar    = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idtalla').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
-            $tabla_talla .= "<tr>
+            $boton_editar  = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idtalla').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
+            $tabla_talla  .= "<tr>
 				<td>$boton_editar</td>
                 <td>$numero</td>
                 <td>$estado</td>
@@ -79,7 +131,7 @@ class talla extends table
         </table>";
 
         $DATA['tabla_talla'] = $tabla_talla;
-        $html                        = new html('talla', $DATA);
+        $html                = new html('set_talla', $DATA);
 
         return $html->get_html();
     }
@@ -87,7 +139,7 @@ class talla extends table
     public function guardar_talla($PARAMETROS)
     {
         $parametros_necesarios = ["numero"]; //valida que se cuente con los parametros necesarios.
-        if (!table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
+        if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 
@@ -136,10 +188,10 @@ class talla extends table
             }
         } else {
             $security = new security($this->ACCIONES['modificar_talla']); //modificar registro de talla
-            if ($PARAMETROS['estado'] == 'ACTIVO') {
+            if ($PARAMETROS['estado_talla'] == 'ACTIVO') {
                 if (mysql::exists('talla', " numero = '{$PARAMETROS['numero']}' AND idtalla != '{$PARAMETROS['idtalla']}'")) { //verifica que una talla existente no tenga el mismo numero que el que se quiere modificar
                     $this->last_error = 'Una talla existente ya tiene ese numero.';
-                    utils::report_error(validation_error, $PARAMETROS=['idtalla'], $this->last_error);
+                    utils::report_error(validation_error, $PARAMETROS = ['idtalla'], $this->last_error);
 
                     return false;
                 }
@@ -168,30 +220,19 @@ class talla extends table
         }
     }
 
-    public function estado($idtalla){
-        return mysql::getvalue("SELECT estado FROM talla WHERE idtalla = '$idtalla' ");
-    }
-
-    public function cambiar_estado($idtalla){
-        $security             = new security($this->ACCIONES['cambiar_estado_talla']);
-        $estado_actual        = mysql::getvalue("SELECT estado FROM talla WHERE idtalla = '$idtalla' ");;
-        $DATOS['idtalla'] = $idtalla;
-
-        if ($estado_actual == 'PROTEGIDO') { //si el estado actual es protegido, no se permite cambiar el estado
-            $this->last_error = 'Registro protegido, no puede modificarse';
-            utils::report_error(validation_error, $idtalla, $this->last_error);
-
-            return $this->estado($idtalla);;
-        }
-
+    public function cambiar_estado($idtalla)
+    {
+        $security                      = new security($this->ACCIONES['cambiar_estado_talla']);
+        $estado_actual                 = mysql::getvalue("SELECT estado AS estado_talla FROM talla WHERE idtalla = '$idtalla' ");
+        $DATOS['idtalla']              = $idtalla;
         $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
         $DATOS['usuario_modificacion'] = $security->get_actual_user();
         $llaves                        = ['idtalla'];
-        
+
         if (table::update_record($DATOS, $llaves)) {
             $security->registrar_bitacora($this->ACCIONES['cambiar_estado_talla'], $idtalla, $DATOS['estado']);
 
-            return $this->estado($idtalla);
+            return mysql::getvalue("SELECT estado AS estado_talla FROM talla WHERE idtalla = '$idtalla' ");
         } else {
             $this->last_error = "Error al cambiar de estado";
             utils::report_error(validation_error, $idtalla, $this->last_error);
@@ -205,8 +246,9 @@ class talla extends table
         return mysql::getvalue("SELECT idtalla FROM talla WHERE numero = '$numero'");
     }
 
-    public function option_activas(){
-        
+    public function option_activas()
+    {
+
         return mysql::getoptions("SELECT idtalla as id, numero as descripcion FROM talla WHERE estado = 'ACTIVO' ORDER BY numero ASC");
     }
 }
