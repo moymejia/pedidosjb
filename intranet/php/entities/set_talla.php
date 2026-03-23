@@ -56,17 +56,6 @@ class set_talla extends table
                 }
             }
         }
-
-        if (isset($PARAMETROS['operacion'])) {
-            if ($PARAMETROS['operacion'] == 'cargar_tabla_set_talla') {
-                if ($resultado = $this->cargar_tabla_set_talla()) {
-                    self::end_success($resultado);
-                } else {
-                    self::end_error($this->last_error);
-                }
-            }
-            self::end_error("Faltan parámetros");
-        }
     }
 
     public function cargar_set_talla()
@@ -353,6 +342,6 @@ class set_talla extends table
 
     public function options_activos()
     {
-        return mysql::getvalue("SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
+        return mysql::getoptions("SELECT idset_talla as id, descripcion as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
     }
 }

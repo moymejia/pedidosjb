@@ -50,6 +50,44 @@ ADD COLUMN total_pares INT NOT NULL DEFAULT 0;
 ALTER TABLE pedido
 ADD COLUMN email VARCHAR(150) NULL;
 
+CREATE TABLE transporte (
+  idtransporte INT NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(100) NOT NULL,
+  estado VARCHAR(25) NOT NULL DEFAULT 'ACTIVO',
+  fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  usuario_creacion VARCHAR(25) NOT NULL,
+  fecha_modificacion DATETIME DEFAULT NULL,
+  usuario_modificacion VARCHAR(25) DEFAULT NULL,
+  PRIMARY KEY (idtransporte)
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE color (
+  idcolor INT NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(50) NOT NULL,
+  estado VARCHAR(25) NOT NULL,
+  fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  usuario_creacion VARCHAR(25) NOT NULL,
+  fecha_modificacion DATETIME DEFAULT NULL,
+  usuario_modificacion VARCHAR(25) DEFAULT NULL,
+  PRIMARY KEY (idcolor),
+  UNIQUE KEY uq_color_nombre (nombre),
+  KEY idx_color_usuario_creacion (usuario_creacion),
+  KEY idx_color_usuario_modificacion (usuario_modificacion),
+  CONSTRAINT fk_color_usuario_creacion 
+    FOREIGN KEY (usuario_creacion) 
+    REFERENCES pedidosjb_seguridad.usuario (usuario)
+    ON DELETE RESTRICT 
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_color_usuario_modificacion 
+    FOREIGN KEY (usuario_modificacion) 
+    REFERENCES pedidosjb_seguridad.usuario (usuario)
+    ON DELETE RESTRICT 
+    ON UPDATE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
 
 CREATE OR REPLACE VIEW pedidosjb_pedidos.view_producto_modelo AS
 SELECT 
