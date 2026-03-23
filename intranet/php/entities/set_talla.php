@@ -12,8 +12,8 @@ class set_talla extends table
 
     use utils;
     private $idset_talla;
-    private $ACCIONES = [];
-    private $last_error;
+    private $ACCIONES   = [];
+    private $last_error = '';
 
     public function __construct($PARAMETROS = null)
     {

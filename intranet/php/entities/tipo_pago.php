@@ -32,7 +32,7 @@ class tipo_pago extends table
 
             if ($PARAMETROS['operacion'] == 'cambiar_estado') {
                 if (table::validate_parameter_existence(['idtipo_pago'], $PARAMETROS, false)) {
-                    if($resultado = self::cambiar_estado($PARAMETROS['idtipo_pago'])){
+                    if ($resultado = self::cambiar_estado($PARAMETROS['idtipo_pago'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -46,8 +46,8 @@ class tipo_pago extends table
 
     public function cargar_opcion()
     {
-        $DATA   = [];
-        $result = mysql::getresult("SELECT idtipo_pago, descripcion, estado FROM tipo_pago ORDER BY idtipo_pago DESC");
+        $DATA            = [];
+        $result          = mysql::getresult("SELECT idtipo_pago, descripcion, estado FROM tipo_pago ORDER BY idtipo_pago DESC");
         $tabla_tipo_pago = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
@@ -60,15 +60,15 @@ class tipo_pago extends table
 
         while ($row = mysql::getrowresult($result)) {
             $descripcion = $row['descripcion'];
-            $estado = $row['estado'];
-            $row_data = $row;
-            $str_data = "";
+            $estado      = $row['estado'];
+            $row_data    = $row;
+            $str_data    = "";
 
             foreach ($row_data as $key => $value) {
                 $str_data .= $key . "=" . $value . "&";
             }
 
-            $boton_editar    = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idtipo_pago').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
+            $boton_editar     = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idtipo_pago').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
             $tabla_tipo_pago .= "<tr>
 				<td>$boton_editar</td>
                 <td>$descripcion</td>
@@ -79,7 +79,7 @@ class tipo_pago extends table
         </table>";
 
         $DATA['tabla_tipo_pago'] = $tabla_tipo_pago;
-        $html                        = new html('tipo_pago', $DATA);
+        $html                    = new html('tipo_pago', $DATA);
 
         return $html->get_html();
     }
@@ -87,7 +87,7 @@ class tipo_pago extends table
     public function guardar_tipo_pago($PARAMETROS)
     {
         $parametros_necesarios = ["descripcion"]; //valida que se cuente con los parametros necesarios.
-        if (!table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
+        if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 
@@ -116,7 +116,7 @@ class tipo_pago extends table
 
                 return false;
             }
-            
+
             $valores_necesarios        = ["descripcion"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
@@ -138,11 +138,11 @@ class tipo_pago extends table
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('tipo_pago', " descripcion = '{$PARAMETROS['descripcion']}' AND idtipo_pago != '{$PARAMETROS['idtipo_pago']}'")) { //verifica que un tipo de pago existente no tenga el mismo descripcion que el que se quiere modificar
                     $this->last_error = 'Un tipo de pago existente ya tiene ese descripcion.';
-                    utils::report_error(validation_error, $PARAMETROS=['idtipo_pago'], $this->last_error);
+                    utils::report_error(validation_error, $PARAMETROS = ['idtipo_pago'], $this->last_error);
 
                     return false;
                 }
-                
+
                 $valores_necesarios            = ["idtipo_pago", "descripcion", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
@@ -167,26 +167,28 @@ class tipo_pago extends table
         }
     }
 
-    public function estado($idtipo_pago){
+    public function estado($idtipo_pago)
+    {
         return mysql::getvalue("SELECT estado FROM tipo_pago WHERE idtipo_pago = '$idtipo_pago' ");
     }
 
-    public function cambiar_estado($idtipo_pago){
+    public function cambiar_estado($idtipo_pago)
+    {
         $security             = new security($this->ACCIONES['cambiar_estado_tipo_pago']);
-        $estado_actual        = mysql::getvalue("SELECT estado FROM tipo_pago WHERE idtipo_pago = '$idtipo_pago' ");;
+        $estado_actual        = mysql::getvalue("SELECT estado FROM tipo_pago WHERE idtipo_pago = '$idtipo_pago' ");
         $DATOS['idtipo_pago'] = $idtipo_pago;
 
         if ($estado_actual == 'PROTEGIDO') { //si el estado actual es protegido, no se permite cambiar el estado
             $this->last_error = 'Registro protegido, no puede modificarse';
             utils::report_error(validation_error, $idtipo_pago, $this->last_error);
 
-            return $this->estado($idtipo_pago);;
+            return $this->estado($idtipo_pago);
         }
 
         $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
         $DATOS['usuario_modificacion'] = $security->get_actual_user();
         $llaves                        = ['idtipo_pago'];
-        
+
         if (table::update_record($DATOS, $llaves)) {
             $security->registrar_bitacora($this->ACCIONES['cambiar_estado_tipo_pago'], $idtipo_pago, $DATOS['estado']);
 

@@ -33,7 +33,7 @@ class marca extends table
 
             if ($PARAMETROS['operacion'] == 'cambiar_estado') {
                 if (table::validate_parameter_existence(['idmarca'], $PARAMETROS, false)) {
-                    if($resultado = self::cambiar_estado($PARAMETROS['idmarca'])){
+                    if ($resultado = self::cambiar_estado($PARAMETROS['idmarca'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -51,16 +51,16 @@ class marca extends table
     }
 
     public function option_activos()
-    {   
+    {
         return mysql::getoptions("SELECT idmarca AS id, nombre AS descripcion FROM marca WHERE estado = 'ACTIVO' ");
     }
 
     public function cargar_opcion()
     {
-        $DATA   = [];
+        $DATA                       = [];
         $DATA['set_tallas_activos'] = (new set_talla())->options_activos();
-        $result = mysql::getresult("SELECT idmarca, nombre, estado, idset_talla_preferido, idset_talla, grupo FROM view_marca_set_talla");
-        $tabla_marca = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+        $result                     = mysql::getresult("SELECT idmarca, nombre, estado, idset_talla_preferido, idset_talla, grupo FROM view_marca_set_talla");
+        $tabla_marca                = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
                 <th style="text-align: center;">Acciones</th>
@@ -72,9 +72,9 @@ class marca extends table
 		<tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
-            $nombre = $row['nombre'];
-            $grupo = $row['grupo'];
-            $estado = $row['estado'];
+            $nombre   = $row['nombre'];
+            $grupo    = $row['grupo'];
+            $estado   = $row['estado'];
             $row_data = $row;
             $str_data = "";
 
@@ -82,8 +82,8 @@ class marca extends table
                 $str_data .= $key . "=" . $value . "&";
             }
 
-            $boton_editar    = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idmarca').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
-            $tabla_marca .= "<tr>
+            $boton_editar  = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idmarca').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
+            $tabla_marca  .= "<tr>
 				<td>$boton_editar</td>
                 <td>$nombre</td>
                 <td>$grupo</td>
@@ -94,7 +94,7 @@ class marca extends table
         </table>";
 
         $DATA['tabla_marca'] = $tabla_marca;
-        $html                        = new html('marca', $DATA);
+        $html                = new html('marca', $DATA);
 
         return $html->get_html();
     }
@@ -102,7 +102,7 @@ class marca extends table
     public function guardar_marca($PARAMETROS)
     {
         $parametros_necesarios = ["nombre"]; //valida que se cuente con los parametros necesarios.
-        if (!table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
+        if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 
@@ -127,7 +127,7 @@ class marca extends table
             $PARAMETROS['idset_talla_preferido'] = 'NULL';
         }
 
-        if ($PARAMETROS['idmarca'] == '') { //es una nueva marca
+        if ($PARAMETROS['idmarca'] == '') {                                  //es una nueva marca
             if (mysql::exists('marca', " nombre = '{$PARAMETROS['nombre']}'")) { //verifica que la marca nueva no exista ya
                 $this->last_error = 'La marca ya esta registrada';
                 utils::report_error(validation_error, $PARAMETROS['idmarca'], $this->last_error);
@@ -156,7 +156,7 @@ class marca extends table
             if ($PARAMETROS['estado'] == 'ACTIVO') {
                 if (mysql::exists('marca', " nombre = '{$PARAMETROS['nombre']}' AND idmarca != '{$PARAMETROS['idmarca']}'")) { //verifica que una marca existente no tenga el mismo nombre que el que se quiere modificar
                     $this->last_error = 'Una marca existente ya tiene ese nombre.';
-                    utils::report_error(validation_error, $PARAMETROS=['idmarca'], $this->last_error);
+                    utils::report_error(validation_error, $PARAMETROS = ['idmarca'], $this->last_error);
 
                     return false;
                 }
@@ -186,26 +186,28 @@ class marca extends table
         }
     }
 
-    public function estado($idmarca){
+    public function estado($idmarca)
+    {
         return mysql::getvalue("SELECT estado FROM marca WHERE idmarca = '$idmarca' ");
     }
 
-    public function cambiar_estado($idmarca){
-        $security             = new security($this->ACCIONES['cambiar_estado_marca']);
-        $estado_actual        = mysql::getvalue("SELECT estado FROM marca WHERE idmarca = '$idmarca' ");;
+    public function cambiar_estado($idmarca)
+    {
+        $security         = new security($this->ACCIONES['cambiar_estado_marca']);
+        $estado_actual    = mysql::getvalue("SELECT estado FROM marca WHERE idmarca = '$idmarca' ");
         $DATOS['idmarca'] = $idmarca;
 
         if ($estado_actual == 'PROTEGIDO') { //si el estado actual es protegido, no se permite cambiar el estado
             $this->last_error = 'Registro protegido, no puede modificarse';
             utils::report_error(validation_error, $idmarca, $this->last_error);
 
-            return $this->estado($idmarca);;
+            return $this->estado($idmarca);
         }
 
         $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
         $DATOS['usuario_modificacion'] = $security->get_actual_user();
         $llaves                        = ['idmarca'];
-        
+
         if (table::update_record($DATOS, $llaves)) {
             $security->registrar_bitacora($this->ACCIONES['cambiar_estado_marca'], $idmarca, $DATOS['estado']);
 
@@ -218,7 +220,8 @@ class marca extends table
         }
     }
 
-    public function option_activas(){
+    public function option_activas()
+    {
 
         return mysql::getoptions("SELECT idmarca as id, nombre as descripcion FROM marca WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
     }

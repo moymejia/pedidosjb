@@ -8,8 +8,8 @@ class transporte extends table
 {
 
     use utils;
-
-    private $last_error;
+    private $last_error = '';
+    private $idtransporte;
     private $ACCIONES = [];
 
     public function __construct($PARAMETROS = null)

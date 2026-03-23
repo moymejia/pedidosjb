@@ -8,9 +8,9 @@ class color extends table
 {
 
     use utils;
-
-    private $last_error;
-    private $ACCIONES = [];
+    private $idcolor;
+    private $last_error = '';
+    private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null)
     {
