@@ -1,7 +1,7 @@
 INSERT INTO pedidosjb_seguridad.opcion
 (idopcion, idmenu, nombre, entity, funcion, orden, estado)
 VALUES
-(50, 8, 'Tipo de suela', 'tipo_suela', 'cargar_opcion', 19, 'ACTIVO');
+(50, 7, 'Tipo de suela', 'tipo_suela', 'cargar_opcion', 19, 'ACTIVO');
 
 INSERT INTO pedidosjb_seguridad.accion
 (idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
