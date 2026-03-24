@@ -199,4 +199,9 @@ class tipo_contacto extends table
             return false;
         }
     }
+
+    public function option_activas()
+    {
+        return mysql::getoptions("SELECT idtipo_contacto as id, descripcion as descripcion FROM tipo_contacto WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
+    }
 }

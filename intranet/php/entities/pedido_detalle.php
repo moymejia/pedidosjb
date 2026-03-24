@@ -18,8 +18,8 @@ class pedido_detalle extends table{
         parent::__construct(prefijo . '_pedidos', 'pedido_detalle');
 
         $this->ACCIONES['crear_detalle']        = 30;
-        $this->ACCIONES['modificar_detalle']    = 31;
-        $this->ACCIONES['eliminar_detalle']     = 32;
+        $this->ACCIONES['eliminar_detalle']     = 31;
+        $this->ACCIONES['modificar_detalle']    = 32;
 
         if(isset($PARAMETROS['operacion'])){
 
@@ -51,9 +51,10 @@ class pedido_detalle extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'eliminar') {
+                var_dump($PARAMETROS);
 
-                if (table::validate_parameter_existence(['idpedido_detalle'],$PARAMETROS,false)) {      
-                    if ($resultado = $this->eliminar($PARAMETROS['idpedido_detalle'])) {
+                if (table::validate_parameter_existence(['idpedido_detalle','idpedido'],$PARAMETROS,false)) {      
+                    if ($resultado = $this->eliminar($PARAMETROS['idpedido_detalle'],$PARAMETROS['idpedido'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -214,9 +215,17 @@ class pedido_detalle extends table{
         return true;
     }
 
-    public function eliminar($ids)
+    public function eliminar($ids,$idpedido)
     {
         $security = new security($this->ACCIONES['eliminar_detalle']);
+
+        $estado_actual = (new pedido())->estado($idpedido);
+
+        if($estado_actual != 'BORRADOR'){
+            $this->last_error = 'No se puede editar un pedido en estado "CERRADO"';
+            $this->report_error(validation_error, $idpedido, $this->last_error);
+            return false;
+        }
 
         if (!is_array($ids)) {
             $ids = [$ids];

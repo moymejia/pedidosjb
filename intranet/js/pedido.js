@@ -261,6 +261,8 @@
     if (!confirm("¿Eliminar esta línea completa?")) return;
   
     var params = [];
+
+    params.push("idpedido=" + state.idpedido);
   
     linea.ids_detalle.forEach(function(id){
       params.push("idpedido_detalle[]=" + id);
@@ -273,12 +275,7 @@
       cargarDetallePedido();
     };
   
-    upload_action(
-      params.join(','),
-      'pedido_detalle',
-      'eliminar',
-      callback_eliminar
-    );
+    upload_action(params.join(','),'pedido_detalle','eliminar',callback_eliminar);
   }
 
   function editarLinea(index){
@@ -308,10 +305,12 @@
         $color.innerHTML += "<option value='"+c.id+"'>"+c.nombre+"</option>";
       });
 
+      var colorNombre = (linea.color_nombre || '').toUpperCase();
+
       var colorEncontrado = resp.colores.find(function(c){
         return (
           c.id == linea.idcolor || 
-          c.nombre.toUpperCase() == linea.color_nombre.toUpperCase()
+          c.nombre.toUpperCase() == colorNombre
         );
       });
       
@@ -328,7 +327,7 @@
         
           if (encontrado) {
             $material.value = encontrado.value;
-            onMaterialChange(); // 🔥 MUY IMPORTANTE
+            onMaterialChange(); 
           }
         
         }, 50);
@@ -376,7 +375,7 @@
   
     };
   
-    upload_action('modelo,idmarca','producto','obtener_modelo',callback_buscar_estilo);
+    upload_action('modelo,idmarca,idset_talla','producto','obtener_modelo',callback_buscar_estilo);
   }
 
   function agregarProducto(){
@@ -414,6 +413,13 @@
   
     if (tallaInfo.total <= 0) {
       notify_warning('Ingrese al menos una cantidad');
+      return;
+    }
+
+    var inputImagen = document.getElementById("imagen_producto");
+
+    if (!inputImagen || !inputImagen.files || inputImagen.files.length === 0) {
+      notify_warning('Debe seleccionar una imagen del producto');
       return;
     }
 
@@ -481,6 +487,7 @@
       tablaTallas += '</table>';
   
       var tr = document.createElement("tr");
+      var imgSrc = linea.imagen ? '../' + linea.imagen + '?x=' + Date.now() : 'https://via.placeholder.com/50';
   
       tr.innerHTML =
         '<td><strong>'+safe(linea.estilo_codigo)+'</strong><br><small>'+safe(linea.estilo_descripcion)+'</small></td>' +
@@ -488,7 +495,7 @@
         '<td>'+safe(linea.marca)+'</td>' +
         '<td>'+safe(linea.material)+'</td>' +
         '<td class="text-right">Q '+linea.precio.toFixed(2)+'</td>' +
-        '<td style="text-align:center;"><img src="../' + linea.imagen + '?x=' + Date.now() + '" class="shoe-thumb"></td>' +
+        '<td style="text-align:center;">' + '<img src="' + imgSrc + '" class="shoe-thumb">' + '</td>' +
         '<td>'+tablaTallas+'</td>' +
         '<td class="text-center"><strong>'+linea.cantidad_total+'</strong></td>' +
         '<td class="text-right"><strong>Q '+linea.subtotal.toFixed(2)+'</strong></td>' +

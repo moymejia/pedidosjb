@@ -4,6 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
+require_once '../entities/tipo_contacto.php';
 
 class cliente extends table
 {
@@ -49,6 +50,8 @@ class cliente extends table
     public function cargar_opcion()
     {
         $DATA   = [];
+        $DATA['tipo_contacto'] = (new tipo_contacto())->option_activas();
+
         $result = mysql::getresult("SELECT idcliente, nombre, codigo, direccion, establecimiento,
                 telefono, nit, limite_credito, dias_credito, observaciones, estado
             FROM cliente");
@@ -89,7 +92,22 @@ class cliente extends table
                 $str_data .= $key . "=" . $value . "&";
             }
 
-            $boton_editar    = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idcliente').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
+            $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"
+                        editar_registro('$str_data', this.parentNode.parentNode);
+                        objeto('idcliente').readOnly = true;
+                        goTop();
+                        hideElements('div_tabla');
+                        showElements('div_tabs,tab_contactos,tab_clientes');
+                        download_div_content('idcliente','cliente_contacto','tabla_contactos','div_tabla_cliente_contactos');
+                    \"
+                >
+                    <span class=\"btn-label\">
+                        <i class=\"far fa-edit\"></i>
+                    </span>
+                    Editar
+                </button>
+            ";
+
             $tabla_clientes .= "<tr>
 				<td>$boton_editar</td>
                 <td>$codigo</td>
