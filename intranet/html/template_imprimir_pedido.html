@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido Tallas</title>
+
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 8px; }
+    
+        .container { 
+            width: 950px; /* antes 1200 */
+            margin: auto; 
+            border: 1px solid #000; 
+        }
+    
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            table-layout: fixed; 
+        }
+    
+        td, th { 
+            border: 1px solid #000; 
+            padding: 1px; /* antes 4px */
+            text-align: center; 
+            vertical-align: middle; 
+        }
+    
+        .left { text-align: left; }
+    
+        .azul { color: #0070c0; font-weight: bold; }
+        .rojo { color: red; font-weight: bold; }
+        .bold { font-weight: bold; }
+    
+        .img img { width: 40px; } /* antes 55px */
+    
+        .fila-totales td { 
+            background: #f2f2f2; 
+            height: 30px; /* antes 45px */
+        }
+    
+        .totales { 
+            font-size: 14px; /* antes 18px */
+            color: red; 
+            font-weight: bold; 
+        }
+    
+        .titulo-totales { 
+            font-size: 11px; /* antes 13px */
+            font-weight: bold; 
+        }
+    
+        img {
+            max-width: 120px !important; /* logo más pequeño */
+        }
+
+        .observaciones {
+            font-size: 12px;
+            line-height: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <table>
+            <colgroup>
+                <col style="width:14%">
+                <col style="width:10%">
+                <col style="width:12%">
+                <col style="width:10%">
+                <col style="width:12%">
+                <col style="width:12%">
+                <col style="width:10%">
+                <col style="width:10%">
+            </colgroup>
+
+            <tr>
+                <td rowspan="6">
+                    <img src="../img/logo.jpg" style="max-width:120px;">
+                </td>
+                <td class="bold">Código Cliente:</td>
+                <td class="azul">[codigo_cliente]</td>
+                <td class="bold">Fecha:</td>
+                <td colspan="2" class="azul">[fecha]</td>
+                <td class="bold">Vendedor:</td>
+                <td style="background:#00b0f0;color:#fff;">[vendedor]</td>
+            </tr>
+
+            <tr>
+                <td class="bold">Cliente:</td>
+                <td colspan="2" class="azul">[cliente]</td>
+                <td class="bold">NIT:</td>
+                <td class="azul">[nit]</td>
+                <td class="bold">Teléfono:</td>
+                <td class="azul">[telefono]</td>
+            </tr>
+
+            <tr>
+                <td class="bold">Dirección:</td>
+                <td colspan="4" class="azul">[direccion]</td>
+                <td class="bold">Pedido No.:</td>
+                <td class="rojo">[idpedido]</td>
+            </tr>
+
+            <tr>
+                <td class="bold">Nombre Zapatería:</td>
+                <td colspan="4" class="azul">[nombre_zapateria]</td>
+                <td class="bold">Crédito:</td>
+                <td class="rojo">[dias_credito] días</td>
+            </tr>
+
+            <tr>
+                <td class="bold">Correo Electrónico:</td>
+                <td colspan="2">[email]</td>
+                <td class="bold">Fecha de Entrega:</td>
+                <td class="rojo" style="font-size: 12px;">[fecha_entrega]</td>
+                <td class="bold">Transporte:</td>
+                <td class="azul">[transporte]</td>
+            </tr>
+
+            <tr>
+                <td colspan="5"></td>
+                <td colspan="2" class="rojo">[set_talla]</td>
+            </tr>
+        </table>
+
+        <table>
+            <colgroup>
+                <col style="width:8%">
+                <col style="width:10%">
+                <col style="width:18%">
+                <col style="width:8%">
+                <col span="10" style="width:4%">
+                <col style="width:8%">
+                <col style="width:8%">
+                <col style="width:12%">
+            </colgroup>
+
+            <tr>
+                <th rowspan="2">Imagen</th>
+                <th rowspan="2">Estilo</th>
+                <th rowspan="2">Color - Material</th>
+                <th rowspan="2">Marca</th>
+                <th colspan="10">TALLAS</th>
+                <th rowspan="2">Total<br>Pares</th>
+                <th rowspan="2">Precio por Par</th>
+                <th rowspan="2">Monto Total por Caja</th>
+            </tr>
+
+            <tr>
+                [tallas_headers]
+            </tr>
+
+            [detalle_productos]
+        </table>
+
+        <table>
+            <colgroup>
+                <col style="width:8%">
+                <col style="width:10%">
+                <col style="width:18%">
+                <col style="width:8%">
+                <col span="10" style="width:4%">
+                <col style="width:8%">
+                <col style="width:8%">
+                <col style="width:12%">
+            </colgroup>
+
+            <tr class="fila-totales">
+                <td colspan="12" class="left" style="font-size:13px;">
+                    Precios 100% facturados menos descuentos. Pedido generado digitalmente, por lo que puede carecer de firma.
+                    Precios más flete de envío. Al recibir este pedido acepta las condiciones.
+                    <span class="rojo">NO SE ACEPTAN DEVOLUCIONES.</span>
+                </td>
+                <td colspan="2" class="titulo-totales">Totales</td>
+                <td class="totales">[total_pares]</td>
+                <td colspan="2" class="totales">Q [total]</td>
+            </tr>
+
+            <tr>
+                <td colspan="3" style="height:70px; vertical-align:bottom;">
+                    <span class="rojo"></span><br><br><br>
+                    <div style="border-top:1px solid #000;">Representante de Ventas:</div>
+                    <b>[vendedor]</b>
+                </td>
+
+                <td colspan="7">
+                    <span class="rojo"></span><br><br>
+                    <div style="border-top:2px solid #000;">Firma Cliente</div>
+                </td>
+
+                <td colspan="6" class="rojo observaciones">
+                    <b>OBSERVACIONES</b><br>
+                    <div style="border-top:1px solid #000;"></div>
+                    <br>
+                    [observaciones]
+                </td>
+
+                <td>Hoja [numero_hoja] de [total_hojas]</td>
+            </tr>
+        </table>
+
+    </div>
+
+</body>
+</html>

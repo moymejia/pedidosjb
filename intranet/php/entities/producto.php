@@ -21,8 +21,8 @@ class producto extends table{
         if(isset($PARAMETROS['operacion'])){
 
             if ($PARAMETROS['operacion'] == 'obtener_modelo') {
-                if (table::validate_parameter_existence(['modelo','idmarca'], $PARAMETROS, false)) {
-                    if($resultado = self::obtener_modelo($PARAMETROS['modelo'],$PARAMETROS['idmarca'])){
+                if (table::validate_parameter_existence(['modelo','idmarca','idset_talla'], $PARAMETROS, false)) {
+                    if($resultado = self::obtener_modelo($PARAMETROS['modelo'],$PARAMETROS['idmarca'],$PARAMETROS['idset_talla'])){
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -34,13 +34,22 @@ class producto extends table{
         }
     }
 
-    public function obtener_modelo($modelo, $idmarca){
+    public function obtener_modelo($modelo, $idmarca, $idset_talla){
 
         $modelo = addslashes($modelo);
         $idmarca = (int)$idmarca;
     
         $result = mysql::getresult("SELECT idproducto, modelo, linea, idcolor, color, idmarca, marca, material, precio, idproducto_precio
-            FROM view_producto_modelo WHERE modelo = '$modelo' AND idmarca = '$idmarca' ORDER BY color ASC");
+            FROM view_producto_modelo 
+            WHERE modelo = '$modelo' 
+            AND idmarca = '$idmarca'
+            AND idproducto IN (
+                SELECT idproducto 
+                FROM producto 
+                WHERE idset_talla = '".intval($idset_talla)."'
+            )
+            ORDER BY color ASC
+        ");
     
         if(!$result || mysql::num_rows($result) == 0){
             $this->last_error = "No se encontro el modelo.";

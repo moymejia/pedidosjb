@@ -212,7 +212,7 @@
 
     };
 
-    upload_action('modelo,idmarca','producto','obtener_modelo',callback_buscar_estilo);
+    upload_action('modelo,idmarca,idset_talla','producto','obtener_modelo',callback_buscar_estilo);
 
   });
 
@@ -445,7 +445,12 @@
 
     upload_file(params.join(','),'imagen_producto','pedido_detalle','guardar',callback_guardar_detalle);
   }
-  
+
+  function safe(val){
+    if (val === null || val === undefined || val === 'null') return '';
+    return val;
+  }
+
   function renderDetalle(){
 
     var tbody = document.getElementById("detallePedidoBody");
@@ -458,28 +463,33 @@
   
     state.detalle.forEach(function(linea, index){
   
-      var tallasFiltradas = linea.tallas.filter(function(t){
-        return (linea.cantidades[t.id] || 0) > 0;
+      var tablaTallas = '<table class="tabla-tallas">';
+
+      tablaTallas += '<tr>';
+      linea.tallas.forEach(function(t){
+        tablaTallas += '<td style="padding:2px 4px;"><strong>' + t.numero + '</strong></td>';
       });
-      
-      var tallasStr = tallasFiltradas.map(function(t){
-        return t.numero;
-      }).join(" ");
-      
-      var cantidadesStr = tallasFiltradas.map(function(t){
-        return linea.cantidades[t.id];
-      }).join(" ");
+      tablaTallas += '</tr>';
+  
+      tablaTallas += '<tr>';
+      linea.tallas.forEach(function(t){
+        var val = linea.cantidades[t.id] || 0;
+        tablaTallas += '<td style="padding:2px 4px; color:'+(val === 0 ? '#ff0000' : '#fff')+'">' + val + '</td>';
+      });
+      tablaTallas += '</tr>';
+  
+      tablaTallas += '</table>';
   
       var tr = document.createElement("tr");
   
       tr.innerHTML =
-        '<td><strong>'+linea.estilo_codigo+'</strong><br><small>'+linea.estilo_descripcion+'</small></td>' +
-        '<td>'+linea.color_nombre+'</td>' +
-        '<td>'+linea.marca+'</td>' +
-        '<td>'+linea.material+'</td>' +
+        '<td><strong>'+safe(linea.estilo_codigo)+'</strong><br><small>'+safe(linea.estilo_descripcion)+'</small></td>' +
+        '<td>'+safe(linea.color_nombre)+'</td>' +
+        '<td>'+safe(linea.marca)+'</td>' +
+        '<td>'+safe(linea.material)+'</td>' +
         '<td class="text-right">Q '+linea.precio.toFixed(2)+'</td>' +
-        '<img src="../' + linea.imagen + '?x=' + Date.now() + '" class="shoe-thumb">' +
-        '<td><div>'+tallasStr+'</div><div class="text-muted">'+cantidadesStr+'</div></td>' +
+        '<td style="text-align:center;"><img src="../' + linea.imagen + '?x=' + Date.now() + '" class="shoe-thumb"></td>' +
+        '<td>'+tablaTallas+'</td>' +
         '<td class="text-center"><strong>'+linea.cantidad_total+'</strong></td>' +
         '<td class="text-right"><strong>Q '+linea.subtotal.toFixed(2)+'</strong></td>' +
         '<td>' +
@@ -554,7 +564,8 @@
   
     document.getElementById("resumenLineas").textContent = totalLineas;
     document.getElementById("resumenPares").textContent = totalPares;
-    document.getElementById("resumenMonto").textContent = "Q " + totalMonto.toFixed(2);
+    document.getElementById("resumenMonto").textContent = "Q " + totalMonto.toLocaleString('en-US', {minimumFractionDigits: 2,maximumFractionDigits: 2
+  });
   
   }
 

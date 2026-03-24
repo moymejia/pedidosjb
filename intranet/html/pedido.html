@@ -65,6 +65,23 @@
             top: 0;
             z-index: 10;
         }
+
+        #pedidoApp table table,
+        #pedidoApp table table td {
+            border: none !important;
+        }
+
+        #pedidoApp .tabla-tallas {
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+
+        #pedidoApp .tabla-tallas td {
+            border: none !important;
+            padding: 2px 4px;
+        }
     </style>
 </header>
 
@@ -182,6 +199,46 @@
                                     onclick="
                                         clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento,email');
                                     ">Limpiar</button>
+
+                                    <button type="button" class="btn btn-warning" id="btn_imprimir" style="display: none;" onclick="
+                                    callback_imprimir_pedido = function(respuesta){
+                                        const contenedor = element('div_imprimir_pedido');
+                                        const imagenes = contenedor.getElementsByTagName('img');
+                                        let total = imagenes.length;
+                                        let cargadas = 0;
+                                        if (total === 0) {
+                                            print_div('div_imprimir_pedido');
+                                            return;
+                                        }
+
+                                        for (let i = 0; i < total; i++) {
+                                            if (imagenes[i].complete) {
+                                                cargadas++;
+                                            } else {
+                                                imagenes[i].onload = () => {
+                                                    cargadas++;
+                                                    if (cargadas === total) {
+                                                        print_div('div_imprimir_pedido');
+                                                    }
+                                                };
+                                                imagenes[i].onerror = () => {
+                                                    cargadas++;
+                                                    if (cargadas === total) {
+                                                        print_div('div_imprimir_pedido');
+                                                    }
+                                                };
+                                            }
+                                        }
+                                        if (cargadas === total) {
+                                            print_div('div_imprimir_pedido');
+                                        }
+                                    }
+
+                                    download_div_content('idpedido','pedido','imprimir_pedido','div_imprimir_pedido', callback_imprimir_pedido);
+                                    ">
+                                    <i class="fas fa-print"></i> Imprimir
+                                    </button>
+                                    <div id="div_imprimir_pedido" style="display: none;"></div>
                             </div>
                         </div>
 
@@ -190,6 +247,8 @@
                 </div>
 
             </form>
+
+            
 
             <!-- Resumen -->
             <div class="" id="detalles_del_pedido" style="display: none;">
@@ -279,7 +338,7 @@
                         <div class="form_row">
                             <div class="form-group col-md-4">
                                 <label for="principios_activos">Imagen</label>
-                                <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept="image/*">
+                                <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept="image/*" required>
                                 <span class="bar"></span>
                             </div>
                         </div>
@@ -372,13 +431,15 @@
                             Eliminar Pedido
                         </button>
                 
-                        <button type="button" id="btn_guardar_pedido" 
+                        <button type="button" id="btn_cerrar_pedido" 
                             class="btn btn-success waves-effect waves-light px-5"
                             onclick="
                                 if(!confirm('¿Está seguro de cerrar este pedido?')) return;
                 
                                 callback_cerrar_pedido = function(){
                                     notify_success('Pedido cerrado exitosamente');
+                                    showElements('btn_imprimir');
+                                    hideElements('btn_cerrar_pedido');
                                     return mostrar_opcion(8,'pedido','Mantenimientos'); 
                                 }
                 

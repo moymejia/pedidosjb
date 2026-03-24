@@ -292,7 +292,7 @@ class usuario extends table
     //get nombre usuario.
     public function get_nombre($usuario)
     {
-        return mysql::getvalue("SELECT nombre FROM multiclich_seguridad.usuario WHERE usuario = '$usuario' ");
+        return mysql::getvalue("SELECT nombre FROM pedidosjb_seguridad.usuario WHERE usuario = '$usuario' ");
     }
 
     public function get_usuario_actual()
