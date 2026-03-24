@@ -1,15 +1,15 @@
-<h4 class="card-title m-b-5 header-titulo">Mantenimiento color</h4>
+<h4 class="card-title m-b-5 header-titulo">Mantenimiento concepto</h4>
 <form class="margen-formulario" onsubmit="
 	delete callback_guardar_registro_correcto;
 	callback_guardar_registro_correcto = function(){
-		return mostrar_opcion(47,'Color','Clientes');
+		return mostrar_opcion(48,'Concepto','Clientes');
 	};
 	guardar_registro(this);
 	return false;
 	" id="formulario_registro">
 
-    <input type="hidden" name="table" id="table" value="color">
-    <input type="hidden" name="idcolor" id="idcolor">
+    <input type="hidden" name="table" id="table" value="concepto">
+    <input type="hidden" name="idconcepto" id="idconcepto">
 
     <div class="row">
         <div class="form-group m-b-5 col-md-4">
@@ -25,18 +25,18 @@
         <div class="form-group col-md-4 m-t-30">
             <button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="">Guardar</button>
             <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
-                onclick="hideElement('botones_edicion');objeto('idcolor').value = '';objeto('idcolor').readOnly = false;">Cancelar</button>
+                onclick="hideElement('botones_edicion');objeto('idconcepto').value = '';objeto('idconcepto').readOnly = false;">Cancelar</button>
             <span id="botones_edicion" style="display: none;">
                 <button type="button" class="btn btn-info waves-effect waves-light" onclick="
 					delete callback_download;
 					callback_download = function(){
 						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
 						if(objeto('estado').value != 'PROTEGIDO'){ 
-							notify_success('El color esta ahora '+objeto('estado').value);
-							return mostrar_opcion(47,'Color','Clientes');
+							notify_success('El concepto esta ahora '+objeto('estado').value);
+							return mostrar_opcion(48,'Concepto','Clientes');
 						}
 					}
-					download_input_value('idcolor','color','cambiar_estado','estado');
+					download_input_value('idconcepto','concepto','cambiar_estado','estado');
 					">Cambiar estado</button>
             </span>
         </div>
@@ -44,6 +44,6 @@
 </form>
 <hr>
 <!-- -->
-<div class="table-responsive" id="lista_color">
-    [tabla_color]
+<div class="table-responsive" id="lista_concepto">
+    [tabla_concepto]
 </div>
