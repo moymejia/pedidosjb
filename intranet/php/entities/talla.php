@@ -242,9 +242,32 @@ class talla extends table
     }
 
     public function get_idtalla($numero)
-    {
-        return mysql::getvalue("SELECT idtalla FROM talla WHERE numero = '$numero'");
+    {   
+        $row = mysql::getrow("SELECT idtalla FROM talla WHERE numero = '$numero'");
+        if(empty($row['idtalla'])){
+            $this->last_error = "Error no existe talla con el numero $numero.";
+            utils::report_error(validation_error, $numero, $this->last_error);
+
+            return false;
+        }else{
+            return $row['idtalla'];
+        }
     }
+
+    public function existen_tallas($talla_desde,$talla_hasta)
+    {
+        for($i = $talla_desde; $i <= $talla_hasta; $i++){
+            $idtalla = $this->get_idtalla($i);
+
+            if(!$idtalla){
+                $this->last_error = "No existe talla para el numero $i";
+
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     public function option_activas()
     {

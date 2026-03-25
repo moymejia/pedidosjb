@@ -73,18 +73,6 @@ class producto extends table{
             )
             ORDER BY color ASC
         ");
-
-        echo "SELECT idproducto, modelo, linea, idcolor, color, idmarca, marca, material, precio, idproducto_precio
-            FROM view_producto_modelo 
-            WHERE modelo = '$modelo' 
-            AND idmarca = '$idmarca'
-            AND idproducto IN (
-                SELECT idproducto 
-                FROM producto 
-                WHERE idset_talla = '".intval($idset_talla)."'
-            )
-            ORDER BY color ASC
-        ";
     
         if(!$result || mysql::num_rows($result) == 0){
             $this->last_error = "No se encontro el modelo.";
@@ -339,11 +327,12 @@ class producto extends table{
                             $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                             if(!$idset_talla){
+                                $this->last_error = $SET_TALLA->last_error;
                                 if(!$this->eliminar()){
                         
                                     return false;
                                 }
-    
+                                
                                 return false;
                             }
             
@@ -501,6 +490,7 @@ class producto extends table{
                         $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                         if(!$idset_talla){
+                            $this->last_error = $SET_TALLA->last_error;
                             if(!$this->eliminar()){
                     
                                 return false;
@@ -594,6 +584,7 @@ class producto extends table{
                         $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                         if(!$idset_talla){
+                            $this->last_error = $SET_TALLA->last_error;
                             if(!$this->eliminar()){
                     
                                 return false;
@@ -697,6 +688,7 @@ class producto extends table{
                         $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                         if(!$idset_talla){
+                            $this->last_error = $SET_TALLA->last_error;
                             if(!$this->eliminar()){
                     
                                 return false;
@@ -789,6 +781,7 @@ class producto extends table{
                         $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                         if(!$idset_talla){
+                            $this->last_error = $SET_TALLA->last_error;
                             if(!$this->eliminar()){
                     
                                 return false;
@@ -890,6 +883,7 @@ class producto extends table{
                         $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
 
                         if(!$idset_talla){
+                            $this->last_error = $SET_TALLA->last_error;
                             if(!$this->eliminar()){
                     
                                 return false;

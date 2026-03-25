@@ -13,7 +13,7 @@ class set_talla extends table
     use utils;
     private $idset_talla;
     private $ACCIONES   = [];
-    private $last_error = '';
+    public $last_error = '';
 
     public function __construct($PARAMETROS = null)
     {
@@ -319,6 +319,14 @@ class set_talla extends table
 
             return $idset_talla_d;
         } else {
+            $TALLA = new talla();
+
+            if(!$TALLA->existen_tallas($talla_desde,$talla_hasta)){
+                $this->last_error = $TALLA->last_error;
+
+                return false;
+            }
+
             $grupo       = $talla_desde . '-' . $talla_hasta;
             $DATOS       = ['idset_talla' => '', 'grupo' => $grupo];
             $idset_talla = $this->guardar($DATOS);
@@ -327,6 +335,7 @@ class set_talla extends table
                 return false;
             } else {
                 if (! $SET_TALLA_DETALLE->guardar_tallas($idset_talla, $talla_desde, $talla_hasta)) {
+                    $this->last_error = $SET_TALLA_DETALLE->last_error;
 
                     return false;
                 }

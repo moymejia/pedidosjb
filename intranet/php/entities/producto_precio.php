@@ -96,12 +96,6 @@ class producto_precio extends table
             }else{
                 $and = "AND material is not null";
             }
-            if(mysql::exists('producto_precio',"idproducto = '$idproducto' $and")){
-                $this->last_error = "Error al modificar el precio del producto, ya existe un registro para el material del producto";
-                utils::report_error(bd_error, $idproducto."-".$material,$this->last_error);
-
-                return false;
-            }
 
             $DATOS = [];
             $DATOS['idproducto_precio']    = $idproducto_precio;

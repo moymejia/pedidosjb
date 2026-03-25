@@ -240,6 +240,12 @@ class set_talla_detalle extends table
         for($i = $talla_desde; $i <= $talla_hasta; $i++){
             $idtalla = $TALLA->get_idtalla($i);
 
+            if(!$idtalla){
+                $this->last_error = $TALLA->last_error;
+
+                return false;
+            }
+
             if(!$this->agregar_talla($idset_talla,$idtalla)){
 
                 return false;
