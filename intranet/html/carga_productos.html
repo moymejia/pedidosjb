@@ -1,0 +1,32 @@
+<div class="row">
+    <div class="col-md-3">
+        <label for="idmarca">Marca</label>
+        <select name="idmarca" id="idmarca" class="form-control">
+            [marcas]
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="idtemporada">Temporada</label>
+        <select name="idtemporada" id="idtemporada" class="form-control">
+            [temporadas]
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="archivo">Archivo</label>
+        <input type="file" id="archivo" class="form-control">
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="button" class="btn btn-secondary" id="btn_agregar_producto" onclick="
+            callback_cargar_productos = function(){
+                notify_success('Productos agregados correctamente.');
+                clearElements('idmarca,idtemporada,archivo');
+            }
+            upload_file('idmarca,idtemporada','archivo','producto', 'cargar_productos', callback_cargar_productos)
+        ">
+            Cargar archivo
+        </button>
+    </div>
+</div>

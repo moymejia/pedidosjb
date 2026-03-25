@@ -212,4 +212,39 @@ class set_talla_detalle extends table
         }
     }
 
+    public function get_tallas($idset_talla)
+    {
+        $sql = mysql::getresult("SELECT idtalla FROM set_talla_detalle WHERE idset_talla = '$idset_talla'");
+
+        $tallas = [];
+
+        while($row = mysql::getrowresult($sql)){
+            $tallas[] = $row['idtalla'];
+        }
+
+        return $tallas;
+    }
+
+    public function get_set_talla($talla_desde,$talla_hasta) 
+    {   
+        return mysql::getvalue("SELECT idset_talla FROM view_set_talla_detalle GROUP BY idset_talla
+                HAVING 
+                    MIN(numero) = $talla_desde
+                    AND MAX(numero) = $talla_hasta
+                    AND COUNT(numero) = ($talla_hasta - $talla_desde + 1);");
+    }
+
+    public function guardar_tallas($idset_talla,$talla_desde,$talla_hasta)
+    {   
+        $TALLA = new talla();
+        for($i = $talla_desde; $i <= $talla_hasta; $i++){
+            $idtalla = $TALLA->get_idtalla($i);
+
+            if(!$this->agregar_talla($idset_talla,$idtalla)){
+
+                return false;
+            }
+        }
+        return true;
+    }
 }

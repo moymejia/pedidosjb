@@ -8,7 +8,7 @@ class tipo_suela extends table
 {
     use utils;
     private $idtipo_suela;
-    private $last_error = '';
+    public $last_error = '';
     private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null)
@@ -193,4 +193,15 @@ class tipo_suela extends table
         return mysql::getvalue("SELECT estado FROM tipo_suela WHERE idtipo_suela = '$idtipo_suela' ");
     }
 
+    public function get_idtipo_suela($nombre)
+    {
+        if(mysql::exists('tipo_suela',"nombre = '$nombre'")){
+            return mysql::getvalue("SELECT idtipo_suela FROM tipo_suela WHERE nombre = '$nombre'");
+        }else{
+            $DATOS = [];
+            $DATOS['idtipo_suela'] = '';
+            $DATOS['nombre'] = $nombre;
+            return $this->guardar_tipo_suela($DATOS);
+        }
+    }
 }

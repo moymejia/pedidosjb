@@ -2,6 +2,7 @@
 require_once '../wisetech/table.php';
 require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
+require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
 
 class color extends table
@@ -9,7 +10,7 @@ class color extends table
 
     use utils;
     private $idcolor;
-    private $last_error = '';
+    public $last_error = '';
     private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null)
@@ -120,7 +121,7 @@ class color extends table
                 $idcolor = mysql::last_id();
                 $security->registrar_bitacora($this->ACCIONES['crear_color'], $idcolor);
 
-                return "nuevo";
+                return $idcolor;
             } else {
                 $this->last_error = "Error al guardar el color";
                 utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -193,6 +194,16 @@ class color extends table
     public function estado($idcolor)
     {
         return mysql::getvalue("SELECT estado FROM color WHERE idcolor = '$idcolor' ");
+    }
+
+    public function get_idcolor($nombre){
+        if(mysql::exists("color","nombre = '$nombre'")){
+            return mysql::getvalue("SELECT idcolor from color WHERE nombre = '$nombre'");
+        }else{
+            $DATOS = ['idcolor'=>'','nombre'=>$nombre];
+            $idcolor = $this->guardar_color($DATOS);
+            return $idcolor;
+        }
     }
 
 }

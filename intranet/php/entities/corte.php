@@ -8,7 +8,7 @@ class corte extends table
 {
     use utils;
     private $idcorte;
-    private $last_error = '';
+    public $last_error = '';
     private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null)
@@ -193,4 +193,15 @@ class corte extends table
         return mysql::getvalue("SELECT estado FROM corte WHERE idcorte = '$idcorte' ");
     }
 
+    public function get_idcorte($nombre)
+    {
+        if(mysql::exists('corte',"nombre = '$nombre'")){
+            return mysql::getvalue("SELECT idcorte FROM corte WHERE nombre = '$nombre'");
+        }else{
+            $DATOS = [];
+            $DATOS['idcorte'] = '';
+            $DATOS['nombre']  = $nombre;
+            return $this->guardar_corte($DATOS);
+        }
+    }
 }

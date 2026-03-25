@@ -8,7 +8,7 @@ class concepto extends table
 {
     use utils;
     private $idconcepto;
-    private $last_error = '';
+    public $last_error = '';
     private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null)
@@ -191,6 +191,18 @@ class concepto extends table
     public function estado($idconcepto)
     {
         return mysql::getvalue("SELECT estado FROM concepto WHERE idconcepto = '$idconcepto' ");
+    }
+
+    public function get_idconcepto($nombre)
+    {
+        if(mysql::exists('concepto',"nombre = '$nombre'")){
+            return mysql::getvalue("SELECT idconcepto FROM concepto WHERE nombre = '$nombre'");
+        }else{
+            $DATOS = [];
+            $DATOS['idconcepto'] = '';
+            $DATOS['nombre']     = $nombre;
+            return $this->guardar_concepto($DATOS);
+        }
     }
 
 }
