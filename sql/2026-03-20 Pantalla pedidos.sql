@@ -4,19 +4,18 @@
 
 INSERT INTO pedidosjb_seguridad.opcion
 (idopcion, idmenu, nombre, entity, funcion, orden, estado)
-VALUES(8, 2, 'Pedido', 'pedido', 'cargar_opcion', 7, 'ACTIVO');
-
+VALUES(9, 2, 'Pedido', 'pedido', 'cargar_opcion', 7, 'ACTIVO');
 INSERT INTO pedidosjb_seguridad.accion
 (idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
 VALUES
-(26, 8, 'Opcion pedido', 'SI', NULL, NULL, NULL, 'ACTIVO'),
-(27, 8, 'Crear pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(28, 8, 'Eliminar pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(29, 8, 'Cerrar Pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(30, 8, 'Crear detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(31, 8, 'Eliminar detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(32, 8, 'Modificar detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
-(33, 8, 'Imprimir pedido', 'NO', NULL, NULL, NULL, 'ACTIVO');
+(40, 9, 'Opcion pedido', 'SI', NULL, NULL, NULL, 'ACTIVO'),
+(41, 9, 'Crear pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(42, 9, 'Eliminar pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(43, 9, 'Cerrar Pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(44, 9, 'Crear detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(45, 9, 'Eliminar detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(46, 9, 'Modificar detalle pedido', 'NO', NULL, NULL, NULL, 'ACTIVO'),
+(47, 9, 'Imprimir pedido', 'NO', NULL, NULL, NULL, 'ACTIVO');
 
 -- =========================
 -- USAR DB

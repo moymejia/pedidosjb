@@ -423,7 +423,7 @@
                 
                                 callback_eliminar_pedido = function(){
                                     notify_success('Pedido eliminado correctamente');
-                                    return mostrar_opcion(8,'pedido','Mantenimientos'); 
+                                    return mostrar_opcion(9,'pedido','Mantenimientos'); 
                                 }
                 
                                 upload_action('idpedido','pedido','eliminar',callback_eliminar_pedido);
@@ -440,7 +440,7 @@
                                     notify_success('Pedido cerrado exitosamente');
                                     showElements('btn_imprimir');
                                     hideElements('btn_cerrar_pedido');
-                                    return mostrar_opcion(8,'pedido','Mantenimientos'); 
+                                    return mostrar_opcion(9,'pedido','Mantenimientos'); 
                                 }
                 
                                 upload_action('idpedido','pedido','cerrar_pedido',callback_cerrar_pedido);

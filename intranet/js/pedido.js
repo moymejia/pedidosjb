@@ -59,6 +59,8 @@
   
       if (!agrupado[key]) {
         agrupado[key] = {
+          idpedido: row.idpedido,
+          idpedido_detalle: row.idpedido_detalle,
           idproducto: row.idproducto,
           idproducto_precio: row.idproducto_precio,
           estilo_codigo: row.codigo,
@@ -260,18 +262,18 @@
   
     if (!confirm("¿Eliminar esta línea completa?")) return;
   
+    var idpedido = document.getElementById("idpedido").value;
+  
     var params = [];
-
-    params.push("idpedido=" + state.idpedido);
+  
+    params.push("idpedido=" + idpedido);
   
     linea.ids_detalle.forEach(function(id){
       params.push("idpedido_detalle[]=" + id);
     });
   
     callback_eliminar = function(resp){
-  
       notify_success("Producto eliminado correctamente");
-  
       cargarDetallePedido();
     };
   
@@ -426,7 +428,7 @@
     var color = state.colorActual;
     var params = [];
   
-    params.push("idpedido_detalle"); 
+    params.push("idpedido_detalle="+state.idpedido_detalle); 
     params.push("idpedido=" + idpedido);
     params.push("idproducto=" + color.idproducto);
     params.push("idproducto_precio=" + state.idproducto_precio);

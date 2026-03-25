@@ -465,7 +465,7 @@ class pedido extends table{
     }
 
     public function estado($idpedido)
-    {
+    {   
         return mysql::getvalue("SELECT estado FROM pedido WHERE idpedido = '$idpedido'");
     }
     

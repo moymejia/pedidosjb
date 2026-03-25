@@ -73,6 +73,18 @@ class producto extends table{
             )
             ORDER BY color ASC
         ");
+
+        echo "SELECT idproducto, modelo, linea, idcolor, color, idmarca, marca, material, precio, idproducto_precio
+            FROM view_producto_modelo 
+            WHERE modelo = '$modelo' 
+            AND idmarca = '$idmarca'
+            AND idproducto IN (
+                SELECT idproducto 
+                FROM producto 
+                WHERE idset_talla = '".intval($idset_talla)."'
+            )
+            ORDER BY color ASC
+        ";
     
         if(!$result || mysql::num_rows($result) == 0){
             $this->last_error = "No se encontro el modelo.";
@@ -286,7 +298,7 @@ class producto extends table{
                     $last_modelo  = null;
                     $linea = 0;
             
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
@@ -437,9 +449,9 @@ class producto extends table{
 
                 if ($handle !== false) {
             
-                    fgetcsv($handle, 1000, ",");
+                    fgetcsv($handle, 1000, ",", '"', "\\");
                     $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea_count++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
@@ -541,9 +553,9 @@ class producto extends table{
                 $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
                 if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",");
+                    fgetcsv($handle, 1000, ",", '"', "\\");
                     $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea_count++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
@@ -641,9 +653,9 @@ class producto extends table{
                 $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
                 if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",");
+                    fgetcsv($handle, 1000, ",", '"', "\\");
                     $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea_count++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
@@ -734,9 +746,9 @@ class producto extends table{
                 $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
                 if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",");
+                    fgetcsv($handle, 1000, ",", '"', "\\");
                     $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea_count++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
@@ -826,9 +838,9 @@ class producto extends table{
                 $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
                 if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",");
+                    fgetcsv($handle, 1000, ",", '"', "\\");
                     $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
                         $linea_count++;
                         $conteo_datos = count(array_filter($row, function($v) {
                             return trim($v) !== '';
