@@ -30,7 +30,7 @@ class pedido extends table{
         if(isset($PARAMETROS['operacion'])){
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada', 'idset_talla','idtransporte'], $PARAMETROS, false)) {
+                if (table::validate_parameter_existence([ 'nopedido','idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada', 'idset_talla','idtransporte'], $PARAMETROS, false)) {
 
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -91,7 +91,7 @@ class pedido extends table{
         $DATA['set_tallas']     = (new set_talla())->options_activos();
         $DATA['transportes']    = (new transporte())->option_activas();
 
-        $result = mysql::getresult("SELECT idpedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, 
+        $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, 
             fecha_desde,fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
             FROM view_pedidos ORDER BY idpedido DESC");
 
@@ -100,7 +100,7 @@ class pedido extends table{
             <thead>
                 <tr>
                     <th>Acciones</th>
-                    <th>ID Pedido</th>
+                    <th>No. pedido</th>
                     <th>Set talla</th>
                     <th>Cliente</th>
                     <th>Temporada</th>
@@ -114,6 +114,7 @@ class pedido extends table{
 
         while ($row = mysql::getrowresult($result)) {
             $idpedido        = $row['idpedido'];
+            $nopedido        = $row['nopedido'];
             $idset_talla     = $row['idset_talla'];
             $set_talla       = $row['set_talla'];
             $cliente         = $row['cliente'];
@@ -145,7 +146,7 @@ class pedido extends table{
                         showElements('btn_imprimir');
                         hideElements('btn_cerrar_pedido');
                     }
-                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email');
+                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
                     cargarTallas();
                     cargarDetallePedido();
                     goTop();\">
@@ -155,7 +156,7 @@ class pedido extends table{
             $tabla .= "
                 <tr>
                     <td>$boton_editar</td>
-                    <td>$idpedido</td>
+                    <td>$nopedido</td>
                     <td>$set_talla</td>
                     <td>$cliente</td>
                     <td>$temporada</td>
@@ -178,8 +179,15 @@ class pedido extends table{
         $security = new security($this->ACCIONES['crear']);
         $usuario  = $security->get_actual_user();
 
+        if (mysql::exists("pedido", "nopedido = '" . addslashes($PARAMETROS['nopedido']) . "'")) {
+            $this->last_error = "El número de pedido ya existe";
+            utils::report_error(validation_error,$PARAMETROS['nopedido'],$this->last_error);
+            return false;
+        }
+
         $DATOS = [];
         $DATOS['idcliente']             = $PARAMETROS['idcliente'];
+        $DATOS['nopedido']              = $PARAMETROS['nopedido'];
         $DATOS['idmarca']               = $PARAMETROS['idmarca'];
         $DATOS['fecha_desde']           = $PARAMETROS['fecha_desde'];
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
@@ -411,14 +419,14 @@ class pedido extends table{
                         <img src='".($p['imagen'] ? '../'.$p['imagen'] : "https://via.placeholder.com/50")."'>
                     </td>
                     <td style='font-size: 12px;'>".$p['producto']."</td>
-                    <td style='font-size: 10px;' class='left'>
+                    <td style='font-size: 10px;' class='center'>
                         ".strtoupper($p['color'])." - ".strtoupper($p['material'])."
                     </td>
                     <td style='font-size: 12px;' >".$PEDIDO['marca']."</td>
                     ".$fila_tallas."
                     <td>".$total."</td>
                     <td style='font-size: 12px;'>Q ".number_format($precio,2,'.',',')."</td>
-                    <td style='font-size: 13px;'>Q ".number_format($monto,2,'.',',')."</td>
+                    <td style='font-size: 12px;'>Q ".number_format($monto,2,'.',',')."</td>
                 </tr>
                 ";
             }

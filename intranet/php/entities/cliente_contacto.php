@@ -112,7 +112,7 @@ class cliente_contacto extends table
                     <span class=\"btn-label\">
                         <i class=\"far fa-edit\"></i>
                     </span>
-                    Seleccionar
+                    Editar
                 </button>
             ";
 
@@ -129,7 +129,7 @@ class cliente_contacto extends table
 
         if (!$tiene_registros) {
             $tabla .= "<tr>
-                    <td colspan='6' style='text-align:center;'>Sin registros</td>
+                    <td colspan='7' style='text-align:center;'>Sin registros</td>
                 </tr>";
         }
 

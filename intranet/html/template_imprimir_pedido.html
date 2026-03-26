@@ -28,25 +28,29 @@
     
         .left { text-align: left; }
     
-        .azul { color: #0070c0; font-weight: bold; }
+        .azul { color: #0070c0; font-weight: bold;  }
         .rojo { color: red; font-weight: bold; }
         .bold { font-weight: bold; }
+        .gris {
+            background-color: #e0dfdf !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     
         .img img { width: 40px; } /* antes 55px */
     
         .fila-totales td { 
-            background: #f2f2f2; 
             height: 30px; /* antes 45px */
         }
     
         .totales { 
-            font-size: 14px; /* antes 18px */
+            font-size: 18px; /* antes 18px */
             color: red; 
             font-weight: bold; 
         }
     
         .titulo-totales { 
-            font-size: 11px; /* antes 13px */
+            font-size: 13px; /* antes 13px */
             font-weight: bold; 
         }
     
@@ -58,6 +62,64 @@
             font-size: 12px;
             line-height: 1;
         }
+
+        /* Quitar cuadrícula solo en encabezado */
+        .encabezado td {
+            border: none;
+            font-size: 15px;
+        }
+
+        .encabezado .bold {
+            white-space: nowrap;
+            font-size: 13px; /* más compacto */
+        }
+
+        .encabezado .azul,
+        .encabezado .rojo {
+            border-bottom: 1px solid #000;
+        }
+
+        /* Quitar toda la cuadrícula */
+        .firmas td {
+            border: none;
+        }
+
+        /* Líneas tipo firma */
+        .linea-firma {
+            border-top: 1px solid #000;
+            width: 60%;           /* controla el largo */
+            margin: 25px auto 0;  /* centra la línea */
+            padding-top: 2px;
+            text-align: center;
+        }
+
+        .firmas .observaciones {
+            border: 1px solid #000 !important;
+        }
+
+        .firma-box {
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* 🔥 pega todo abajo */
+        }
+
+        .cuadricula{
+            border: 1px solid #000 !important;
+        }
+
+
+        .titulo-observaciones {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .color-print {
+            background-color: #00b0f0 !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     </style>
 </head>
 
@@ -65,7 +127,7 @@
 
     <div class="container">
 
-        <table>
+        <table class="encabezado">
             <colgroup>
                 <col style="width:14%">
                 <col style="width:10%">
@@ -86,7 +148,7 @@
                 <td class="bold">Fecha:</td>
                 <td colspan="2" class="azul">[fecha]</td>
                 <td class="bold">Vendedor:</td>
-                <td style="background:#00b0f0;color:#fff;">[vendedor]</td>
+                <td class="color-print">[vendedor]</td>
             </tr>
 
             <tr>
@@ -114,9 +176,9 @@
 
             <tr>
                 <td class="bold">Correo Electrónico:</td>
-                <td colspan="2">[email]</td>
+                <td colspan="2" class="azul">[email]</td>
                 <td class="bold">Fecha de Entrega:</td>
-                <td class="rojo" style="font-size: 12px;">[fecha_entrega]</td>
+                <td class="rojo" style="font-size: 13px;">[fecha_entrega]</td>
                 <td class="bold">Transporte:</td>
                 <td class="azul">[transporte]</td>
             </tr>
@@ -140,14 +202,14 @@
             </colgroup>
 
             <tr>
-                <th rowspan="2">Imagen</th>
-                <th rowspan="2">Estilo</th>
-                <th rowspan="2">Color - Material</th>
-                <th rowspan="2">Marca</th>
-                <th colspan="10">TALLAS</th>
-                <th rowspan="2">Total<br>Pares</th>
-                <th rowspan="2">Precio por Par</th>
-                <th rowspan="2">Monto Total por Caja</th>
+                <th class="gris" rowspan="2">Imagen</th>
+                <th class="gris" rowspan="2">Estilo</th>
+                <th class="gris" rowspan="2">Color - Material</th>
+                <th class="gris" rowspan="2">Marca</th>
+                <th class="gris" colspan="10">TALLAS</th>
+                <th class="gris" rowspan="2">Total<br>Pares</th>
+                <th class="gris" rowspan="2">Precio por Par</th>
+                <th class="gris" rowspan="2">Monto Total por Caja</th>
             </tr>
 
             <tr>
@@ -157,7 +219,7 @@
             [detalle_productos]
         </table>
 
-        <table>
+        <table class="firmas">
             <colgroup>
                 <col style="width:8%">
                 <col style="width:10%">
@@ -169,37 +231,42 @@
                 <col style="width:12%">
             </colgroup>
 
-            <tr class="fila-totales">
-                <td colspan="12" class="left" style="font-size:13px;">
+            <tr class="fila-totales gris cuadricula">
+                <td colspan="12" class="left cuadricula" style="font-size:13px; text-align: center;">
                     Precios 100% facturados menos descuentos. Pedido generado digitalmente, por lo que puede carecer de firma.
                     Precios más flete de envío. Al recibir este pedido acepta las condiciones.
                     <span class="rojo">NO SE ACEPTAN DEVOLUCIONES.</span>
                 </td>
-                <td colspan="2" class="titulo-totales">Totales</td>
-                <td class="totales">[total_pares]</td>
-                <td colspan="2" class="totales">Q [total]</td>
+                <td colspan="2" class="titulo-totales gris cuadricula" style="font-size: 15px;">Totales</td>
+                <td class="totales gris cuadricula">[total_pares]</td>
+                <td colspan="2" class="totales gris cuadricula">Q [total]</td>
             </tr>
 
             <tr>
-                <td colspan="3" style="height:70px; vertical-align:bottom;">
-                    <span class="rojo"></span><br><br><br>
-                    <div style="border-top:1px solid #000;">Representante de Ventas:</div>
-                    <b>[vendedor]</b>
+                <td colspan="3">
+                    <div class="firma-box">
+                        <br><br><br>
+                        <div class="linea-firma">Representante de Ventas</div>
+                        <b>Lic. Juan Bran</b>
+                    </div>
+                </td>
+                
+                <td colspan="5">
+                    <div class="firma-box">
+                        <br><br>
+                        <div class="linea-firma">Firma Cliente</div>
+                        <br>
+                    </div>
                 </td>
 
-                <td colspan="7">
-                    <span class="rojo"></span><br><br>
-                    <div style="border-top:2px solid #000;">Firma Cliente</div>
-                </td>
-
-                <td colspan="6" class="rojo observaciones">
-                    <b>OBSERVACIONES</b><br>
+                <td colspan="8" class="rojo observaciones">
+                    <span class="titulo-observaciones">OBSERVACIONES</span><br>
                     <div style="border-top:1px solid #000;"></div>
                     <br>
                     [observaciones]
                 </td>
 
-                <td>Hoja [numero_hoja] de [total_hojas]</td>
+                <td style="color: red;">Hoja [numero_hoja] de [total_hojas]</td>
             </tr>
         </table>
 
