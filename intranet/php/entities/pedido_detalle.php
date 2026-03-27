@@ -51,8 +51,6 @@ class pedido_detalle extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'eliminar') {
-                var_dump($PARAMETROS);
-
                 if (table::validate_parameter_existence(['idpedido_detalle','idpedido'],$PARAMETROS,false)) {      
                     if ($resultado = $this->eliminar($PARAMETROS['idpedido_detalle'],$PARAMETROS['idpedido'])) {
                         self::end_success($resultado);

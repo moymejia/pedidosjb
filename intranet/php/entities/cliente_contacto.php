@@ -4,6 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/utils.php';
 require_once '../entities/usuario.php';
+require_once '../entities/cliente.php';
 
 class cliente_contacto extends table
 {
@@ -23,7 +24,6 @@ class cliente_contacto extends table
         if (isset($PARAMETROS['operacion'])) {
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                var_dump($PARAMETROS);
                 if (table::validate_parameter_existence(['idcliente','idtipo_contacto','nombre_contacto','estado_contacto'], $PARAMETROS, false)) {
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -139,7 +139,16 @@ class cliente_contacto extends table
     }
 
     public function guardar($PARAMETROS)
-    {
+    {   
+        $CLIENTE = new cliente();
+        $estado_actual_cliente = $CLIENTE->estado($PARAMETROS['idcliente']);
+
+        if ($estado_actual_cliente == 'INACTIVO') {
+            $this->last_error = 'Cliente en estado INACTIVO, no puede modificarse';
+            $this->report_error(validation_error, "Modificar cliente", $this->last_error);
+            return false;
+        }
+
         if ($PARAMETROS['idcliente_contacto'] == '') {
 
             $security = new security($this->ACCIONES['crear_contacto']);
@@ -179,10 +188,10 @@ class cliente_contacto extends table
             $DATOS['nombre']                = $PARAMETROS['nombre_contacto'];
             $DATOS['telefono']              = $PARAMETROS['telefono_contacto'];
             $DATOS['correo']                = $PARAMETROS['correo_contacto'];
+            $DATOS['estado']                = $PARAMETROS['estado_contacto'];
             $DATOS['observaciones']         = $PARAMETROS['observaciones_contacto'];
             $DATOS['fecha_modificacion']    = date('Y-m-d H:i:s');
             $DATOS['usuario_modificacion']  = $usuario;
-            $DATOS['estado']                = $PARAMETROS['estado'];
 
             $llaves = ['idcliente_contacto'];
 
