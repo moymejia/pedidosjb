@@ -119,7 +119,17 @@
 
                             <div class="form-group col-md-3">
                                 <label>Cliente</label>
-                                <select class="form-control" id="idcliente" name="idcliente">
+                                <select class="form-control" id="idcliente" name="idcliente" onchange="
+                                    callback_obtener_correo = function(respuesta){
+                                        if(respuesta === 'sin_correo'){
+                                            notify_warning('El cliente seleccionado no tiene correo registrado.');
+                                            clearElements('email');
+                                            return;
+                                        }
+                                        element('email').value = respuesta;
+                                    }
+                                    upload_action('idcliente='+this.value,'cliente','obtener_correo', callback_obtener_correo);
+                                ">
                                     [clientes]
                                 </select>
                             </div>

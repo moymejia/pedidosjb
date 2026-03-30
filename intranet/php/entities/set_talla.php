@@ -328,7 +328,7 @@ class set_talla extends table
             }
 
             $grupo       = $talla_desde . '-' . $talla_hasta;
-            $DATOS       = ['idset_talla' => '', 'grupo' => $grupo];
+            $DATOS       = ['idset_talla' => '', 'grupo' => $grupo, 'descripcion' => $grupo];
             $idset_talla = $this->guardar($DATOS);
 
             if (! $idset_talla) {

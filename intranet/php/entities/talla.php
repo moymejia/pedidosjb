@@ -57,7 +57,7 @@ class talla extends table
 
     public function cargar_tabla_talla()
     {
-        $result = mysql::getresult("SELECT idtalla, numero, estado AS estado_talla FROM talla ORDER BY idtalla DESC");
+        $result = mysql::getresult("SELECT idtalla, numero, estado AS estado_talla FROM talla ORDER BY CAST(numero AS UNSIGNED) ASC");
 
         $tabla = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" width="100%">
             <thead style="background-color: var(--datatable-color); color: white;">
@@ -99,7 +99,7 @@ class talla extends table
     public function cargar_opcion()
     {
         $DATA        = [];
-        $result      = mysql::getresult("SELECT idtalla, numero, estado FROM talla ORDER BY idtalla DESC");
+        $result      = mysql::getresult("SELECT idtalla, numero, estado FROM talla ORDER BY CAST(numero AS UNSIGNED) ASC");
         $tabla_talla = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>

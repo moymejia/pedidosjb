@@ -59,22 +59,24 @@ class marca extends table
     {
         $DATA                       = [];
         $DATA['set_tallas_activos'] = (new set_talla())->options_activos();
-        $result                     = mysql::getresult("SELECT idmarca, nombre, estado, idset_talla_preferido, idset_talla, grupo FROM view_marca_set_talla");
+        $result                     = mysql::getresult("SELECT idmarca, nombre, estado, idset_talla_preferido, idset_talla, grupo, descripcion FROM view_marca_set_talla");
         $tabla_marca                = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
                 <th style="text-align: center;">Acciones</th>
                 <th style="text-align: center;">Nombre</th>
                 <th style="text-align: center;">Set de tallas preferido</th>
+                <th style="text-align: center;">Descripcion</th>
                 <th style="text-align: center;">Estado</th>
 			</tr>
 		</thead>
 		<tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
-            $nombre   = $row['nombre'];
-            $grupo    = $row['grupo'];
-            $estado   = $row['estado'];
+            $nombre         = $row['nombre'];
+            $grupo          = $row['grupo'];
+            $descripcion    = $row['descripcion'];
+            $estado         = $row['estado'];
             $row_data = $row;
             $str_data = "";
 
@@ -87,6 +89,7 @@ class marca extends table
 				<td>$boton_editar</td>
                 <td>$nombre</td>
                 <td>$grupo</td>
+                <td>$descripcion</td>
                 <td>$estado</td>
 			</tr>";
         }
@@ -136,7 +139,7 @@ class marca extends table
             }
 
             $security                  = new security($this->ACCIONES['crear_marca']);
-            $valores_necesarios        = ["nombre", "idset_talla_preferido"];
+            $valores_necesarios        = ["nombre","descripcion","idset_talla_preferido"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
             $DATOS['usuario_creacion'] = $security->get_actual_user();
@@ -162,7 +165,7 @@ class marca extends table
                 }
 
                 $security                      = new security($this->ACCIONES['modificar_marca']); //modificar registro de marca
-                $valores_necesarios            = ["idmarca", "nombre", "idset_talla_preferido", "estado"];
+                $valores_necesarios            = ["idmarca", "nombre", "descripcion","idset_talla_preferido", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
                 $llaves                        = ["idmarca"];
