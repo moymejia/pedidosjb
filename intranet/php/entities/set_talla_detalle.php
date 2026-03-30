@@ -65,7 +65,8 @@ class set_talla_detalle extends table
     {
 
         $tallas_actuales = '';
-        $SQL             = "SELECT idtalla, numero FROM view_set_talla_detalle WHERE idset_talla = $idset_talla";
+        $SQL = "SELECT idtalla, numero FROM talla WHERE estado = 'ACTIVO' AND idtalla NOT IN (SELECT idtalla FROM set_talla_detalle WHERE idset_talla = $idset_talla)
+            ORDER BY CAST(numero AS UNSIGNED) ASC";
 
         $RES = mysql::getresult($SQL);
 
@@ -92,11 +93,7 @@ class set_talla_detalle extends table
         }
 
         $tallas_desponibles = '';
-        $SQL                = "SELECT idtalla, numero FROM talla WHERE estado = 'ACTIVO' AND idtalla NOT IN (
-                    SELECT idtalla
-                    FROM set_talla_detalle
-                    WHERE idset_talla = $idset_talla
-            )";
+        $SQL = "SELECT idtalla, numero FROM talla WHERE estado = 'ACTIVO' AND idtalla NOT IN (SELECT idtalla FROM set_talla_detalle WHERE idset_talla = $idset_talla) ORDER BY CAST(numero AS UNSIGNED) ASC";
 
         $RES = mysql::getresult($SQL);
 

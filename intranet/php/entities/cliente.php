@@ -43,6 +43,19 @@ class cliente extends table
                     self::end_error($this->last_error);
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_correo') {
+                if (table::validate_parameter_existence(['idcliente'], $PARAMETROS, false)) {
+                    if($resultado = self::obtener_correo($PARAMETROS['idcliente'])){
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error($this->last_error);
+                }
+            }
+            
         }
 
     }
@@ -53,9 +66,9 @@ class cliente extends table
         $DATA['tipo_contacto'] = (new tipo_contacto())->option_activas();
 
         $result = mysql::getresult("SELECT idcliente, nombre, codigo, direccion, establecimiento,
-                telefono, nit, limite_credito, dias_credito, observaciones, estado
+                telefono, nit, limite_credito, dias_credito, observaciones, estado, correo
             FROM cliente");
-        $tabla_clientes = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+        $tabla_clientes = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable " cellspacing="0" width="100%">
 		<thead>
 			<tr>
                 <th style="text-align: center;">Acciones</th>
@@ -134,7 +147,7 @@ class cliente extends table
     public function guardar_cliente($PARAMETROS)
     {
         //valida que se cuente con los parametros necesarios.
-        $parametros_necesarios = ["nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones"];
+        $parametros_necesarios = ["nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones","correo"];
         if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -191,15 +204,8 @@ class cliente extends table
                 return false;
             }
 
-            //valida que el nombre asignado no este siendo usado por otro cliente.
-            if (mysql::exists('cliente', " nombre = '{$PARAMETROS['nombre']}'")) { //verifica que el nombre del cliente nuevo no exista ya
-                $this->last_error = 'El cliente actual ya existe en el sistema.';
-                utils::report_error(validation_error, $PARAMETROS['idcliente'], $this->last_error);
 
-                return false;
-            }
-
-            $valores_necesarios        = [ "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones"];
+            $valores_necesarios        = [ "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones","correo"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
             $DATOS['usuario_creacion'] = $security->get_actual_user();
@@ -219,12 +225,6 @@ class cliente extends table
         } else {
             $security = new security($this->ACCIONES['modificar_cliente']);
             if ($PARAMETROS['estado'] == 'ACTIVO') {
-                if (mysql::exists('cliente', " nombre = '{$PARAMETROS['nombre']}' AND idcliente != '{$PARAMETROS['idcliente']}'")) {
-                    $this->last_error = 'El nombre del cliente modificar ya existe en el sistema.';
-                    utils::report_error(validation_error, $PARAMETROS=['idcliente'], $this->last_error);
-
-                    return false;
-                }
 
                 if (mysql::exists('cliente', " codigo = '{$PARAMETROS['codigo']}' AND idcliente != '{$PARAMETROS['idcliente']}'")) {
                     $this->last_error = 'Uno de los clientes ya tiene asignado el codigo: ' . $PARAMETROS['codigo'];
@@ -234,7 +234,7 @@ class cliente extends table
                 }
 
                  //modificar registro de cliente
-                $valores_necesarios            = ["idcliente", "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones"];
+                $valores_necesarios            = ["idcliente", "nombre", "codigo", "direccion", "establecimiento", "telefono", "nit", "limite_credito", "dias_credito", "observaciones", "correo"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
                 $llaves                        = ["idcliente"];
@@ -296,6 +296,17 @@ class cliente extends table
 
     public function option_activas(){
 
-        return mysql::getoptions("SELECT idcliente id, nombre descripcion FROM cliente WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+        return mysql::getoptions("SELECT idcliente AS id, CONCAT(codigo, ' - ', nombre) AS descripcion FROM cliente  WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
+
+    public function obtener_correo($idcliente){
+    
+        $correo = mysql::getvalue("SELECT correo FROM cliente WHERE idcliente = $idcliente LIMIT 1");
+    
+        if (empty($correo)) {
+            return 'sin_correo';
+        }
+    
+        return $correo;
     }
 }
