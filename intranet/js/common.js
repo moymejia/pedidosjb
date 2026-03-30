@@ -631,26 +631,175 @@ function activate_select2() {
 }
 
 //DATA TABLES
-function activar_tabla(idtabla) {
-    var tabla_nueva = $("#tabla_datos").DataTable({
-        dom: "Bfrtip",
-        buttons: ["copy", "csv", "excel", "pdf", "print"],
-        language: {
-            url: "../assets/plugins/datatables/media/datatables.spanish.lang",
-        },
-        responsive: true,
-        createdRow: function (row, data, dataIndex) {
-            fila_agregada(row, data, dataIndex);
-        },
-        lengthMenu: [
-            [10, 25, 50, -1],
-            [10, 25, 50, "All"],
-        ],
-        paging: true,
-        ordering: true,
-        aaSorting: [],
+function activar_tabla(idtabla) {      
+    //
+    var inputDT = document.getElementById('datatableid');
+    var idFinal = 'tabla_datos'; // Valor por defecto
+
+    if (inputDT && inputDT.value.trim() !== "") {
+        var nuevoId = inputDT.value.trim();
+        var tablaPorDefecto = document.getElementById('tabla_datos');
+
+        if (tablaPorDefecto) {
+            // Si existe la tabla con el ID genérico, se lo cambiamos al del input
+            tablaPorDefecto.id = nuevoId;
+            idFinal = nuevoId;
+        } else if (document.getElementById(nuevoId)) {
+            // Si no existe 'tabla_datos' pero ya existe una con el ID del input, la usamos
+            idFinal = nuevoId;
+        }
+
+    }
+    idtabla = idFinal;
+    //
+
+    var tabla = document.getElementById(idtabla);            
+    var ds = tabla.dataset;                                  
+    var pagingUser = ds.confPaging === "true";               
+    var selectUser = ds.confSelect === "true";               
+    var buttonsUser = ds.confButtons === "true";             
+    
+    var nombreABuscar = ds.confRowgroup; 
+    var indiceReal = -1;
+    $('#' + idtabla + ' thead th').each(function(i) {
+        if ($(this).text().trim() === nombreABuscar) {
+            indiceReal = i; 
+        }
     });
-    $(".buttons-copy, .buttons-csv, .buttons-print, .buttons-excel").addClass("btn", "hidden");
+    var rowGroupUser = (indiceReal !== -1);
+
+    var responsiveUser = ds.confResponsive === "true";       
+    var colReorderUser = ds.confColreorder === "true";       
+    var columnControlUser = ds.confColumncontrol === "true"; 
+    var columnasAuto = [];
+
+    $('#' + idtabla + ' thead th').each(function() {
+        columnasAuto.push({ name: $(this).text().trim() });
+    });
+    
+    var botones = [];
+    if (buttonsUser) {  
+        botones.push("copy", "csv", "excel", "pdf", "print");
+    }
+    if (rowGroupUser) { 
+        botones.push({
+            text: 'Limpiar Agrupación',
+            action: function(e, dt) {
+                if (dt.rowGroup().enabled()) {
+                    dt.rowGroup().disable();
+                    dt.draw();
+                }
+            },
+            className: 'btn-limpiar'
+        });
+    }
+
+    if (selectUser) { 
+        botones.push({
+            text: 'Deseleccionar',
+            action: function(e, dt) {
+                dt.rows().deselect();
+            }
+        });
+    }
+
+    var configTopStart = [];
+    if (buttonsUser) configTopStart.push('buttons');   
+    if (pagingUser) configTopStart.push('pageLength'); 
+    configTopStart.push('search');
+
+    var layoutConfig = {
+        topStart: configTopStart.length > 0 ? { features: configTopStart } : null, 
+        topEnd: null,                              
+        bottomStart: pagingUser ? 'paging' : null, 
+        bottomEnd: null,                           
+        top: null,                                 
+        bottom: null                               
+    };
+
+    var tabla_nueva = new DataTable('#' + idtabla, {
+        layout: layoutConfig,   
+        retrieve: true,         
+        columnControl: columnControlUser ? { 
+            target: 0, 
+            content: ['order', ['orderAsc', 'orderDesc', 'search']]
+        } : false,
+        buttons: botones.map(function(btn) {
+            if (typeof btn === "string") { 
+                return { 
+                    extend: btn,
+                    exportOptions: {
+                        modifier: function() {
+                            var seleccionadas = tabla_nueva.rows({ selected: true }).count();
+                            return (selectUser && seleccionadas > 0) 
+                                ? { selected: true }  
+                                : { selected: null }; 
+                        }
+                    }
+                }; 
+            }
+            return btn;
+        }),
+        language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" }, 
+        responsive: responsiveUser,                         
+        colReorder: colReorderUser,                         
+        select: selectUser ? { style: 'multi' } : false,    
+        paging: true,                                       
+        pageLength: 10,                                     
+        lengthChange: pagingUser,                           
+        stateSave: true,                                    
+        stateDuration: 0,                                   
+        ordering: true,                                     
+        
+        // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
+        order: rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']],
+
+        createdRow: function (row, data, dataIndex) { 
+            if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex); 
+        },
+        lengthMenu: [[10,25,50,-1],[10,25,50,"All"]],
+        
+        // --- CAMBIO 4: Usar el índice numérico para el agrupamiento ---
+        rowGroup: rowGroupUser ? {
+            dataSrc: indiceReal, 
+            enable: true,
+            startRender: function(rows, group) { return group + ' (' + rows.count() + ' registros)'; }
+        } : false,
+
+        stateSaveCallback: function(settings, data) {
+            if (rowGroupUser) {
+                data.rowGroup = tabla_nueva.rowGroup().dataSrc();
+                data.rowGroupEnabled = tabla_nueva.rowGroup().enabled();
+            }
+            if (selectUser) {
+                data.selectedRows = tabla_nueva.rows({ selected: true }).indexes().toArray();
+            }
+            localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data));
+            if (typeof upload_action === "function") {
+                upload_action('idtabla=' + settings.sTableId +',estadotabla=' + encodeURIComponent(JSON.stringify(data)),'datatables','guardar_estado_datatables');
+            }
+        },
+        stateLoadCallback: function(settings) {
+            var data = JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance));
+            if (data) {
+                setTimeout(function() {
+                    /*
+                    if (rowGroupUser && data.rowGroup !== undefined) {
+                        if (data.rowGroupEnabled) tabla_nueva.rowGroup().enable();
+                        tabla_nueva.rowGroup().dataSrc(data.rowGroup);
+                        // Aplicamos el orden fijado sobre el índice cargado
+                        tabla_nueva.order.fixed({ pre: [[data.rowGroup, 'asc']] }).draw();
+                    }
+                    */
+                    if (selectUser && data.selectedRows) {
+                        tabla_nueva.rows(data.selectedRows).select();
+                    }
+                }, 0);
+            }
+            return data;
+        }
+    });
+
     return tabla_nueva;
 }
 

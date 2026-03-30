@@ -49,7 +49,12 @@ $idubicacion = $row['idubicacion'];
     <link href="css/pages/tab-page.css" rel="stylesheet">
     <link href="css/colors/default-dark.css" id="theme" rel="stylesheet">
     <link href="../css/common.css" rel="stylesheet">
-
+    <!-- inicio de data table -->
+    <link rel="stylesheet" href="../assets/plugins/datatables2/dataTables.dataTables.css" >
+    <link rel="stylesheet" href="../assets/plugins/datatables2/columnControl.dataTables.min.css" >
+    <link rel="stylesheet" href="../assets/plugins/datatables2/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="../assets/plugins/datatables2/rowGroup.dataTables.css">
+    <!-- fin de  data table -->
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
@@ -63,6 +68,30 @@ $idubicacion = $row['idubicacion'];
 </head>
 
 <body class="fix-header card-no-border fix-sidebar" onload="
+    callback_cargar_estado_tabla = function(respuesta){
+        if (!respuesta) return;
+        let estados = JSON.parse(respuesta);
+        console.log('Estados cargados:', estados);
+        Object.keys(estados).forEach(function(idtabla){
+            let estado = estados[idtabla];
+            if (!estado) return;
+            if (Array.isArray(estado.columnControl)) {
+                let obj = {};
+                estado.columnControl.forEach((v, i) => obj[i] = v);
+                estado.columnControl = obj;
+            }
+            if (Array.isArray(estado.search?._hungarianMap)) {
+                estado.search._hungarianMap = {};
+            }
+            estado.columns?.forEach(col => {
+                if (col.visible === undefined) col.visible = true;
+            });
+            let key = 'DataTables_' + idtabla;
+            localStorage.setItem(key, JSON.stringify(estado));
+            console.log('Estado listo:', estado);
+        });
+    }
+    upload_action('x=1', 'datatables', 'cargar_estado_datatables', callback_cargar_estado_tabla);
     const params = new URLSearchParams(window.location.search);
 
     if (params.has('idopcion')) {
@@ -348,6 +377,7 @@ $idubicacion = $row['idubicacion'];
     <!-- End Wrapper -->
     <!-- ============================================================== -->
     <!-- ============================================================== -->
+    
     <!-- All Jquery -->
     <!-- ============================================================== -->
     <script src="../assets/plugins/jquery/jquery.min.js"></script>
@@ -373,14 +403,17 @@ $idubicacion = $row['idubicacion'];
     <!-- ============================================================== -->
     <script src="../assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
     <!-- This is data table -->
-    <script src="../assets/plugins/datatables/datatables.min.js"></script>
-    <!-- start - This is for export functionality only -->
-    <script src="../assets/plugins/datatables/media/js/dataTables.buttons.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.flash.min.js"></script>
-    <script src="../assets/plugins/jszip.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.html5.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.print.min.js"></script>
-
+    <script src="../assets/plugins/datatables2/datatables.min.js"></script>
+    <script src="../assets/plugins/datatables2/dataTables.rowGroup.js"></script>
+    <script src="../assets/plugins/datatables2/rowGroup.dataTables.js"></script> 
+    <!-- This is data table 
+        <script src="../assets/plugins/datatables/datatables.min.js"></script>
+        `<script src="../assets/plugins/datatables/media/js/dataTables.buttons.min.js"></script>
+        <script src="../assets/plugins/datatables/media/js/buttons.flash.min.js"></script>
+        <script src="../assets/plugins/jszip.min.js"></script>
+        <script src="../assets/plugins/datatables/media/js/buttons.html5.min.js"></script>
+        <`script src="../assets/plugins/datatables/media/js/buttons.print.min.js"></script>
+    -->
     <!-- jQuery peity -->
     <script src="../assets/plugins/peity/jquery.peity.min.js"></script>
     <script src="../assets/plugins/peity/jquery.peity.init.js"></script>
