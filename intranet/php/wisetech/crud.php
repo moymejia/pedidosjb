@@ -7,6 +7,9 @@ switch ($table) {
     case 'opcion':
         require_once $table . ".php";
         break;
+    case 'datatables':
+        require_once '../wisetech/' . $table . ".php";
+        break;
     case 'ping':
         die("|correcto|" . ping());
     default:
