@@ -25,7 +25,7 @@ class pedido_detalle extends table{
 
             if ($PARAMETROS['operacion'] == 'guardar') {
 
-                if (table::validate_parameter_existence(['idpedido','idproducto','precio','idproducto_precio'],$PARAMETROS,false)) {
+                if (table::validate_parameter_existence(['idpedido','idproducto','precio','idproducto_precio','idset_talla'],$PARAMETROS,false)) {
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
                     } else {
@@ -68,9 +68,11 @@ class pedido_detalle extends table{
 
     public function obtener_por_pedido($idpedido)
     {
-        $result = mysql::getresult("SELECT idpedido_detalle, idpedido, idproducto, codigo, descripcion, idcolor, color, marca, material, precio_venta, cantidad, subtotal, idtalla, 
-            talla, idproducto_precio, imagen 
-            FROM view_pedido_detalle WHERE idpedido = $idpedido");
+        $result = mysql::getresult("SELECT idpedido_detalle, idpedido, idproducto, codigo, descripcion, idcolor, color, marca, material, precio_venta, cantidad, subtotal, 
+            idtalla, talla, idproducto_precio, imagen, idset_talla, set_talla
+        FROM view_pedido_detalle 
+        WHERE idpedido = $idpedido
+        ORDER BY idset_talla ASC, idproducto_precio ASC, idtalla ASC;");
 
         if (!$result) {
             $this->last_error = "Error al obtener el detalle del pedido.";
@@ -93,6 +95,7 @@ class pedido_detalle extends table{
         $usuario  = $security->get_actual_user();
 
         $idpedido           = (int)$PARAMETROS['idpedido'];
+        $idset_talla        = (int)$PARAMETROS['idset_talla'];
         $idproducto         = (int)$PARAMETROS['idproducto'];
         $precio             = (float)$PARAMETROS['precio'];
         $idproducto_precio  = (int)$PARAMETROS['idproducto_precio'];
@@ -143,10 +146,7 @@ class pedido_detalle extends table{
             $idtalla  = (int) str_replace('talla_', '', $key);
             $cantidad = (int)$valor;
 
-            $existe = mysql::exists(
-                'pedido_detalle',
-                "idpedido = $idpedido AND idproducto_precio = $idproducto_precio AND idtalla = $idtalla"
-            );
+            $existe = mysql::exists('pedido_detalle', "idpedido = $idpedido AND idproducto_precio = $idproducto_precio AND idtalla = $idtalla AND idset_talla = $idset_talla");
 
             if (!$existe) {
 
@@ -156,6 +156,7 @@ class pedido_detalle extends table{
                 $DATOS['idpedido']             = $idpedido;
                 $DATOS['idproducto_precio']    = $idproducto_precio;
                 $DATOS['idproducto']           = $idproducto;
+                $DATOS['idset_talla']          = $idset_talla;
                 $DATOS['idtalla']              = $idtalla;
                 $DATOS['cantidad']             = $cantidad;
                 $DATOS['precio_lista']         = $precio;
@@ -177,13 +178,14 @@ class pedido_detalle extends table{
                 }
 
             } else {
-
+                
                 $security = new security($this->ACCIONES['modificar_detalle']);
 
                 $DATOS = [];
                 $DATOS['idpedido']              = $idpedido;
                 $DATOS['idproducto']            = $idproducto;
                 $DATOS['idproducto_precio']     = $idproducto_precio;
+                $DATOS['idset_talla']           = $idset_talla;
                 $DATOS['idtalla']               = $idtalla;
                 $DATOS['cantidad']              = $cantidad;
                 $DATOS['precio_lista']          = $precio;
@@ -197,7 +199,7 @@ class pedido_detalle extends table{
                     $DATOS['imagen'] = $ruta_bd;
                 }
 
-                $llaves = ['idpedido', 'idproducto_precio', 'idtalla'];
+                $llaves = ['idpedido', 'idproducto_precio', 'idtalla', 'idset_talla'];
 
                 if (table::update_record($DATOS, $llaves)) {
                     $security->registrar_bitacora($this->ACCIONES['modificar_detalle'],$idpedido . '-' . $idproducto . '-' . $idtalla);

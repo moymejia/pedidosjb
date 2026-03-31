@@ -134,24 +134,14 @@
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Marca</label>
                                 <select class="form-control" id="idmarca" name="idmarca">
                                     [marcas]
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-2">
-                                <label>Set de tallas</label>
-                                <select class="form-control" id="idset_talla" name="idset_talla">
-                                    [set_tallas]
-                                </select>
-                                <small class="form-text text-muted" id="setTallasHelp">
-                                    Seleccione un set para habilitar el ingreso por talla.
-                                </small>
-                            </div>
-
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Temporada</label>
                                 <select class="form-control" id="idtemporada" name="idtemporada">
                                     [temporadas]
@@ -183,8 +173,29 @@
                             </div>
 
                             <div class="form-group m-b-6 col-md-2">
-                                <label for="monto_descuento">Descuento</label>
-                                <input type="number" class="form-control" id="monto_descuento" name="monto_descuento" value="0">
+                                <label for="monto_descuento">Descuento (%)</label>
+                                <input type="number" class="form-control" id="monto_descuento" name="monto_descuento" value="0" min="0" max="99" onchange="
+                                    var val = parseFloat(this.value);
+                    
+                                    if (isNaN(val)) {
+                                        this.value = 0;
+                                        return;
+                                    }
+                    
+                                    if (val < 0) {
+                                        notify_error('El descuento no puede ser negativo');
+                                        this.value = 0;
+                                        return;
+                                    }
+                    
+                                    if (val > 100) {
+                                        notify_error('El descuento no puede ser mayor a 100%');
+                                        this.value = 99;
+                                        return;
+                                    }
+                    
+                                    this.value = val;
+                                ">
                                 <span class="bar"></span>
                             </div>
                             
@@ -205,9 +216,9 @@
                                     notify_success('Pedido guardado exitosamente');
                                     showElements('detalles_del_pedido');
                                     hideElements('lista_pedidos');
-                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
+                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
                                 }
-                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,idtransporte,monto_descuento,email,nopedido','pedido','guardar','idpedido',callback_guardar_pedido);
+                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,nopedido','pedido','guardar','idpedido',callback_guardar_pedido);
                                 ">Guardar</button>
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="
@@ -265,7 +276,7 @@
             
 
             <!-- Resumen -->
-            <div class="" id="detalles_del_pedido" style="display: none;">
+            <div class="" id="detalles_del_pedido" style="display: none;" >
                 <div class="row mb-3">
 
                     <div class="col-md-3 mb-2">
@@ -307,10 +318,19 @@
                     </div>
     
                     <div class="card-body">
-    
+
                         <div class="form-row">
-    
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-4">
+                                <label>Set de tallas</label>
+                                <select class="form-control" id="idset_talla" name="idset_talla">
+                                    [set_tallas]
+                                </select>
+                                <small class="form-text text-muted" id="setTallasHelp">
+                                    Seleccione un set para habilitar el ingreso por talla.
+                                </small>
+                            </div>
+
+                            <div class="form-group col-md-4">
                                 <label>Código de estilo</label>
     
                                 <div class="input-group">
@@ -326,35 +346,35 @@
                                 </div>
     
                             </div>
-    
+
                             <div class="form-group col-md-4">
                                 <label>Descripción estilo</label>
                                 <input type="text" class="form-control" id="descripcionEstilo" readonly>
                             </div>
+                        </div>
     
-                            <div class="form-group col-md-2">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
                                 <label>Color</label>
                                 <select class="form-control" id="color"></select>
                             </div>
     
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Material</label>
                                 <select class="form-control" id="material"></select>
                             </div>
     
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Precio</label>
                                 <input type="number" class="form-control text-right" id="precio" step="0.01" min="0">
                             </div>
-    
-                        </div>
 
-                        <div class="form_row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-3">
                                 <label for="principios_activos">Imagen</label>
                                 <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept="image/*" required>
                                 <span class="bar"></span>
                             </div>
+    
                         </div>
 
                         <br>
@@ -395,16 +415,17 @@
                                 <thead class="thead-light">
     
                                     <tr>
-                                        <th style="min-width:110px;">Estilo</th>
-                                        <th style="min-width:130px;">Color</th>
+                                        <th style="min-width:160px;">Estilo</th>
+                                        <th style="min-width:120px;">Set</th>
+                                        <th style="min-width:140px;">Color</th>
                                         <th style="min-width:120px;">Marca</th>
                                         <th style="min-width:120px;">Material</th>
-                                        <th style="min-width:120px;" class="text-right">Precio</th>
-                                        <th style="min-width:110px;">Imagen</th>
-                                        <th style="min-width:190px;">Tallas</th>
-                                        <th style="min-width:90px;" class="text-center">Cantidad</th>
+                                        <th style="min-width:110px;" class="text-right">Precio</th>
+                                        <th style="min-width:90px;" class="text-center">Imagen</th>
+                                        <th style="min-width:200px;">Tallas</th>
+                                        <th style="min-width:100px;" class="text-center">Cantidad</th>
                                         <th style="min-width:140px;" class="text-right">Subtotal</th>
-                                        <th style="min-width:140px;">Acciones</th>
+                                        <th style="min-width:130px;" class="text-center">Acciones</th>
                                     </tr>
     
                                 </thead>

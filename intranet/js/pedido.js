@@ -55,7 +55,7 @@
   
     data.forEach(function(row){
   
-      var key = row.idproducto_precio;
+      var key = row.idproducto_precio + "_" + row.idset_talla;
   
       if (!agrupado[key]) {
         agrupado[key] = {
@@ -63,6 +63,8 @@
           idpedido_detalle: row.idpedido_detalle,
           idproducto: row.idproducto,
           idproducto_precio: row.idproducto_precio,
+          idset_talla: row.idset_talla, 
+          set_talla_nombre: row.set_talla || '',
           estilo_codigo: row.codigo,
           estilo_descripcion: row.descripcion,
           idcolor: row.idcolor,
@@ -214,7 +216,7 @@
 
     };
 
-    upload_action('modelo,idmarca,idset_talla','producto','obtener_modelo',callback_buscar_estilo);
+    upload_action('modelo,idmarca,idtemporada','producto','obtener_modelo',callback_buscar_estilo);
 
   });
 
@@ -283,9 +285,13 @@
   function editarLinea(index){
     var linea = state.detalle[index];
     state.editIndex = index;
+
+    document.getElementById("idset_talla").value = linea.idset_talla;
+    cargarTallas();
   
     // 1. modelo
     document.getElementById("modelo").value = linea.estilo_codigo;
+    
   
     callback_buscar_estilo = function(resp){
   
@@ -377,12 +383,13 @@
   
     };
   
-    upload_action('modelo,idmarca,idset_talla','producto','obtener_modelo',callback_buscar_estilo);
+    upload_action('modelo,idmarca,idtemporada','producto','obtener_modelo',callback_buscar_estilo);
   }
 
   function agregarProducto(){
 
     var idpedido = document.getElementById("idpedido").value;
+    var idset_talla = document.getElementById("idset_talla").value;
   
     if (!idpedido) {
       notify_warning('Debe guardar el pedido antes de agregar productos');
@@ -427,7 +434,8 @@
 
     var color = state.colorActual;
     var params = [];
-  
+
+    params.push("idset_talla=" + idset_talla);
     params.push("idpedido_detalle="+state.idpedido_detalle); 
     params.push("idpedido=" + idpedido);
     params.push("idproducto=" + color.idproducto);
@@ -493,6 +501,7 @@
   
       tr.innerHTML =
         '<td><strong>'+safe(linea.estilo_codigo)+'</strong><br><small>'+safe(linea.estilo_descripcion)+'</small></td>' +
+        '<td>'+safe(linea.set_talla_nombre)+'</td>'+
         '<td>'+safe(linea.color_nombre)+'</td>' +
         '<td>'+safe(linea.marca)+'</td>' +
         '<td>'+safe(linea.material)+'</td>' +

@@ -352,6 +352,15 @@ class set_talla extends table
 
     public function options_activos()
     {
-        return mysql::getoptions("SELECT idset_talla as id, grupo as descripcion FROM set_talla WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
+        return mysql::getoptions("SELECT idset_talla AS id,
+                CASE 
+                    WHEN descripcion IS NULL OR descripcion = '' THEN grupo
+                    WHEN grupo IS NULL OR grupo = '' THEN descripcion
+                    ELSE CONCAT(grupo, ' - ', descripcion)
+                END AS descripcion
+            FROM set_talla
+            WHERE estado = 'ACTIVO'
+            ORDER BY grupo, descripcion
+        ");
     }
 }

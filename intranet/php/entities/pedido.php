@@ -30,7 +30,7 @@ class pedido extends table{
         if(isset($PARAMETROS['operacion'])){
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence([ 'nopedido','idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada', 'idset_talla','idtransporte'], $PARAMETROS, false)) {
+                if (table::validate_parameter_existence([ 'nopedido','idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte'], $PARAMETROS, false)) {
 
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -91,9 +91,10 @@ class pedido extends table{
         $DATA['set_tallas']     = (new set_talla())->options_activos();
         $DATA['transportes']    = (new transporte())->option_activas();
 
-        $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, idset_talla, set_talla, cliente, temporada, marca, set_talla, estado, 
-            fecha_desde,fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
-            FROM view_pedidos ORDER BY idpedido DESC");
+        $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, cliente, temporada, marca, estado, 
+            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
+            FROM view_pedidos 
+            ORDER BY idpedido DESC");
 
         $tabla = '
         <table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
@@ -101,7 +102,6 @@ class pedido extends table{
                 <tr>
                     <th>Acciones</th>
                     <th>No. pedido</th>
-                    <th>Set talla</th>
                     <th>Cliente</th>
                     <th>Temporada</th>
                     <th>Marca</th>
@@ -115,8 +115,6 @@ class pedido extends table{
         while ($row = mysql::getrowresult($result)) {
             $idpedido        = $row['idpedido'];
             $nopedido        = $row['nopedido'];
-            $idset_talla     = $row['idset_talla'];
-            $set_talla       = $row['set_talla'];
             $cliente         = $row['cliente'];
             $idcliente       = $row['idcliente'];
             $temporada       = $row['temporada'];
@@ -146,8 +144,7 @@ class pedido extends table{
                         showElements('btn_imprimir');
                         hideElements('btn_cerrar_pedido');
                     }
-                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,idset_talla,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
-                    cargarTallas();
+                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
                     cargarDetallePedido();
                     goTop();\">
                     <span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar
@@ -157,7 +154,6 @@ class pedido extends table{
                 <tr>
                     <td>$boton_editar</td>
                     <td>$nopedido</td>
-                    <td>$set_talla</td>
                     <td>$cliente</td>
                     <td>$temporada</td>
                     <td style='text-align: center;'>$marca</td>
@@ -179,6 +175,12 @@ class pedido extends table{
         $security = new security($this->ACCIONES['crear']);
         $usuario  = $security->get_actual_user();
 
+        if ($PARAMETROS['descuento'] < 0 || $PARAMETROS['descuento'] > 99) {
+            $this->last_error = "El descuento debe estar entre 0 y 99%.";
+            $this->report_error(validation_error, $usuario, $this->last_error);
+            return false;
+        }
+
         if (mysql::exists("pedido", "nopedido = '" . addslashes($PARAMETROS['nopedido']) . "'")) {
             $this->last_error = "El número de pedido ya existe";
             utils::report_error(validation_error,$PARAMETROS['nopedido'],$this->last_error);
@@ -193,7 +195,6 @@ class pedido extends table{
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
         $DATOS['idtemporada']           = $PARAMETROS['idtemporada'];
         $DATOS['email']                 = $PARAMETROS['email'];
-        $DATOS['idset_talla']           = $PARAMETROS['idset_talla'];
         $DATOS['observaciones_pedido']  = $PARAMETROS['observaciones_pedido'];
         $DATOS['idtransporte']          = $PARAMETROS['idtransporte'];
         $DATOS['monto_descuento']       = $PARAMETROS['monto_descuento'];
@@ -281,7 +282,10 @@ class pedido extends table{
         $monto_subtotal = $monto_total;
         $pedido = mysql::getrow("SELECT monto_descuento FROM pedido WHERE idpedido = $idpedido");
         $monto_descuento = $pedido && $pedido['monto_descuento'] ? (float)$pedido['monto_descuento'] : 0;
-        $monto_total = $monto_total - $monto_descuento;
+
+        $descuento_valor = ($monto_total * $monto_descuento) / 100;
+        $monto_total = $monto_total - $descuento_valor;
+
 
         if($monto_total < 0){
             $monto_total = 0;

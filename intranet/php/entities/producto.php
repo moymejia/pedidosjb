@@ -32,8 +32,8 @@ class producto extends table{
         if(isset($PARAMETROS['operacion'])){
 
             if ($PARAMETROS['operacion'] == 'obtener_modelo') {
-                if (table::validate_parameter_existence(['modelo','idmarca','idset_talla'], $PARAMETROS, false)) {
-                    if($resultado = self::obtener_modelo($PARAMETROS['modelo'],$PARAMETROS['idmarca'],$PARAMETROS['idset_talla'])){
+                if (table::validate_parameter_existence(['modelo','idmarca','idtemporada'], $PARAMETROS, false)) {
+                    if($resultado = self::obtener_modelo($PARAMETROS['modelo'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'])){
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -57,7 +57,7 @@ class producto extends table{
         }
     }
 
-    public function obtener_modelo($modelo, $idmarca, $idset_talla){
+    public function obtener_modelo($modelo, $idmarca, $idtemporada){
 
         $modelo = addslashes($modelo);
         $idmarca = (int)$idmarca;
@@ -69,7 +69,7 @@ class producto extends table{
             AND idproducto IN (
                 SELECT idproducto 
                 FROM producto 
-                WHERE idset_talla = '".intval($idset_talla)."'
+                WHERE idtemporada = '".intval($idtemporada)."'
             )
             ORDER BY color ASC
         ");
