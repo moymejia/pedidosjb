@@ -27,7 +27,7 @@ require_once 'security.php';
         public function cargar_estado_datatables() {
             $db = new mysql();
             $usuario = ( new security())->get_actual_user() ;
-            $sql = "SELECT tabla, estado FROM legans_seguridad.datatables WHERE usuario = '$usuario' ";
+            $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
             $result = $db->getresult($sql);
             $idtabla = '';
             while ($row = $db->getrowresult($result)) {
