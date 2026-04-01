@@ -125,7 +125,7 @@ class pedido_detalle extends table{
 
             $ruta           = "../../img/producto/";
             $nombre_temp    = $_FILES['file_uploaded']['tmp_name'];
-            $nombre_archivo = $idproducto . "_" . $idproducto_precio . "_" . $idcolor . ".jpg";
+            $nombre_archivo = $idproducto . "_" . $idproducto_precio . "_" . $idset_talla . "_" . $idcolor . ".jpg";
 
             if (!file_exists($ruta)) {
                 mkdir($ruta, 0777, true);

@@ -175,7 +175,7 @@ class pedido extends table{
         $security = new security($this->ACCIONES['crear']);
         $usuario  = $security->get_actual_user();
 
-        if ($PARAMETROS['descuento'] < 0 || $PARAMETROS['descuento'] > 99) {
+        if ($PARAMETROS['monto_descuento'] < 0 || $PARAMETROS['monto_descuento'] > 99) {
             $this->last_error = "El descuento debe estar entre 0 y 99%.";
             $this->report_error(validation_error, $usuario, $this->last_error);
             return false;
@@ -315,7 +315,6 @@ class pedido extends table{
 
     public function imprimir_pedido($idpedido)
     {
-        $security = new security();
         $security = new security($this->ACCIONES['imprimir_pedido']);
         $usuario  = $security->get_actual_user();
 
@@ -323,39 +322,112 @@ class pedido extends table{
         $nombre_usuario = $usuarioObj->get_nombre($usuario);
 
 
-        $PEDIDO = mysql::getrow("SELECT idpedido, idcliente, idset_talla, set_talla, cliente, telefono, direccion, nit, establecimiento, marca, 
-            transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito
+        $PEDIDO = mysql::getrow("SELECT idpedido, idcliente, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
             FROM view_pedidos
-            WHERE idpedido = '$idpedido'
-        ");
+            WHERE idpedido = '$idpedido'");
 
-        $tallas = [];
-        $tallas_headers = '';
+        if (!$PEDIDO) {
+            $this->last_error = "No se encontró la información del pedido.";
+            $this->report_error(validation_error, $idpedido, $this->last_error);
+            return false;
+        }
+
         $MAX_TALLAS = 10;
+        $sets_catalogo = [];
+        $tallas_header_block = '';
 
-        $sql_tallas = mysql::getresult("SELECT idtalla, talla AS numero, orden
-            FROM view_set_talla_detalle
-            WHERE idset_talla = '".$PEDIDO['idset_talla']."' 
-            ORDER BY orden ASC
-        ");
+        $sql_sets = mysql::getresult("SELECT DISTINCT vpd.idset_talla, COALESCE(vpd.grupo, '') AS grupo, COALESCE(vpd.set_descripcion, '') AS set_descripcion, vstd.orden, vstd.idtalla, vstd.talla
+            FROM view_pedido_detalle vpd JOIN view_set_talla_detalle vstd ON vstd.idset_talla = vpd.idset_talla
+            WHERE vpd.idpedido = '$idpedido'
+            ORDER BY vpd.grupo ASC, vpd.set_descripcion ASC, vpd.idset_talla ASC, vstd.orden ASC");
 
-        while ($row = mysql::getrowresult($sql_tallas)) {
-            $tallas[] = $row;
-            $tallas_headers .= "<th>".$row['numero']."</th>";
+        if (!$sql_sets) {
+            $this->last_error = "Error al obtener los grupos de tallas del pedido.";
+            $this->report_error(bd_error, $idpedido, $this->last_error);
+            return false;
         }
 
-        $cantidad_tallas = count($tallas);
+        while ($row = mysql::getrowresult($sql_sets)) {
+            $idset_talla = (int)$row['idset_talla'];
 
-        if ($cantidad_tallas < $MAX_TALLAS) {
-            $faltantes = $MAX_TALLAS - $cantidad_tallas;
-            $tallas_headers .= "<th colspan='".$faltantes."'></th>";
+            if (!isset($sets_catalogo[$idset_talla])) {
+                $sets_catalogo[$idset_talla] = [
+                    'grupo' => trim((string)$row['grupo']),
+                    'descripcion' => trim((string)$row['set_descripcion']),
+                    'tallas' => []
+                ];
+            }
+
+            $sets_catalogo[$idset_talla]['tallas'][] = [
+                'idtalla' => (int)$row['idtalla'],
+                'numero' => (string)$row['talla']
+            ];
         }
 
-        $sql = mysql::getresult("SELECT idproducto, idproducto_precio, codigo AS producto, imagen, idtalla, cantidad, precio_venta, color, material
+        if (empty($sets_catalogo)) {
+            $this->last_error = "El pedido no tiene grupos de tallas para imprimir.";
+            $this->report_error(validation_error, $idpedido, $this->last_error);
+            return false;
+        }
+
+        $rowspan_encabezado = count($sets_catalogo);
+
+        $primer_header = true;
+
+        foreach ($sets_catalogo as $set_info) {
+            $grupo = htmlspecialchars($set_info['grupo'], ENT_QUOTES, 'UTF-8');
+            $descripcion_set = htmlspecialchars($set_info['descripcion'], ENT_QUOTES, 'UTF-8');
+
+            $tallas_header_block .= "<tr>";
+
+            if ($primer_header) {
+                $tallas_header_block .= "
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Imagen</th>
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Estilo</th>
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Color - Material</th>
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Marca</th>
+                ";
+            }
+
+            $tallas_header_block .= "<th class='gris talla-grupo'>{$grupo}</th>";
+
+            foreach ($set_info['tallas'] as $talla) {
+                $numero = htmlspecialchars($talla['numero'], ENT_QUOTES, 'UTF-8');
+                $tallas_header_block .= "<th class='gris'>{$numero}</th>";
+            }
+
+            $faltantes = $MAX_TALLAS - count($set_info['tallas']);
+
+            if ($faltantes > 0) {
+                if ($descripcion_set !== '') {
+                    $tallas_header_block .= "<th colspan='{$faltantes}' class='gris talla-desc'>{$descripcion_set}</th>";
+                } else {
+                    $tallas_header_block .= "<th colspan='{$faltantes}' class='gris'>&nbsp;</th>";
+                }
+            }
+
+            if ($primer_header) {
+                $tallas_header_block .= "
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Total<br>Pares</th>
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Precio<br>por Par</th>
+                    <th class='gris' rowspan='{$rowspan_encabezado}'>Monto Total<br>por Caja</th>
+                ";
+                $primer_header = false;
+            }
+
+            $tallas_header_block .= "</tr>";
+        }
+
+        $sql = mysql::getresult("SELECT idproducto, idproducto_precio, codigo AS producto, imagen, idtalla, cantidad, precio_venta, color, material, idset_talla, COALESCE(grupo, '') AS grupo, COALESCE(set_descripcion, '') AS set_descripcion
             FROM view_pedido_detalle
-            WHERE idpedido = '$idpedido' 
-            ORDER BY idproducto, idproducto_precio
-        ");
+            WHERE idpedido = '$idpedido'
+            ORDER BY grupo ASC, set_descripcion ASC, idproducto ASC, idproducto_precio ASC, idtalla ASC");
+
+        if (!$sql) {
+            $this->last_error = "Error al obtener el detalle del pedido para impresión.";
+            $this->report_error(bd_error, $idpedido, $this->last_error);
+            return false;
+        }
 
         $meses = [
             '01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril',
@@ -367,7 +439,7 @@ class pedido extends table{
 
         while ($row = mysql::getrowresult($sql)) {
 
-            $idp = $row['idproducto'].'_'.$row['idproducto_precio'];
+            $idp = $row['idproducto'].'_'.$row['idproducto_precio'].'_'.$row['idset_talla'];
 
             if (!isset($productos[$idp])) {
                 $productos[$idp] = [
@@ -376,6 +448,9 @@ class pedido extends table{
                     'precio'   => $row['precio_venta'],
                     'color'    => $row['color'],
                     'material' => $row['material'],
+                    'idset_talla' => (int)$row['idset_talla'],
+                    'grupo' => trim((string)$row['grupo']),
+                    'set_descripcion' => trim((string)$row['set_descripcion']),
                     'tallas'   => [],
                     'total'    => 0
                 ];
@@ -399,15 +474,23 @@ class pedido extends table{
             foreach ($chunk as $p) {
 
                 $fila_tallas = '';
+                $set_producto = isset($sets_catalogo[$p['idset_talla']]) ? $sets_catalogo[$p['idset_talla']] : null;
+                $grupo_producto = htmlspecialchars($p['grupo'], ENT_QUOTES, 'UTF-8');
+                $fila_tallas .= "<td class='talla-grupo-producto'>{$grupo_producto}</td>";
 
-                foreach ($tallas as $t) {
-                    $cantidad = array_key_exists($t['idtalla'], $p['tallas']) ? $p['tallas'][$t['idtalla']] : '';
-                    $fila_tallas .= "<td style='font-size: 13px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
+                $cantidad_tallas = 0;
+
+                if ($set_producto) {
+                    foreach ($set_producto['tallas'] as $t) {
+                        $cantidad = array_key_exists($t['idtalla'], $p['tallas']) ? $p['tallas'][$t['idtalla']] : '';
+                        $fila_tallas .= "<td style='font-size: 13px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
+                        $cantidad_tallas++;
+                    }
                 }
 
                 if ($cantidad_tallas < $MAX_TALLAS) {
                     $faltantes = $MAX_TALLAS - $cantidad_tallas;
-                    $fila_tallas .= "<td colspan='".$faltantes."'></td>";
+                    $fila_tallas .= "<td colspan='{$faltantes}'>&nbsp;</td>";
                 }
 
                 $total  = $p['total'];
@@ -436,31 +519,31 @@ class pedido extends table{
             }
 
             $DATA = [];
-            $DATA['codigo_cliente']     = $PEDIDO['idcliente'];
-            $fecha                      = strtotime($PEDIDO['fecha_creacion']);
-            $DATA['fecha']              = date('d', $fecha).' '.$meses[date('m', $fecha)].' '.date('Y', $fecha);
-            $DATA['vendedor']           = $nombre_usuario;
-            $DATA['cliente']            = $PEDIDO['cliente'];
-            $DATA['nit']                = !empty($PEDIDO['nit']) ? $PEDIDO['nit'] : 'CF';
-            $DATA['telefono']           = $PEDIDO['telefono'];
-            $DATA['direccion']          = $PEDIDO['direccion'];
-            $DATA['set_talla']          = $PEDIDO['set_talla'];
-            $DATA['nombre_zapateria']   = $PEDIDO['establecimiento'];
-            $DATA['dias_credito']       = $PEDIDO['dias_credito'];
-            $DATA['email']              = $PEDIDO['email'];
-            $fecha1                     = strtotime($PEDIDO['fecha_desde']);
-            $fecha2                     = strtotime($PEDIDO['fecha_hasta']);
-            $DATA['fecha_entrega']      = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
-                                            date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
-            $DATA['transporte']         = $PEDIDO['transporte'];
-            $DATA['idpedido']           = $PEDIDO['idpedido'];
-            $DATA['tallas_headers']     = $tallas_headers;
-            $DATA['detalle_productos']  = $detalle_html;
-            $DATA['total_pares']        = $total_pares;
-            $DATA['total']              = number_format($total_general,2,'.',',');
-            $DATA['observaciones']      = $PEDIDO['observaciones_pedido'];
-            $DATA['numero_hoja']        = $numero_hoja;
-            $DATA['total_hojas']        = $total_hojas;
+            $DATA['codigo_cliente']         = $PEDIDO['idcliente'];
+            $fecha                          = strtotime($PEDIDO['fecha_creacion']);
+            $DATA['fecha']                  = date('d', $fecha).' '.$meses[date('m', $fecha)].' '.date('Y', $fecha);
+            $DATA['vendedor']               = $nombre_usuario;
+            $DATA['cliente']                = $PEDIDO['cliente'];
+            $DATA['nit']                    = !empty($PEDIDO['nit']) ? $PEDIDO['nit'] : 'CF';
+            $DATA['telefono']               = $PEDIDO['telefono'];
+            $DATA['direccion']              = $PEDIDO['direccion'];
+            $DATA['nombre_zapateria']       = $PEDIDO['establecimiento'];
+            $DATA['dias_credito']           = $PEDIDO['dias_credito'];
+            $DATA['email']                  = $PEDIDO['email'];
+            $fecha1                         = strtotime($PEDIDO['fecha_desde']);
+            $fecha2                         = strtotime($PEDIDO['fecha_hasta']);
+            $DATA['fecha_entrega']          = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
+                                                date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
+            $DATA['transporte']             = $PEDIDO['transporte'];
+            $DATA['idpedido']               = $PEDIDO['idpedido'];
+            $DATA['descripcion_marca']      = $PEDIDO['descripcion_marca'];
+            $DATA['tallas_header_block']    = $tallas_header_block;
+            $DATA['detalle_productos']      = $detalle_html;
+            $DATA['total_pares']            = $total_pares;
+            $DATA['total']                  = number_format($total_general,2,'.',',');
+            $DATA['observaciones']          = $PEDIDO['observaciones_pedido'];
+            $DATA['numero_hoja']            = $numero_hoja;
+            $DATA['total_hojas']            = $total_hojas;
 
             $html = new html('template_imprimir_pedido', $DATA);
 

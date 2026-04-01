@@ -286,6 +286,8 @@
     var linea = state.detalle[index];
     state.editIndex = index;
 
+    
+    disableElements('modelo,idset_talla,color,material');
     document.getElementById("idset_talla").value = linea.idset_talla;
     cargarTallas();
   
@@ -549,9 +551,8 @@
 
   function limpiarLinea(){
 
-    document.getElementById("modelo").value = "";
-    document.getElementById("descripcionEstilo").value = "";
-    state.idproducto_precio = null;
+    clearElements('idset_talla,modelo,color,material');
+    enableElements('modelo,idset_talla,color,material');
   
     $color.innerHTML = "<option value=''>Seleccione...</option>";
     $material.innerHTML = "<option value=''>Seleccione...</option>";
