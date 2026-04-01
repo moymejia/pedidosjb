@@ -205,4 +205,9 @@ class concepto extends table
         }
     }
 
+    public function option_activos()
+    {
+        return mysql::getoptions("SELECT idconcepto id, nombre descripcion FROM concepto WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
+
 }

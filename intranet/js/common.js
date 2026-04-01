@@ -803,9 +803,12 @@ function activar_tabla(idtabla) {
     return tabla_nueva;
 }
 
-function desactivar_tabla(tabla) {
-    if (tabla != undefined) {
-        tabla.destroy();
+function desactivar_tabla(tabla_instancia) {
+
+    if (!tabla_instancia) return;
+
+    if (typeof tabla_instancia.destroy === "function") {
+        tabla_instancia.destroy();
     }
 }
 

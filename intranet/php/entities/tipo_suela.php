@@ -204,4 +204,9 @@ class tipo_suela extends table
             return $this->guardar_tipo_suela($DATOS);
         }
     }
+
+    public function option_activos()
+    {
+        return mysql::getoptions("SELECT idtipo_suela id, nombre descripcion FROM tipo_suela WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
 }

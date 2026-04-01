@@ -23,11 +23,14 @@ class producto extends table{
 
         parent::__construct(prefijo . '_pedidos', 'producto');
 
-        $this->ACCIONES['cargar_productos'] = 23;
-        $this->ACCIONES['crear']            = 24;
-        $this->ACCIONES['eliminar']         = 26;
-        $this->ACCIONES['activar']          = 27;
-        $this->ACCIONES['modificar']        = 28;
+        $this->ACCIONES['cargar_productos']    = 23;
+        $this->ACCIONES['crear']               = 24;
+        $this->ACCIONES['eliminar']            = 26;
+        $this->ACCIONES['activar']             = 27;
+        $this->ACCIONES['modificar']           = 28;
+        $this->ACCIONES['crear_x_mante']       = 49;
+        $this->ACCIONES['modificar_x_mante']   = 50;
+        $this->ACCIONES['cambiar_est_x_mante'] = 51;
 
         if(isset($PARAMETROS['operacion'])){
 
@@ -52,6 +55,38 @@ class producto extends table{
                     }
                 } else {
                     self::end_error("Parametros faltantes");
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'guardar') {
+                if (table::validate_parameter_existence(['idmarca','modelo','idset_talla'], $PARAMETROS, false)) {
+                    if ($resultado = $this->guardar($PARAMETROS['idproducto'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'],$PARAMETROS['linea'],$PARAMETROS['modelo'],$PARAMETROS['idset_talla'],$PARAMETROS['idcolor'],$PARAMETROS['idcorte'],$PARAMETROS['idtipo_suela'],$PARAMETROS['idconcepto'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Parametros faltantes");
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'cambiar_estado') {
+                if (table::validate_parameter_existence(['idproducto'], $PARAMETROS, false)) {
+                    if ($resultado = $this->cambiar_estado($PARAMETROS['idproducto'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Parametros faltantes");
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'tabla') {
+                if ($resultado = $this->tabla()) {
+                    self::end_success($resultado);
+                } else {
+                    self::end_error($this->last_error);
                 }
             }
         }
@@ -159,6 +194,139 @@ class producto extends table{
         return $html->get_html();
     }
 
+    public function cargar_opcion_producto()
+    {
+        $DATA = [];
+        $DATA['marcas']          = (new marca())->option_activos();
+        $DATA['temporadas']      = (new temporada())->option_activos();
+        $DATA['set_tallas']      = (new set_talla())->options_activos();
+        $DATA['colores']         = (new color())->option_activos();
+        $DATA['cortes']          = (new corte())->option_activos();
+        $DATA['tipo_suelas']     = (new tipo_suela())->option_activos();
+        $DATA['conceptos']       = (new concepto())->option_activos();
+        $DATA['tabla_productos'] = $this->tabla();
+        $DATA['modelos']         = $this->modelos();
+
+        $html = new html('producto', $DATA);
+        return $html->get_html();
+    }
+
+    public function tabla()
+    {   
+        $sql = mysql::getresult("
+            SELECT 
+                idproducto,
+                modelo,
+                linea,
+                idmarca,
+                marca,
+                idtemporada,
+                temporada,
+                idset_talla,
+                set_talla,
+                idcolor,
+                color,
+                idcorte,
+                corte,
+                idtipo_suela,
+                tipo_suela,
+                idconcepto,
+                concepto,
+                estado
+            FROM view_producto
+        ");
+
+        $columnControl = true;
+        $responsive    = true;
+        $colReorder    = true;
+        $select        = true;
+        $buttons       = false;
+        $paging        = true;
+        $ordering      = true;
+        $order         = true;
+        $rowGroup      = false;
+
+        $data_ = "";
+        $data_  = " data-conf-columncontrol='" . ($columnControl ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup=''";
+        $data_ .= " data-conf-responsive='"    . ($responsive    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-colreorder='"    . ($colReorder    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-select='"        . ($select        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-buttons='"       . ($buttons       ? "true" : "false") . "' ";
+        $data_ .= " data-conf-paging='"        . ($paging        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
+        $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
+
+
+        $tabla = '<table id="tabla_datos" '.$data_.' class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Modelo</th>
+                            <th>Línea</th>
+                            <th>Marca</th>
+                            <th>Temporada</th>
+                            <th>Set Talla</th>
+                            <th>Color</th>
+                            <th>Corte</th>
+                            <th>Tipo Suela</th>
+                            <th>Concepto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla_todos">';
+                    
+        while($row = mysql::getrowresult($sql)){
+
+            $idproducto  = $row['idproducto'];
+            $modelo      = $row['modelo'];
+            $linea       = $row['linea'];
+            $marca       = $row['marca'];
+            $temporada   = $row['temporada'];
+            $set_talla   = $row['set_talla'];
+            $color       = $row['color'];
+            $corte       = $row['corte'];
+            $tipo_suela  = $row['tipo_suela'];
+            $concepto    = $row['concepto'];
+            $estado      = $row['estado'];
+
+            $str_data = "";
+            foreach ($row as $key => $value) {
+                $str_data .= $key . "=" . $value . "&";
+            }
+
+            $btn = "<button class='btn btn-info btn-sm' onclick='
+                    editar_registro(\"$str_data\",this.parentNode.parentNode);
+                    showElements(\"div_form_producto\");
+                    hideElements(\"div_tabla\");
+                    element(\"modelo_b\").value = \"$modelo\";
+                    activar_tabla_precios($modelo);
+                    goTop();
+                    showElements(\"btn_cambiar_estado,tab_producto_precio\");
+                '>Editar</button>";
+
+            $tabla .= "<tr>
+                        <td>$idproducto</td>
+                        <td>$modelo</td>
+                        <td>$linea</td>
+                        <td>$marca</td>
+                        <td>$temporada</td>
+                        <td>$set_talla</td>
+                        <td>$color</td>
+                        <td>$corte</td>
+                        <td>$tipo_suela</td>
+                        <td>$concepto</td>
+                        <td>$estado</td>
+                        <td>$btn</td>
+                    </tr>";
+        }
+
+        $tabla .= '</tbody></table>';
+
+        return $tabla;
+    }
+
     public function get_idproducto($modelo,$idmarca,$idtemporada)
     {
         $idproducto = mysql::getvalue("SELECT idproducto FROM producto WHERE idmarca = '$idmarca' AND modelo = '$modelo' AND idtemporada = '$idtemporada'");
@@ -170,20 +338,33 @@ class producto extends table{
         }
     }
 
-    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$idset_talla,$idcolor,$idcorte,$idtipo_suela,$idconcepto,$estado = '') 
+    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$idset_talla,$idcolor,$idcorte,$idtipo_suela,$idconcepto,$estado = '',$mantenimiento = 'NO') 
     {   
-        if($idproducto == ''){
-            $idprod_existente = $this->get_idproducto($modelo,$idmarca,$idtemporada);
-
-            if($idprod_existente){
-                $idproducto = $idprod_existente;
-            }else{
-                $idproducto = '';
+        if($mantenimiento !== 'SI'){
+            if($idproducto == ''){
+                $idprod_existente = $this->get_idproducto($modelo,$idmarca,$idtemporada);
+    
+                if($idprod_existente){
+                    $idproducto = $idprod_existente;
+                }else{
+                    $idproducto = '';
+                }
             }
         }
 
         if($idproducto == ''){
-            $security = new security($this->ACCIONES['crear']);
+            if($mantenimiento == 'SI'){
+                $security = new security($this->ACCIONES['crear_x_mante']);
+            }else{
+                $security = new security($this->ACCIONES['crear']);
+            }
+            
+
+            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor'")){
+                $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
+                utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
+                return false;
+            }
 
             $DATOS = [];
             $DATOS['idmarca']          = $idmarca;
@@ -212,7 +393,11 @@ class producto extends table{
 
             if(table::insert_record($DATOS)){
                 $referencia = mysql::last_id();
-                $security->registrar_bitacora($this->ACCIONES['crear'], "guardar_producto");
+                if($mantenimiento == 'SI'){
+                    $security->registrar_bitacora($this->ACCIONES['crear_x_mante'], "Guardar producto");
+                }else{
+                    $security->registrar_bitacora($this->ACCIONES['crear'], "Guardar producto");
+                }
 
                 return $referencia;
             }else{
@@ -222,7 +407,17 @@ class producto extends table{
                 return false;
             }
         }else{
-            $security = new security($this->ACCIONES['modificar']);
+            if($mantenimiento == 'SI'){
+                $security = new security($this->ACCIONES['modificar_x_mante']);
+            }else{
+                $security = new security($this->ACCIONES['modificar']);
+            }
+
+            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor'")){
+                $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
+                utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
+                return false;
+            }
 
             $DATOS = [];
             $DATOS['idproducto']           = $idproducto;
@@ -248,7 +443,12 @@ class producto extends table{
             $llaves                        = ['idproducto'];
 
             if(table::update_record($DATOS,$llaves)){
-                $security->registrar_bitacora($this->ACCIONES['modificar'], "Modificar producto");
+                if($mantenimiento == 'SI'){
+                    $security->registrar_bitacora($this->ACCIONES['modificar_x_mante'], "Modificar producto");
+                }else{
+                    $security->registrar_bitacora($this->ACCIONES['modificar'], "Modificar producto");
+                }
+                
 
                 return $idproducto;
             }else{
@@ -994,6 +1194,42 @@ class producto extends table{
         }
     }
 
+    public function modelos()
+    {
+        return mysql::getoptions("SELECT DISTINCT 
+            modelo AS id,
+            modelo AS descripcion
+        FROM producto
+        ORDER BY modelo ASC;");
+    }
 
+    public function estado($idproducto)
+    {
+        return mysql::getvalue("SELECT estado FROM producto WHERE idproducto = '$idproducto'");
+    }
+
+    public function cambiar_estado($idproducto)
+    {
+        $security = new security($this->ACCIONES['cambiar_estado']);
+        $estado_actual = $this->estado($idproducto);
+
+        $DATOS = [];
+        $DATOS['idproducto']           = $idproducto;
+        $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
+        $DATOS['usuario_modificacion'] = $security->get_actual_user();
+        $DATOS['fecha_modificacion']   = date("Y-m-d H:i:s");
+        $llaves                        = ['idproducto'];
+
+        if (table::update_record($DATOS, $llaves)) {
+            $security->registrar_bitacora($this->ACCIONES['cambiar_estado'], $idproducto, $DATOS['estado']);
+
+            return $this->estado($idproducto);
+        } else {
+            $this->last_error = "Error al cambiar de estado";
+            utils::report_error(validation_error, $idproducto, $this->last_error);
+
+            return false;
+        }
+    }
 
 }

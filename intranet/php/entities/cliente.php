@@ -68,7 +68,29 @@ class cliente extends table
         $result = mysql::getresult("SELECT idcliente, nombre, codigo, direccion, establecimiento,
                 telefono, nit, limite_credito, dias_credito, observaciones, estado, correo
             FROM cliente");
-        $tabla_clientes = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable " cellspacing="0" width="100%">
+
+        $columnControl = true;
+        $responsive    = true;
+        $colReorder    = true;
+        $select        = true;
+        $buttons       = true;
+        $paging        = true;
+        $ordering      = true;
+        $order         = true;
+        $rowGroup      = false;
+
+        $data_ = "";
+        $data_  = " data-conf-columncontrol='" . ($columnControl ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup=''";
+        $data_ .= " data-conf-responsive='"    . ($responsive    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-colreorder='"    . ($colReorder    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-select='"        . ($select        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-buttons='"       . ($buttons       ? "true" : "false") . "' ";
+        $data_ .= " data-conf-paging='"        . ($paging        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
+        $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
+
+        $tabla_clientes = '<table id="tabla_datos"'.$data_.' class="display nowrap table table-hover table-bordered datatable " cellspacing="0" width="100%">
 		<thead>
 			<tr>
                 <th style="text-align: center;">Acciones</th>

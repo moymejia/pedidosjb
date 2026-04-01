@@ -1,0 +1,241 @@
+<input type="hidden" id="datatableid" name="datatableid" value="tabla_productos_datos">
+<input type="hidden" id="jsid" name="jsid" value="producto">
+<div id="div_tabs">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" id="tab_producto">
+                        <a class="nav-link active" data-toggle="tab" href="#producto_tab" role="tab">Producto</a>
+                    </li>
+                    <li class="nav-item" id="tab_producto_precio" style="display: none;">
+                        <a class="nav-link" data-toggle="tab" href="#producto_precio_tab" role="tab">Producto Precio</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+
+                    <div class="tab-pane active" id="producto_tab" role="tabpanel">
+                        <br>
+                        <div id="div_form_producto" style="display: none;">
+                            <div class="row">
+                                <input type="hidden" id="idproducto">
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Marca</label>
+                                    <select id="idmarca" class="form-control">
+                                        [marcas]
+                                    </select>
+                                </div>
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Temporada</label>
+                                    <select id="idtemporada" class="form-control">
+                                        [temporadas]
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 form-group">
+                                    <label>Linea</label>
+                                    <input type="text" id="linea" class="form-control">
+                                </div>
+
+                                <div class="col-md-3 form-group">
+                                    <label>Modelo</label>
+                                    <input type="text" id="modelo" class="form-control">
+                                </div>
+    
+                                
+    
+                            </div>
+    
+                            <div class="row mt-2">
+
+                                <div class="col-md-3 form-group">
+                                    <label>Set de Tallas</label>
+                                    <select id="idset_talla" class="form-control">
+                                        [set_tallas]
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 form-group">
+                                    <label>Color</label>
+                                    <select id="idcolor" class="form-control">
+                                        [colores]
+                                    </select>
+                                </div>
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Corte</label>
+                                    <select id="idcorte" class="form-control">
+                                        [cortes]
+                                    </select>
+                                </div>
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Tipo Suela</label>
+                                    <select id="idtipo_suela" class="form-control">
+                                        [tipo_suelas]
+                                    </select>
+                                </div>
+    
+                            </div>
+    
+                            <div class="row mt-2">
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Concepto</label>
+                                    <select id="idconcepto" class="form-control">
+                                        [conceptos]
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3 form-group">
+                                    <label>Estado</label>
+                                    <input type="text" id="estado" class="form-control" readonly value="ACTIVO">
+                                </div>
+
+                                <div class="col-md-6 form-group d-flex align-items-end">
+                                    <button class="btn btn-primary" onclick="
+                                        callback_guardar_producto = function(){
+                                            notify_success('Producto guardado correctamente.');
+                                            mostrar_opcion(10,'Producto','Mantenimientos');
+                                        }
+                                        upload_action('idproducto,idmarca,idtemporada,linea,modelo,idset_talla,idcolor,idcorte,idtipo_suela,idconcepto,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
+                                    ">
+                                        Guardar Producto
+                                    </button>
+
+                                    <button class="btn btn-secondary ml-2" onclick="
+                                        mostrar_opcion(10,'Producto','Mantenimientos');
+                                    ">
+                                        Cancelar
+                                    </button>
+
+                                    <button id="btn_cambiar_estado" style="display: none;" class="btn btn-success ml-2 " onclick="
+                                        callback_cambiar_estado = function(){
+                                            notify_success('Estado cambiado correctamente.');
+                                            download_div_content('','producto','tabla','tabla_productos');
+                                        }
+                                        download_input_value('idproducto','producto','cambiar_estado','estado',callback_cambiar_estado);
+                                    ">
+                                        Cambiar estado
+                                    </button>
+                                </div>
+    
+                            </div>
+                        </div>
+                        
+
+                        <div id="div_tabla">
+                            <button class="btn btn-primary" onclick="
+                                clearElements('idproducto,idmarca,idtemporada,idset_talla,idcolor,idcorte,idtipo_suela,idconcepto,modelo,linea');
+                                hideElements('div_tabla');
+                                showElements('div_form_producto');
+                            ">
+                                <i class="fas fa-plus"></i> Nuevo
+                            </button>
+                            <div class="table-responsive" id="tabla_productos">
+                                [tabla_productos]
+                            </div>
+                        
+                        </div>
+
+                    </div>
+
+                    <div class="tab-pane" id="producto_precio_tab" role="tabpanel">
+                        <br>
+                        <div id="div_form_busqueda">
+                            <div class="row">
+                                <div class="col-md-3 form-group">
+                                    <label for="modelo_b">Modelo</label>
+                                    <input type="text" id="modelo_b" class="form-control" readonly onchange="
+                                        
+                                    ">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="div_form_precio_producto" style="display: none;">
+                            <div class="row mt-2">
+                                <input type="hidden" id="idproducto_precio">
+                                <div class="col-md-3 form-group">
+                                    <label>Material</label>
+                                    <input type="text" id="material" class="form-control">
+                                </div>
+    
+                                <div class="col-md-3 form-group">
+                                    <label>Precio</label>
+                                    <input type="number" id="precio" class="form-control" step="0.01">
+                                </div>
+    
+                                <div class="col-md-3 form-group d-flex align-items-end">
+                                    <button class="btn btn-success" onclick="
+                                        callback_guardar_precio = function(){
+                                            
+                                            notify_success('Precio guardado correctamente.');
+                                            hideElements('div_form_precio_producto,div_form_producto');
+                                            showElements('div_form_busqueda,div_tabla_precios,div_tabla,div_botones_precio');
+                                            if(element('modelo_b').value != ''){
+                                                callback_guardar_precio = function(){
+                                                    tabla = activar_tabla('tabla_precios');
+                                                }
+                                                download_div_content('modelo='+element('modelo_b').value,'producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
+                                            }
+                                        }
+                                        upload_action(
+                                            'idproducto,idproducto_precio,material,precio,estado=,mantenimiento=SI',
+                                            'producto_precio',
+                                            'guardar',
+                                            callback_guardar_precio
+                                        );
+                                    ">
+                                        Guardar Precio
+                                    </button>
+                                    <button class="btn btn-secondary ml-2" onclick="
+                                        hideElements('div_form_precio_producto');
+                                        showElements('div_form_busqueda,div_botones_precio,div_tabla_precios');
+                                        clearElements('idproducto_precio,material,precio');
+                                    ">
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="row" id="div_botones_precio">
+                            <div class="col-md-3">
+                                <button class="btn btn-primary" onclick="
+                                    if(element('idproducto').value == ''){
+                                        notify_error('Seleccione un producto para agregar precios.');
+                                        return;
+                                    }
+                                    showElements('div_form_precio_producto');
+                                    hideElements('div_form_busqueda,div_tabla_precios,div_botones_precio');
+                                ">
+                                    <i class="fas fa-plus"></i> Nuevo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="div_tabla_precios">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="table-responsive"  id="tabla_producto_precio" class="mt-3">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+

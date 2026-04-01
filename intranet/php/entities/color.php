@@ -206,4 +206,9 @@ class color extends table
         }
     }
 
+    public function option_activos()
+    {
+        return mysql::getoptions("SELECT idcolor id, nombre descripcion FROM color WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
+
 }

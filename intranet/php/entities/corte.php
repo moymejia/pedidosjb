@@ -204,4 +204,9 @@ class corte extends table
             return $this->guardar_corte($DATOS);
         }
     }
+
+    public function option_activos()
+    {
+        return mysql::getoptions("SELECT idcorte id, nombre descripcion FROM corte WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
 }
