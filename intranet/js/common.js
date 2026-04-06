@@ -19,7 +19,25 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
         habilitar_floating_labels();
         desactivar_tabla(tabla);
         if (objeto("tabla_datos") != undefined && objeto("tabla_datos").classList.contains("datatable")) {
-            tabla = activar_tabla("tabla_datos");
+            var inputDT = document.getElementById('datatableid');
+            var idFinal = 'tabla_datos'; // Valor por defecto
+
+            if (inputDT && inputDT.value.trim() !== "") {
+                var nuevoId = inputDT.value.trim();
+                var tablaPorDefecto = document.getElementById('tabla_datos');
+
+                if (tablaPorDefecto) {
+                    // Si existe la tabla con el ID genérico, se lo cambiamos al del input
+                    tablaPorDefecto.id = nuevoId;
+                    idFinal = nuevoId;
+                } else if (document.getElementById(nuevoId)) {
+                    // Si no existe 'tabla_datos' pero ya existe una con el ID del input, la usamos
+                    idFinal = nuevoId;
+                }
+
+            }
+            var idtabla = idFinal;
+            tabla = activar_tabla(idtabla);
         }
         activate_select2();
         activate_switch();
@@ -633,29 +651,11 @@ function activate_select2() {
 //DATA TABLES
 function activar_tabla(idtabla) {      
     //
-    var inputDT = document.getElementById('datatableid');
-    var idFinal = 'tabla_datos'; // Valor por defecto
-
-    if (inputDT && inputDT.value.trim() !== "") {
-        var nuevoId = inputDT.value.trim();
-        var tablaPorDefecto = document.getElementById('tabla_datos');
-
-        if (tablaPorDefecto) {
-            // Si existe la tabla con el ID genérico, se lo cambiamos al del input
-            tablaPorDefecto.id = nuevoId;
-            idFinal = nuevoId;
-        } else if (document.getElementById(nuevoId)) {
-            // Si no existe 'tabla_datos' pero ya existe una con el ID del input, la usamos
-            idFinal = nuevoId;
-        }
-
-    }
-    idtabla = idFinal;
+    
     //
 
     var tabla = document.getElementById(idtabla);            
     var ds = tabla.dataset;                                  
-    var pagingUser = ds.confPaging === "true";     
     var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");          
     var selectUser = ds.confSelect === "true";               
     var buttonsUser = ds.confButtons === "true";             
