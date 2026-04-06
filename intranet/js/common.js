@@ -655,7 +655,8 @@ function activar_tabla(idtabla) {
 
     var tabla = document.getElementById(idtabla);            
     var ds = tabla.dataset;                                  
-    var pagingUser = ds.confPaging === "true";               
+    var pagingUser = ds.confPaging === "true";     
+    var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");          
     var selectUser = ds.confSelect === "true";               
     var buttonsUser = ds.confButtons === "true";             
     

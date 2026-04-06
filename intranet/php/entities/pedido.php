@@ -195,7 +195,7 @@ class pedido extends table{
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
         $DATOS['idtemporada']           = $PARAMETROS['idtemporada'];
         $DATOS['email']                 = $PARAMETROS['email'];
-        $DATOS['observaciones_pedido']  = $PARAMETROS['observaciones_pedido'];
+        $DATOS['observaciones_pedido']  = str_replace(["\r", "\n"], ' ', $PARAMETROS['observaciones_pedido']);
         $DATOS['idtransporte']          = $PARAMETROS['idtransporte'];
         $DATOS['monto_descuento']       = $PARAMETROS['monto_descuento'];
         $DATOS['estado']                = 'BORRADOR';
@@ -332,7 +332,6 @@ class pedido extends table{
             return false;
         }
 
-        $MAX_TALLAS = 10;
         $sets_catalogo = [];
         $tallas_header_block = '';
 
@@ -370,6 +369,34 @@ class pedido extends table{
             return false;
         }
 
+        $max_tallas = 1;
+        foreach ($sets_catalogo as $set_info) {
+            $max_tallas = max($max_tallas, count($set_info['tallas']));
+        }
+
+        $column_weights = [2.1, 2.6, 4.6, 2.2, 1.6];
+
+        for ($i = 0; $i < $max_tallas; $i++) {
+            $column_weights[] = 1;
+        }
+
+        $column_weights[] = 2.1;
+        $column_weights[] = 2.2;
+        $column_weights[] = 3.1;
+
+        $weight_total = array_sum($column_weights);
+        $detalle_colgroup = "<colgroup>";
+        foreach ($column_weights as $weight) {
+            $width = number_format(($weight / $weight_total) * 100, 4, '.', '');
+            $detalle_colgroup .= "<col style=\"width:{$width}%\">";
+        }
+        $detalle_colgroup .= "</colgroup>";
+
+        $total_columns = count($column_weights);
+        $totales_leyenda_colspan = max(1, $total_columns - 5);
+        $observaciones_colspan = max(1, $total_columns - 9);
+        $container_width = max(950, 760 + ($max_tallas * 38)) . 'px';
+
         $rowspan_encabezado = count($sets_catalogo);
 
         $primer_header = true;
@@ -396,7 +423,7 @@ class pedido extends table{
                 $tallas_header_block .= "<th class='gris'>{$numero}</th>";
             }
 
-            $faltantes = $MAX_TALLAS - count($set_info['tallas']);
+            $faltantes = $max_tallas - count($set_info['tallas']);
 
             if ($faltantes > 0) {
                 if ($descripcion_set !== '') {
@@ -421,7 +448,7 @@ class pedido extends table{
         $sql = mysql::getresult("SELECT idproducto, idproducto_precio, codigo AS producto, imagen, idtalla, cantidad, precio_venta, color, material, idset_talla, COALESCE(grupo, '') AS grupo, COALESCE(set_descripcion, '') AS set_descripcion
             FROM view_pedido_detalle
             WHERE idpedido = '$idpedido'
-            ORDER BY grupo ASC, set_descripcion ASC, idproducto ASC, idproducto_precio ASC, idtalla ASC");
+            ORDER BY idproducto ASC, idproducto_precio ASC, color ASC, material ASC, grupo ASC, set_descripcion ASC, idset_talla ASC, idtalla ASC");
 
         if (!$sql) {
             $this->last_error = "Error al obtener el detalle del pedido para impresión.";
@@ -460,7 +487,59 @@ class pedido extends table{
             $productos[$idp]['total'] += $row['cantidad'];
         }
 
-        $productos_chunks = array_chunk($productos, 8);
+        $productos_agrupados = [];
+
+        foreach ($productos as $producto_info) {
+            $codigo_estilo = (string)$producto_info['producto'];
+            $color_material = trim((string)$producto_info['color']).'|'.trim((string)$producto_info['material']);
+            $grupo_key = $codigo_estilo.'|'.$color_material;
+
+            if (!isset($productos_agrupados[$grupo_key])) {
+                $productos_agrupados[$grupo_key] = [
+                    'producto' => $codigo_estilo,
+                    'imagen' => $producto_info['imagen'],
+                    'marca' => $PEDIDO['marca'],
+                    'color' => $producto_info['color'],
+                    'material' => $producto_info['material'],
+                    'filas' => [],
+                    'total' => 0,
+                    'monto' => 0,
+                    'precios' => []
+                ];
+            }
+
+            if (empty($productos_agrupados[$grupo_key]['imagen']) && !empty($producto_info['imagen'])) {
+                $productos_agrupados[$grupo_key]['imagen'] = $producto_info['imagen'];
+            }
+
+            $productos_agrupados[$grupo_key]['filas'][] = $producto_info;
+            $productos_agrupados[$grupo_key]['total'] += $producto_info['total'];
+            $productos_agrupados[$grupo_key]['monto'] += ($producto_info['total'] * $producto_info['precio']);
+            $productos_agrupados[$grupo_key]['precios'][(string)$producto_info['precio']] = $producto_info['precio'];
+        }
+
+        $productos_chunks = [];
+        $chunk_actual = [];
+        $filas_actuales = 0;
+        $max_filas_por_hoja = 8;
+
+        foreach ($productos_agrupados as $grupo_producto) {
+            $filas_grupo = count($grupo_producto['filas']);
+
+            if (!empty($chunk_actual) && ($filas_actuales + $filas_grupo) > $max_filas_por_hoja) {
+                $productos_chunks[] = $chunk_actual;
+                $chunk_actual = [];
+                $filas_actuales = 0;
+            }
+
+            $chunk_actual[] = $grupo_producto;
+            $filas_actuales += $filas_grupo;
+        }
+
+        if (!empty($chunk_actual)) {
+            $productos_chunks[] = $chunk_actual;
+        }
+
         $html_final = '';
         $total_hojas = count($productos_chunks);
 
@@ -471,51 +550,72 @@ class pedido extends table{
             $total_pares    = 0;
             $total_general  = 0;
 
-            foreach ($chunk as $p) {
+            foreach ($chunk as $grupo_producto) {
+                $rowspan_producto = count($grupo_producto['filas']);
+                $precio_texto = count($grupo_producto['precios']) === 1
+                    ? 'Q '.number_format(reset($grupo_producto['precios']), 2, '.', ',')
+                    : 'VARIOS';
 
-                $fila_tallas = '';
-                $set_producto = isset($sets_catalogo[$p['idset_talla']]) ? $sets_catalogo[$p['idset_talla']] : null;
-                $grupo_producto = htmlspecialchars($p['grupo'], ENT_QUOTES, 'UTF-8');
-                $fila_tallas .= "<td class='talla-grupo-producto'>{$grupo_producto}</td>";
+                $total_pares    += $grupo_producto['total'];
+                $total_general  += $grupo_producto['monto'];
 
-                $cantidad_tallas = 0;
+                foreach ($grupo_producto['filas'] as $fila_index => $p) {
 
-                if ($set_producto) {
-                    foreach ($set_producto['tallas'] as $t) {
-                        $cantidad = array_key_exists($t['idtalla'], $p['tallas']) ? $p['tallas'][$t['idtalla']] : '';
-                        $fila_tallas .= "<td style='font-size: 13px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
-                        $cantidad_tallas++;
+                    $fila_tallas = '';
+                    $set_producto = isset($sets_catalogo[$p['idset_talla']]) ? $sets_catalogo[$p['idset_talla']] : null;
+                    $grupo_talla = htmlspecialchars($p['grupo'], ENT_QUOTES, 'UTF-8');
+                    $fila_tallas .= "<td class='talla-grupo-producto'>{$grupo_talla}</td>";
+
+                    $cantidad_tallas = 0;
+
+                    if ($set_producto) {
+                        foreach ($set_producto['tallas'] as $t) {
+                            $cantidad = array_key_exists($t['idtalla'], $p['tallas']) ? $p['tallas'][$t['idtalla']] : '';
+                            $fila_tallas .= "<td style='font-size: 13px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
+                            $cantidad_tallas++;
+                        }
                     }
+
+                    if ($cantidad_tallas < $max_tallas) {
+                        $faltantes = $max_tallas - $cantidad_tallas;
+                        $fila_tallas .= "<td colspan='{$faltantes}'>&nbsp;</td>";
+                    }
+
+                    $detalle_html .= "<tr>";
+
+                    if ($fila_index === 0) {
+                        $detalle_html .= "
+                            <td class='img' rowspan='{$rowspan_producto}'>
+                                <img src='".($grupo_producto['imagen'] ? '../'.$grupo_producto['imagen'] : "https://via.placeholder.com/50")."'>
+                            </td>
+                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".htmlspecialchars($grupo_producto['producto'], ENT_QUOTES, 'UTF-8')."</td>
+                        ";
+                    }
+
+                    if ($fila_index === 0) {
+                        $detalle_html .= "
+                            <td style='font-size: 10px;' class='center' rowspan='{$rowspan_producto}'>
+                                ".strtoupper($grupo_producto['color'])." - ".strtoupper($grupo_producto['material'])."
+                            </td>
+                        ";
+                    }
+
+                    if ($fila_index === 0) {
+                        $detalle_html .= "<td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".$grupo_producto['marca']."</td>";
+                    }
+
+                    $detalle_html .= $fila_tallas;
+
+                    if ($fila_index === 0) {
+                        $detalle_html .= "
+                            <td rowspan='{$rowspan_producto}'>".$grupo_producto['total']."</td>
+                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".$precio_texto."</td>
+                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>Q ".number_format($grupo_producto['monto'],2,'.',',')."</td>
+                        ";
+                    }
+
+                    $detalle_html .= "</tr>";
                 }
-
-                if ($cantidad_tallas < $MAX_TALLAS) {
-                    $faltantes = $MAX_TALLAS - $cantidad_tallas;
-                    $fila_tallas .= "<td colspan='{$faltantes}'>&nbsp;</td>";
-                }
-
-                $total  = $p['total'];
-                $precio = $p['precio'];
-                $monto  = $total * $precio;
-
-                $total_pares    += $total;
-                $total_general  += $monto;
-
-                $detalle_html .= "
-                <tr>
-                    <td class='img'>
-                        <img src='".($p['imagen'] ? '../'.$p['imagen'] : "https://via.placeholder.com/50")."'>
-                    </td>
-                    <td style='font-size: 12px;'>".$p['producto']."</td>
-                    <td style='font-size: 10px;' class='center'>
-                        ".strtoupper($p['color'])." - ".strtoupper($p['material'])."
-                    </td>
-                    <td style='font-size: 12px;' >".$PEDIDO['marca']."</td>
-                    ".$fila_tallas."
-                    <td>".$total."</td>
-                    <td style='font-size: 12px;'>Q ".number_format($precio,2,'.',',')."</td>
-                    <td style='font-size: 12px;'>Q ".number_format($monto,2,'.',',')."</td>
-                </tr>
-                ";
             }
 
             $DATA = [];
@@ -537,6 +637,11 @@ class pedido extends table{
             $DATA['transporte']             = $PEDIDO['transporte'];
             $DATA['idpedido']               = $PEDIDO['idpedido'];
             $DATA['descripcion_marca']      = $PEDIDO['descripcion_marca'];
+            $DATA['container_width']        = $container_width;
+            $DATA['detalle_colgroup']       = $detalle_colgroup;
+            $DATA['firmas_colgroup']        = $detalle_colgroup;
+            $DATA['totales_leyenda_colspan']= $totales_leyenda_colspan;
+            $DATA['observaciones_colspan']  = $observaciones_colspan;
             $DATA['tallas_header_block']    = $tallas_header_block;
             $DATA['detalle_productos']      = $detalle_html;
             $DATA['total_pares']            = $total_pares;

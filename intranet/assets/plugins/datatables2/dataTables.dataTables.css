@@ -706,7 +706,7 @@ div.dt-container .dt-paging .dt-paging-button.current, div.dt-container .dt-pagi
 }
 div.dt-container .dt-paging .dt-paging-button.disabled, div.dt-container .dt-paging .dt-paging-button.disabled:hover, div.dt-container .dt-paging .dt-paging-button.disabled:active {
   cursor: default;
-  color: rgba(0, 0, 0, 0.5) !important;
+  color: rgb(255, 255, 255) !important;
   border: 1px solid transparent;
   background: transparent;
   box-shadow: none;
