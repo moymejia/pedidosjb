@@ -1,5 +1,4 @@
-CREATE OR REPLACE
-ALGORITHM = UNDEFINED VIEW `pedidosjb_pedidos`.`view_producto_modelo` AS
+CREATE OR REPLACE VIEW view_producto_modelo AS
 SELECT
     p.idproducto,
     p.modelo,
@@ -13,11 +12,10 @@ SELECT
     pp.material,
     pp.precio,
     pp.estado AS estado_material
-FROM pedidosjb_pedidos.producto p
-JOIN pedidosjb_pedidos.marca m 
-    ON m.idmarca = p.idmarca
-JOIN pedidosjb_pedidos.color c 
-    ON p.idcolor = c.idcolor
-LEFT JOIN pedidosjb_pedidos.producto_precio pp 
+FROM producto p
+JOIN marca m ON m.idmarca = p.idmarca
+JOIN color c ON p.idcolor = c.idcolor
+JOIN producto_precio pp 
     ON pp.idproducto = p.idproducto
+    AND pp.estado = 'ACTIVO' 
 WHERE p.estado = 'ACTIVO';
