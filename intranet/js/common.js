@@ -659,6 +659,12 @@ function activar_tabla(idtabla) {
     var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");          
     var selectUser = ds.confSelect === "true";               
     var buttonsUser = ds.confButtons === "true";             
+    var fixedHeaderDisponible = (typeof DataTable !== "undefined" && typeof DataTable.FixedHeader !== "undefined") ||
+        (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.FixedHeader !== "undefined");
+    var fixedHeaderUser = ds.confFixedheader === "true" && fixedHeaderDisponible;
+    var exportTitle = "Listado de Clientes";
+    var exportCompany = "JBR Innovaciones y Servicios";
+    var exportFileName = "Listado_de_Clientes_JBR_Innovaciones_y_Servicios";
     
     var nombreABuscar = ds.confRowgroup; 
     var indiceReal = -1;
@@ -677,10 +683,142 @@ function activar_tabla(idtabla) {
     $('#' + idtabla + ' thead th').each(function() {
         columnasAuto.push({ name: $(this).text().trim() });
     });
-    
+
     var botones = [];
     if (buttonsUser) {  
-        botones.push("copy", "csv", "excel", "pdf", "print");
+        botones.push(
+            {
+                extend: "copy",
+                text: "Copiar",
+                className: "btn btn-secondary btn-sm",
+                title: exportTitle,
+                messageTop: exportCompany
+            },
+            {
+                extend: "csv",
+                text: "CSV",
+                className: "btn btn-secondary btn-sm",
+                title: exportTitle,
+                filename: exportFileName
+            },
+            {
+                extend: "excel",
+                text: "Excel",
+                className: "btn btn-success btn-sm",
+                title: exportTitle,
+                filename: exportFileName,
+                messageTop: exportCompany
+            },
+            {
+                extend: "pdf",
+                text: "PDF",
+                className: "btn btn-danger btn-sm",
+                title: exportTitle,
+                messageTop: exportCompany,
+                filename: exportFileName,
+                orientation: "landscape",
+                pageSize: "LEGAL",
+                customize: function(doc) {
+                    doc.pageMargins = [18, 40, 18, 24];
+                    doc.defaultStyle = {
+                        color: "#000000",
+                        fontSize: 7,
+                        alignment: "center"
+                    };
+                    doc.styles.title = {
+                        color: "#000000",
+                        fontSize: 14,
+                        bold: true,
+                        alignment: "center"
+                    };
+                    doc.styles.message = {
+                        color: "#000000",
+                        fontSize: 10,
+                        alignment: "center",
+                        margin: [0, 0, 0, 10]
+                    };
+                    doc.styles.tableHeader = {
+                        color: "#000000",
+                        fillColor: null,
+                        bold: true,
+                        alignment: "center"
+                    };
+                    if (doc.content && doc.content[2] && doc.content[2].table) {
+                        doc.content[2].alignment = "center";
+                        if (doc.content[2].table.widths) {
+                            doc.content[2].table.widths = doc.content[2].table.widths.map(function() {
+                                return "*";
+                            });
+                        }
+                        doc.content[2].layout = {
+                            hLineColor: function() { return "#000000"; },
+                            vLineColor: function() { return "#000000"; },
+                            hLineWidth: function() { return 0.5; },
+                            vLineWidth: function() { return 0.5; },
+                            paddingLeft: function() { return 4; },
+                            paddingRight: function() { return 4; },
+                            paddingTop: function() { return 3; },
+                            paddingBottom: function() { return 3; }
+                        };
+                    }
+                }
+            },
+            {
+                extend: "print",
+                text: "Imprimir",
+                className: "btn btn-primary btn-sm",
+                title: "",
+                messageTop: "",
+                filename: exportFileName,
+                autoPrint: true,
+                customize: function(win) {
+                    var doc = win.document;
+                    $(doc.body).prepend(
+                        '<div style="text-align:center; margin-bottom:12px; color:#000000;">' +
+                            '<div style="font-size:40px; font-weight:bold;">' + exportTitle + '</div>' +
+                            '<div style="font-size:20px; font-weight:normal;">' + exportCompany + '</div>' +
+                        '</div>'
+                    );
+                    $(doc.head).append(
+                        '<style>' +
+                        '@page { size: landscape; margin: 8mm; }' +
+                        'html, body { background: #ffffff !important; color: #000000 !important; ' +
+                            '-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
+                        'body { font-family: Arial, sans-serif; font-size: 8px; }' +
+                        'h1, h2, h3, h4, h5, h6, div, span, p { color: #000000 !important; }' +
+                        'table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; }' +
+                        'table thead { display: table-header-group; }' +
+                        'table thead th {' +
+                            'background: #ffffff !important;' +
+                            'color: #000000 !important;' +
+                            'border: 1px solid #000000 !important;' +
+                            'font-weight: bold !important;' +
+                            'font-size: 11px !important;' +
+                        '}' +
+                        'table th, table td {' +
+                            'border: 1px solid #000000 !important;' +
+                            'padding: 2px 3px !important;' +
+                            'color: #000000 !important;' +
+                            'background: #ffffff !important;' +
+                            'white-space: normal !important;' +
+                            'word-break: break-word !important;' +
+                            'line-height: 1.1 !important;' +
+                        '}' +
+                        'table tbody td {' +
+                            'font-size: 12px !important;' +
+                        '}' +
+                        '.dtrg-group td {' +
+                            'background: #ffffff !important;' +
+                            'color: #000000 !important;' +
+                            'font-weight: bold !important;' +
+                        '}' +
+                        '.dataTables_wrapper, .dataTables_wrapper * { color: #000000 !important; }' +
+                        '.dt-print-view .dt-buttons, .dt-print-view .dataTables_filter, .dt-print-view .dataTables_length { display: none !important; }' +
+                        '</style>'
+                    );
+                }
+            }
+        );
     }
     if (rowGroupUser) { 
         botones.push({
@@ -721,25 +859,22 @@ function activar_tabla(idtabla) {
     var tabla_nueva = new DataTable('#' + idtabla, {
         layout: layoutConfig,   
         retrieve: true,         
+        fixedHeader: fixedHeaderUser,
         columnControl: columnControlUser ? { 
             target: 0, 
             content: ['order', ['orderAsc', 'orderDesc', 'search']]
         } : false,
         buttons: botones.map(function(btn) {
-            if (typeof btn === "string") { 
-                return { 
-                    extend: btn,
-                    exportOptions: {
-                        modifier: function() {
-                            var seleccionadas = tabla_nueva.rows({ selected: true }).count();
-                            return (selectUser && seleccionadas > 0) 
-                                ? { selected: true }  
-                                : { selected: null }; 
-                        }
-                    }
-                }; 
-            }
-            return btn;
+            var configBtn = (typeof btn === "string") ? { extend: btn } : Object.assign({}, btn);
+            configBtn.exportOptions = Object.assign({}, configBtn.exportOptions, {
+                modifier: function() {
+                    var seleccionadas = tabla_nueva.rows({ selected: true }).count();
+                    return (selectUser && seleccionadas > 0) 
+                        ? { selected: true }  
+                        : { selected: null }; 
+                }
+            });
+            return configBtn;
         }),
         language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" }, 
         responsive: responsiveUser,                         
