@@ -143,7 +143,20 @@
 
                             <div class="form-group col-md-3">
                                 <label>Temporada</label>
-                                <select class="form-control" id="idtemporada" name="idtemporada">
+                                <select class="form-control" id="idtemporada" name="idtemporada" onchange="
+                                    callbcack_obtener_fechas = function(respuesta){
+                                        let data;
+                                        try {
+                                            data = JSON.parse(respuesta);
+                                        } catch (e) {
+                                            notify_error('Error al obtener las fechas de la temporada');
+                                            return;
+                                        }
+                                        element('fecha_desde').value = data.fecha_desde;
+                                        element('fecha_hasta').value = data.fecha_hasta;
+                                    }
+                                    upload_action('idtemporada='+this.value,'temporada','obtener_fechas_temporada', callbcack_obtener_fechas);
+                                ">
                                     [temporadas]
                                 </select>
                             </div>
@@ -232,7 +245,7 @@
                                         let total = imagenes.length;
                                         let cargadas = 0;
                                         if (total === 0) {
-                                            print_div('div_imprimir_pedido');
+                                            imprimirDesdeContenedor('div_imprimir_pedido');
                                             return;
                                         }
 
@@ -243,19 +256,19 @@
                                                 imagenes[i].onload = () => {
                                                     cargadas++;
                                                     if (cargadas === total) {
-                                                        print_div('div_imprimir_pedido');
+                                                        imprimirDesdeContenedor('div_imprimir_pedido');
                                                     }
                                                 };
                                                 imagenes[i].onerror = () => {
                                                     cargadas++;
                                                     if (cargadas === total) {
-                                                        print_div('div_imprimir_pedido');
+                                                        imprimirDesdeContenedor('div_imprimir_pedido');
                                                     }
                                                 };
                                             }
                                         }
                                         if (cargadas === total) {
-                                            print_div('div_imprimir_pedido');
+                                            imprimirDesdeContenedor('div_imprimir_pedido');
                                         }
                                     }
 
@@ -371,7 +384,7 @@
 
                             <div class="form-group col-md-3">
                                 <label for="principios_activos">Imagen</label>
-                                <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept="image/*" required>
+                                <input type="file" class="form-control" id="imagen_producto" name="imagen_producto" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
                                 <span class="bar"></span>
                             </div>
     

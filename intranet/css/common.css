@@ -161,3 +161,19 @@
 input, select, textarea {
     background-color: #e3e3e3;
 }
+
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {    
+    input[type="date"] {
+        width: 100%;       /* Makes it responsive within its container */
+        max-width: 85%;    /* Limits the width to 85% of its parent element */
+        box-sizing: border-box; /* Ensures padding/borders don't exceed the 85% */
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    input[type="date"] {
+        width: 100%;
+        max-width: 85%;
+        box-sizing: border-box;
+    }
+}

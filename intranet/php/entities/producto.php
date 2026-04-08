@@ -327,9 +327,9 @@ class producto extends table{
         return $tabla;
     }
 
-    public function get_idproducto($modelo,$idmarca,$idtemporada)
+    public function get_idproducto($modelo,$idmarca,$idtemporada,$idcolor)
     {
-        $idproducto = mysql::getvalue("SELECT idproducto FROM producto WHERE idmarca = '$idmarca' AND modelo = '$modelo' AND idtemporada = '$idtemporada'");
+        $idproducto = mysql::getvalue("SELECT idproducto FROM producto WHERE idmarca = '$idmarca' AND modelo = '$modelo' AND idtemporada = '$idtemporada' AND idcolor = '$idcolor'");
 
         if(!empty($idproducto)){
             return $idproducto;
@@ -342,7 +342,7 @@ class producto extends table{
     {   
         if($mantenimiento !== 'SI'){
             if($idproducto == ''){
-                $idprod_existente = $this->get_idproducto($modelo,$idmarca,$idtemporada);
+                $idprod_existente = $this->get_idproducto($modelo,$idmarca,$idtemporada,$idcolor);
     
                 if($idprod_existente){
                     $idproducto = $idprod_existente;
@@ -359,7 +359,6 @@ class producto extends table{
                 $security = new security($this->ACCIONES['crear']);
             }
             
-
             if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor'")){
                 $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
@@ -413,7 +412,7 @@ class producto extends table{
                 $security = new security($this->ACCIONES['modificar']);
             }
 
-            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor'")){
+            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor' AND idproducto != '$idproducto'")){
                 $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
                 return false;

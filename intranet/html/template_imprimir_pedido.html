@@ -10,7 +10,7 @@
         .container { 
             width: [container_width];
             margin: auto; 
-            border: 1px solid #000; 
+            border: 1px solid transparent; 
         }
     
         table { 
@@ -112,6 +112,8 @@
         .titulo-observaciones {
             font-size: 14px;
             font-weight: bold;
+            display: block;
+            text-align: center;
         }
 
         .color-print {
@@ -140,6 +142,10 @@
         .talla-grupo-producto {
             white-space: nowrap;
         }
+
+        .letra-grande {
+            font-size: 22px;
+        }
     </style>
 </head>
 
@@ -167,8 +173,9 @@
                 <td class="azul">[codigo_cliente]</td>
                 <td class="bold">Fecha:</td>
                 <td colspan="2" class="azul">[fecha]</td>
-                <td class="bold">Vendedor:</td>
-                <td class="color-print">[vendedor]</td>
+                <td class="bold">Pedido No.:</td>
+                <td class="rojo">[nopedido]</td>
+                
             </tr>
 
             <tr>
@@ -176,15 +183,16 @@
                 <td colspan="2" class="azul">[cliente]</td>
                 <td class="bold">NIT:</td>
                 <td class="azul">[nit]</td>
-                <td class="bold">Teléfono:</td>
-                <td class="azul">[telefono]</td>
+                <td class="bold">Vendedor:</td>
+                <td class="color-print">[vendedor]</td>
+                
             </tr>
 
             <tr>
                 <td class="bold">Dirección:</td>
                 <td colspan="4" class="azul">[direccion]</td>
-                <td class="bold">Pedido No.:</td>
-                <td class="rojo">[idpedido]</td>
+                <td class="bold">Teléfono:</td>
+                <td class="azul">[telefono]</td>
             </tr>
 
             <tr>
@@ -205,10 +213,10 @@
 
             <tr>
                 <td colspan="5"></td>
-                <td colspan="2" class="rojo">[descripcion_marca]</td>
+                <td colspan="2" class="rojo letra-grande">[descripcion_marca]</td>
             </tr>
         </table>
-
+        <br>
         <table>
             [detalle_colgroup]
 
@@ -232,7 +240,7 @@
             </tr>
 
             <tr>
-                <td colspan="3">
+                <td colspan="3" class="cuadricula">
                     <div class="firma-box">
                         <br><br><br>
                         <div class="linea-firma">Representante de Ventas</div>
@@ -240,7 +248,7 @@
                     </div>
                 </td>
                 
-                <td colspan="5">
+                <td colspan="5" class="cuadricula">
                     <div class="firma-box">
                         <br><br>
                         <div class="linea-firma">Firma Cliente</div>
@@ -248,14 +256,12 @@
                     </div>
                 </td>
 
-                <td colspan="[observaciones_colspan]" class="rojo observaciones">
+                <td colspan="[observaciones_colspan]" class="rojo observaciones cuadricula">
                     <span class="titulo-observaciones">OBSERVACIONES</span><br>
                     <div style="border-top:1px solid #000;"></div>
                     <br>
                     [observaciones]
                 </td>
-
-                <td style="color: red;">Hoja [numero_hoja] de [total_hojas]</td>
             </tr>
         </table>
 

@@ -100,14 +100,6 @@ class pedido_detalle extends table{
         $precio             = (float)$PARAMETROS['precio'];
         $idproducto_precio  = (int)$PARAMETROS['idproducto_precio'];
 
-        $estado_actual = (new pedido())->estado($idpedido);
-
-        if($estado_actual != 'BORRADOR'){
-            $this->last_error = 'No se puede editar un pedido en estado "CERRADO"';
-            $this->report_error(validation_error, $idpedido, $this->last_error);
-            return false;
-        }
-
         $idcolor = isset($PARAMETROS['idcolor']) ? (int)$PARAMETROS['idcolor'] : 0;
 
         $ruta_bd = null;
@@ -117,15 +109,23 @@ class pedido_detalle extends table{
             $_FILES['file_uploaded']['tmp_name'] != '' &&
             $idcolor > 0
         ){
-            if ($_FILES['file_uploaded']['type'] != 'image/jpeg') {
-                $this->last_error = "Tipo de archivo no permitido. Debe cargar imagenes en formato JPG";
+            $tipos_permitidos = [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+            ];
+
+            $tipo_archivo = isset($_FILES['file_uploaded']['type']) ? $_FILES['file_uploaded']['type'] : '';
+
+            if (!isset($tipos_permitidos[$tipo_archivo])) {
+                $this->last_error = "Tipo de archivo no permitido. Debe cargar imagenes en formato JPEG, JPG o PNG";
                 utils::report_error(validation_error, $idproducto, $this->last_error);
                 return false;
             }
 
+            $extension      = $tipos_permitidos[$tipo_archivo];
             $ruta           = "../../img/producto/";
             $nombre_temp    = $_FILES['file_uploaded']['tmp_name'];
-            $nombre_archivo = $idproducto . "_" . $idproducto_precio . "_" . $idset_talla . "_" . $idcolor . ".jpg";
+            $nombre_archivo = $idproducto . "_" . $idproducto_precio . "_" . $idset_talla . "_" . $idcolor . "." . $extension;
 
             if (!file_exists($ruta)) {
                 mkdir($ruta, 0777, true);
@@ -180,6 +180,7 @@ class pedido_detalle extends table{
             } else {
                 
                 $security = new security($this->ACCIONES['modificar_detalle']);
+                $imagen_actual = mysql::getvalue("SELECT imagen FROM pedido_detalle WHERE idpedido = $idpedido AND idproducto_precio = $idproducto_precio AND idtalla = $idtalla AND idset_talla = $idset_talla LIMIT 1");
 
                 $DATOS = [];
                 $DATOS['idpedido']              = $idpedido;
@@ -190,14 +191,11 @@ class pedido_detalle extends table{
                 $DATOS['cantidad']              = $cantidad;
                 $DATOS['precio_lista']          = $precio;
                 $DATOS['precio_venta']          = $precio;
+                $DATOS['imagen']                = $ruta_bd ? $ruta_bd : (!empty($imagen_actual) ? $imagen_actual : 'NULL');
                 $DATOS['subtotal']              = $cantidad * $precio;
                 $DATOS['cantidad_pendiente']    = $cantidad;
                 $DATOS['fecha_modificacion']    = date('Y-m-d H:i:s');
                 $DATOS['usuario_modificacion']  = $usuario;
-
-                if($ruta_bd){
-                    $DATOS['imagen'] = $ruta_bd;
-                }
 
                 $llaves = ['idpedido', 'idproducto_precio', 'idtalla', 'idset_talla'];
 
@@ -218,14 +216,6 @@ class pedido_detalle extends table{
     public function eliminar($ids,$idpedido)
     {
         $security = new security($this->ACCIONES['eliminar_detalle']);
-
-        $estado_actual = (new pedido())->estado($idpedido);
-
-        if($estado_actual != 'BORRADOR'){
-            $this->last_error = 'No se puede editar un pedido en estado "CERRADO"';
-            $this->report_error(validation_error, $idpedido, $this->last_error);
-            return false;
-        }
 
         if (!is_array($ids)) {
             $ids = [$ids];

@@ -41,6 +41,18 @@ class temporada extends table
                     self::end_error($this->last_error);
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_fechas_temporada') {
+                if (table::validate_parameter_existence(['idtemporada'], $PARAMETROS, false)) {
+                    if($resultado = self::obtener_fechas_temporada($PARAMETROS['idtemporada'])){
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error($this->last_error);
+                }
+            }
         }
 
     }
@@ -226,6 +238,15 @@ class temporada extends table
     public function option_activos(){ 
         
         return mysql::getoptions("SELECT idtemporada as id, nombre as descripcion FROM temporada WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
+
+    public function obtener_fechas_temporada($idtemporada){
+        $data = mysql::getrow("SELECT fecha_inicio, fecha_fin FROM temporada WHERE idtemporada = $idtemporada LIMIT 1");
+    
+        return json_encode([
+            'fecha_desde' => $data['fecha_inicio'],
+            'fecha_hasta' => $data['fecha_fin']
+        ]);
     }
 
     

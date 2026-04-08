@@ -10,6 +10,7 @@ require_once('../entities/set_talla.php');
 require_once('../entities/temporada.php');
 require_once('../entities/transporte.php');
 require_once('../entities/usuario.php');
+require_once('../entities/talla.php');
 
 class pedido extends table{
 
@@ -322,7 +323,7 @@ class pedido extends table{
         $nombre_usuario = $usuarioObj->get_nombre($usuario);
 
 
-        $PEDIDO = mysql::getrow("SELECT idpedido, idcliente, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
+        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
             FROM view_pedidos
             WHERE idpedido = '$idpedido'");
 
@@ -334,11 +335,12 @@ class pedido extends table{
 
         $sets_catalogo = [];
         $tallas_header_block = '';
+        $TALLA = new talla();
 
         $sql_sets = mysql::getresult("SELECT DISTINCT vpd.idset_talla, COALESCE(vpd.grupo, '') AS grupo, COALESCE(vpd.set_descripcion, '') AS set_descripcion, vstd.orden, vstd.idtalla, vstd.talla
             FROM view_pedido_detalle vpd JOIN view_set_talla_detalle vstd ON vstd.idset_talla = vpd.idset_talla
             WHERE vpd.idpedido = '$idpedido'
-            ORDER BY vpd.grupo ASC, vpd.set_descripcion ASC, vpd.idset_talla ASC, vstd.orden ASC");
+            ORDER BY vpd.grupo ASC, vpd.set_descripcion ASC, vpd.idset_talla ASC, CAST(vstd.talla AS UNSIGNED) ASC, vstd.talla ASC");
 
         if (!$sql_sets) {
             $this->last_error = "Error al obtener los grupos de tallas del pedido.";
@@ -359,7 +361,7 @@ class pedido extends table{
 
             $sets_catalogo[$idset_talla]['tallas'][] = [
                 'idtalla' => (int)$row['idtalla'],
-                'numero' => (string)$row['talla']
+                'numero' => $TALLA->formatear_numero_talla($row['talla'])
             ];
         }
 
@@ -394,7 +396,7 @@ class pedido extends table{
 
         $total_columns = count($column_weights);
         $totales_leyenda_colspan = max(1, $total_columns - 5);
-        $observaciones_colspan = max(1, $total_columns - 9);
+        $observaciones_colspan = max(1, $total_columns - 8);
         $container_width = max(950, 760 + ($max_tallas * 38)) . 'px';
 
         $rowspan_encabezado = count($sets_catalogo);
@@ -403,7 +405,6 @@ class pedido extends table{
 
         foreach ($sets_catalogo as $set_info) {
             $grupo = htmlspecialchars($set_info['grupo'], ENT_QUOTES, 'UTF-8');
-            $descripcion_set = htmlspecialchars($set_info['descripcion'], ENT_QUOTES, 'UTF-8');
 
             $tallas_header_block .= "<tr>";
 
@@ -426,11 +427,7 @@ class pedido extends table{
             $faltantes = $max_tallas - count($set_info['tallas']);
 
             if ($faltantes > 0) {
-                if ($descripcion_set !== '') {
-                    $tallas_header_block .= "<th colspan='{$faltantes}' class='gris talla-desc'>{$descripcion_set}</th>";
-                } else {
-                    $tallas_header_block .= "<th colspan='{$faltantes}' class='gris'>&nbsp;</th>";
-                }
+                $tallas_header_block .= "<th colspan='{$faltantes}' class='gris'>&nbsp;</th>";
             }
 
             if ($primer_header) {
@@ -635,7 +632,7 @@ class pedido extends table{
             $DATA['fecha_entrega']          = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
                                                 date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
             $DATA['transporte']             = $PEDIDO['transporte'];
-            $DATA['idpedido']               = $PEDIDO['idpedido'];
+            $DATA['nopedido']               = $PEDIDO['nopedido'];
             $DATA['descripcion_marca']      = $PEDIDO['descripcion_marca'];
             $DATA['container_width']        = $container_width;
             $DATA['detalle_colgroup']       = $detalle_colgroup;

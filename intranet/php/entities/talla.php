@@ -70,7 +70,7 @@ class talla extends table
         <tbody>';
 
         while ($row = mysql::getrowresult($result)) {
-            $numero   = $row['numero'];
+            $numero   = $this->formatear_numero_talla($row['numero']);
             $estado   = $row['estado_talla'];
             $str_data = '';
 
@@ -111,7 +111,7 @@ class talla extends table
 		<tbody id="tabla_todos">';
 
         while ($row = mysql::getrowresult($result)) {
-            $numero   = $row['numero'];
+            $numero   = $this->formatear_numero_talla($row['numero']);
             $estado   = $row['estado'];
             $row_data = $row;
             $str_data = "";
@@ -273,5 +273,16 @@ class talla extends table
     {
 
         return mysql::getoptions("SELECT idtalla as id, numero as descripcion FROM talla WHERE estado = 'ACTIVO' ORDER BY numero ASC");
+    }
+
+    public function formatear_numero_talla($numero)
+    {
+        $numero = trim((string)$numero);
+
+        if ($numero !== '' && preg_match('/^-?\d+\.0+$/', $numero)) {
+            return preg_replace('/\.0+$/', '', $numero);
+        }
+
+        return $numero;
     }
 }

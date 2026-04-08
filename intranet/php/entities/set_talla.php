@@ -255,7 +255,7 @@ class set_talla extends table
         $result = mysql::getresult("SELECT idset_talla, descripcion, idtalla, talla
             FROM view_set_talla_detalle
             WHERE idset_talla = '" . intval($idset_talla) . "'
-            ORDER BY orden ASC
+            ORDER BY CAST(talla AS UNSIGNED) ASC, talla ASC
         ");
 
         if (mysql::num_rows($result) == 0) {
@@ -279,11 +279,22 @@ class set_talla extends table
 
             $data['tallas'][] = [
                 'id'     => $row['idtalla'],
-                'numero' => $row['talla'],
+                'numero' => $this->formatear_numero_talla($row['talla']),
             ];
         }
 
         return json_encode($data);
+    }
+
+    private function formatear_numero_talla($numero)
+    {
+        $numero = trim((string)$numero);
+
+        if ($numero !== '' && preg_match('/^-?\d+\.0+$/', $numero)) {
+            return preg_replace('/\.0+$/', '', $numero);
+        }
+
+        return $numero;
     }
 
     public function cambiar_estado($idset_talla)

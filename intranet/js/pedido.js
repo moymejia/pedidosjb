@@ -23,6 +23,47 @@
   var $material = document.getElementById("material");
   var $precio = document.getElementById("precio");
 
+  function limpiarContenedorImpresion() {
+    var contenedor = document.getElementById("div_imprimir_pedido");
+    if (contenedor) {
+      contenedor.innerHTML = "";
+    }
+  }
+
+  function imprimirDesdeContenedor(divId) {
+    var contenedor = document.getElementById(divId);
+
+    if (!contenedor || !contenedor.innerHTML.trim()) {
+      notify_warning('No se pudo generar la vista de impresión.');
+      limpiarContenedorImpresion();
+      return false;
+    }
+
+    var contenido = contenedor.innerHTML;
+    var ventanaImpresion = window.open("", "PRINT", "fullscreen=yes");
+
+    if (!ventanaImpresion) {
+      limpiarContenedorImpresion();
+      notify_warning('El navegador bloqueó la ventana de impresión.');
+      return false;
+    }
+
+    ventanaImpresion.document.write("<html><head><title>" + document.title + "</title>");
+    ventanaImpresion.document.write("</head><body>");
+    ventanaImpresion.document.write(contenido);
+    ventanaImpresion.document.write("</body></html>");
+    ventanaImpresion.document.close();
+
+    limpiarContenedorImpresion();
+
+    ventanaImpresion.focus();
+    ventanaImpresion.print();
+
+    return true;
+  }
+
+  window.imprimirDesdeContenedor = imprimirDesdeContenedor;
+
   // =========================
   // RENDER TALLAS
   // =========================
@@ -48,6 +89,37 @@
   }
 
   window.cargarDetallePedido = cargarDetallePedido;
+
+  function ordenarTallas(tallas) {
+    return (tallas || []).slice().sort(function(a, b) {
+      var numeroA = String(a.numero || '').trim();
+      var numeroB = String(b.numero || '').trim();
+      var valorA = parseFloat(numeroA);
+      var valorB = parseFloat(numeroB);
+      var esNumeroA = numeroA !== '' && !isNaN(valorA);
+      var esNumeroB = numeroB !== '' && !isNaN(valorB);
+
+      if (esNumeroA && esNumeroB && valorA !== valorB) {
+        return valorA - valorB;
+      }
+
+      return numeroA.localeCompare(numeroB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }
+
+  function formatearNumeroTalla(numero) {
+    var valor = String(numero === null || numero === undefined ? '' : numero).trim();
+
+    if (valor === '') {
+      return '';
+    }
+
+    if (/^-?\d+\.0+$/.test(valor)) {
+      return valor.replace(/\.0+$/, '');
+    }
+
+    return valor;
+  }
 
   function agruparDetalle(data){
 
@@ -89,7 +161,7 @@
       if (!yaExiste) {
         agrupado[key].tallas.push({
           id: row.idtalla,
-          numero: row.talla
+          numero: formatearNumeroTalla(row.talla)
         });
       }
 
@@ -100,7 +172,10 @@
   
     });
   
-    return Object.values(agrupado);
+    return Object.values(agrupado).map(function(item) {
+      item.tallas = ordenarTallas(item.tallas);
+      return item;
+    });
   }
 
   function renderTallas(tallas, nombre) {
@@ -117,13 +192,13 @@
     var wrapper = document.createElement("div");
     wrapper.className = "size-grid";
   
-    tallas.forEach(function (talla) {
+    ordenarTallas(tallas).forEach(function (talla) {
   
       var box = document.createElement("div");
       box.className = "size-box";
   
       box.innerHTML =
-        '<label>Talla ' + talla.numero + '</label>' +
+        '<label>Talla ' + formatearNumeroTalla(talla.numero) + '</label>' +
         '<input type="number" min="0" value="0" ' +
         'id="talla_' + talla.id + '" ' +
         'data-idtalla="' + talla.id + '" ' +
@@ -360,7 +435,7 @@
         var wrapper = document.createElement("div");
         wrapper.className = "size-grid";
       
-        resp.tallas.forEach(function(talla){
+        ordenarTallas(resp.tallas).forEach(function(talla){
       
           var idtalla = talla.id;
       
@@ -368,7 +443,7 @@
           box.className = "size-box";
       
           box.innerHTML =
-            '<label>Talla ' + talla.numero + '</label>' +
+            '<label>Talla ' + formatearNumeroTalla(talla.numero) + '</label>' +
             '<input type="number" min="0" value="'+(linea.cantidades[idtalla] || 0)+'" ' +
             'id="talla_' + idtalla + '" ' +
             'data-idtalla="' + idtalla + '" ' +
@@ -427,13 +502,6 @@
       return;
     }
 
-    var inputImagen = document.getElementById("imagen_producto");
-
-    if (!inputImagen || !inputImagen.files || inputImagen.files.length === 0) {
-      notify_warning('Debe seleccionar una imagen del producto');
-      return;
-    }
-
     var color = state.colorActual;
     var params = [];
 
@@ -460,8 +528,16 @@
       limpiarLinea();
   
     };
+  
+    var inputImagen = document.getElementById("imagen_producto");
+    var tieneImagen = inputImagen && inputImagen.files && inputImagen.files.length > 0;
 
-    upload_file(params.join(','),'imagen_producto','pedido_detalle','guardar',callback_guardar_detalle);
+    if (tieneImagen) {
+      upload_file(params.join(','),'imagen_producto','pedido_detalle','guardar',callback_guardar_detalle);
+    } else {
+      upload_action(params.join(','),'pedido_detalle','guardar',callback_guardar_detalle);
+    }
+
   }
 
   function safe(val){
@@ -485,7 +561,7 @@
 
       tablaTallas += '<tr>';
       linea.tallas.forEach(function(t){
-        tablaTallas += '<td style="padding:2px 4px;"><strong>' + t.numero + '</strong></td>';
+        tablaTallas += '<td style="padding:2px 4px;"><strong>' + formatearNumeroTalla(t.numero) + '</strong></td>';
       });
       tablaTallas += '</tr>';
   
