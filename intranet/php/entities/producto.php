@@ -47,8 +47,8 @@ class producto extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'cargar_productos') {
-                if (table::validate_parameter_existence(['idmarca','idtemporada'], $PARAMETROS, false)) {
-                    if ($resultado = $this->cargar_productos($PARAMETROS['idmarca'],$PARAMETROS['idtemporada'])) {
+                if (table::validate_parameter_existence(['idtemporada'], $PARAMETROS, false)) {
+                    if ($resultado = $this->cargar_productos($PARAMETROS['idtemporada'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -187,7 +187,6 @@ class producto extends table{
     public function cargar_opcion()
     {
         $DATA = [];
-        $DATA['marcas']     = (new marca())->option_activos();
         $DATA['temporadas'] = (new temporada())->option_activos();
         $html = new html('carga_productos', $DATA);
 
@@ -329,7 +328,8 @@ class producto extends table{
 
     public function get_idproducto($modelo,$idmarca,$idtemporada,$idcolor)
     {
-        $idproducto = mysql::getvalue("SELECT idproducto FROM producto WHERE idmarca = '$idmarca' AND modelo = '$modelo' AND idtemporada = '$idtemporada' AND idcolor = '$idcolor'");
+        $filtro_color = ($idcolor === '' || is_null($idcolor)) ? "idcolor IS NULL" : "idcolor = '$idcolor'";
+        $idproducto = mysql::getvalue("SELECT idproducto FROM producto WHERE idmarca = '$idmarca' AND modelo = '$modelo' AND idtemporada = '$idtemporada' AND $filtro_color");
 
         if(!empty($idproducto)){
             return $idproducto;
@@ -359,7 +359,9 @@ class producto extends table{
                 $security = new security($this->ACCIONES['crear']);
             }
             
-            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor'")){
+            $condicion_color = ($idcolor === '' || is_null($idcolor)) ? " AND idcolor IS NULL" : " AND idcolor = '$idcolor'";
+
+            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca'" . $condicion_color)){
                 $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
                 return false;
@@ -412,7 +414,9 @@ class producto extends table{
                 $security = new security($this->ACCIONES['modificar']);
             }
 
-            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idcolor = '$idcolor' AND idproducto != '$idproducto'")){
+            $condicion_color = ($idcolor === '' || is_null($idcolor)) ? " AND idcolor IS NULL" : " AND idcolor = '$idcolor'";
+
+            if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idproducto != '$idproducto'" . $condicion_color)){
                 $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
                 return false;
@@ -459,679 +463,167 @@ class producto extends table{
         }
     }
 
-    public function cargar_productos($idmarca,$idtemporada)
+    public function cargar_productos($idtemporada)
     {
         $security = new security($this->ACCIONES['cargar_productos']);
 
         $PRODUCTO_PRECIO = new producto_precio();
-        $TIPO_SUELA      = new tipo_suela();
-        $CONCEPTO        = new concepto();
-        $COLOR           = new color();
-        $CORTE           = new corte();
         $SET_TALLA       = new set_talla();
-    
-        switch($idmarca){
-    
-            case 2:
+        $MARCA           = new marca();
 
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
-            
-                $PRODUCTOS        = [];
-            
-                if ($handle !== false) {
-            
-                    $grupo        = null;
-                    $idset_talla  = null;
-                    $last_modelo  = null;
-                    $linea = 0;
-            
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
+        $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
-                        if($conteo_datos > 7 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea,$this->last_error);
+        if ($handle === false) {
+            $this->last_error = "No se pudo abrir el archivo cargado.";
+            utils::report_error(validation_error, $_FILES, $this->last_error);
 
-                            return false;
-                        }
+            return false;
+        }
 
-                        if($conteo_datos < 7 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea,$this->last_error);
+        $linea_count = 0;
 
-                            return false;
-                        }
-            
-                        if (!isset($row[0])) {
-                            continue;
-                        }
-            
-                        $col0 = trim($row[0]);
-            
-                        if (strtoupper($col0) === 'MODELO') {
-            
-                            $grupo = trim($row[1]);
-                            $tallas = explode('/',$grupo);
-                            $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
+        while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
+            $linea_count++;
 
-                            if(!$idset_talla){
-                                $this->last_error = $SET_TALLA->last_error;
-                                if(!$this->eliminar()){
-                        
-                                    return false;
-                                }
-                                
-                                return false;
-                            }
-            
-                            $last_modelo = null;
-            
-                            continue;
-                        }
-            
-                        if (!$idset_talla) {
-                            continue;
-                        }
-            
-                        $modelo = trim($row[0]);
-            
-                        if ($modelo === "") {
-                            $modelo = $last_modelo;
-                        } else {
-                            $last_modelo = $modelo;
-                        }
-            
-                        $precio = str_replace(['$', 'Q'], '', trim($row[1]));
-                        $corte  = trim($row[2]);
-                        $suela  = trim($row[4]);
-            
-                        if (!$idtipo_suela = $TIPO_SUELA->get_idtipo_suela($suela)) {
-                            $this->last_error = $TIPO_SUELA->last_error;
+            if (!isset($row[0]) || trim($row[0]) === '') {
+                continue;
+            }
 
-                            return false;
-                        }
-            
-                        $concepto = trim($row[5]);
-                        if (!$idconcepto = $CONCEPTO->get_idconcepto($concepto)) {
-                            $this->last_error = $CONCEPTO->last_error;
+            $nombre_marca = trim($row[0]);
+            if (strtoupper($nombre_marca) === 'MARCA') {
+                continue;
+            }
 
-                            return false;
-                        }
-            
-                        $material = trim($row[6]);
-            
-                        $cortes  = explode(',', $corte);
-                        $colores = explode(',', trim($row[3]));
-            
-                        foreach ($cortes as $corte_item) {
-            
-                            $corte_item = trim($corte_item);
-                            if (!$idcorte = $CORTE->get_idcorte($corte_item)) {
-                                $this->last_error = $CORTE->last_error;
+            if (!isset($row[2], $row[4], $row[6])) {
+                fclose($handle);
+                $this->last_error = "Formato invalido en la linea $linea_count. Se esperaban al menos 7 columnas.";
+                utils::report_error(validation_error, $row, $this->last_error);
 
-                                return false;
-                            }
-            
-                            foreach ($colores as $color_item) {
-            
-                                $color_item = trim($color_item);
-                                if (!$idcolor = $COLOR->get_idcolor($color_item)) {
-                                    $this->last_error = $COLOR->last_error;
+                return $this->eliminar();
+            }
 
-                                    return false;
-                                }
-            
-                                $idproducto = $this->guardar('',$idmarca,$idtemporada,'',$modelo,$idset_talla,$idcolor,$idcorte,$idtipo_suela,$idconcepto,"BORRADOR");
-            
-                                if (!$idproducto) {
-                                    if(!$this->eliminar()){
-                            
-                                        return false;
-                                    }
+            $idmarca = $MARCA->get_idmarca(addslashes($nombre_marca));
+            if (!$idmarca) {
+                fclose($handle);
+                $this->last_error = "La marca '$nombre_marca' no existe.";
+                utils::report_error(validation_error, $nombre_marca, $this->last_error);
 
-                                    return false;
-                                }
-            
-                                $PRODUCTOS[] = $idproducto;
-            
-                                if (!$PRODUCTO_PRECIO->guardar('', $idproducto, $material, $precio, 'BORRADOR')) {
-                                    if(!$this->eliminar()){
-                            
-                                        return false;
-                                    }
-                                    $this->last_error = $PRODUCTO_PRECIO->last_error;
+                if(!$this->eliminar()){
+                    return false;
+                }
 
-                                    return false;
-                                }
-                            }
-                        }
+                return false;
+            }
+
+            $estilo_raw = trim($row[2]);
+            if ($estilo_raw === '') {
+                fclose($handle);
+                $this->last_error = "El estilo esta vacio en la linea $linea_count.";
+                utils::report_error(validation_error, $row, $this->last_error);
+
+                if(!$this->eliminar()){
+                    return false;
+                }
+
+                return false;
+            }
+
+            $estilos = [$estilo_raw];
+            $marca_normalizada = strtoupper(preg_replace('/\s+/', ' ', $nombre_marca));
+            switch($marca_normalizada){
+                case 'VIA MARTE':
+                    $estilos = explode('/', $estilo_raw);
+                break;
+                default:
+                    if(strpos($estilo_raw, '/') !== false){
+                        $estilos = explode('/', $estilo_raw);
                     }
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
+                break;
+            }
 
+            $set_talla_raw = trim($row[4]);
+            $set_talla_raw = preg_replace('/\s+/', '', $set_talla_raw);
+            $tallas = explode('-', $set_talla_raw);
+
+            if(count($tallas) < 2){
+                fclose($handle);
+                $this->last_error = "Set de tallas invalido en la linea $linea_count.";
+                utils::report_error(validation_error, $row, $this->last_error);
+
+                if(!$this->eliminar()){
+                    return false;
+                }
+
+                return false;
+            }
+
+            $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
+            if(!$idset_talla){
+                fclose($handle);
+                $this->last_error = $SET_TALLA->last_error . " (linea $linea_count)";
+                utils::report_error(validation_error, $row, $this->last_error);
+
+                if(!$this->eliminar()){
+                    return false;
+                }
+
+                return false;
+            }
+
+            $linea  = isset($row[5]) ? trim($row[5]) : '';
+            $precio = str_replace(['$', 'Q', ','], '', trim($row[6]));
+
+            if ($precio === '') {
+                fclose($handle);
+                $this->last_error = "El precio esta vacio en la linea $linea_count.";
+                utils::report_error(validation_error, $row, $this->last_error);
+
+                if(!$this->eliminar()){
+                    return false;
+                }
+
+                return false;
+            }
+
+            foreach($estilos as $modelo){
+                $modelo = trim($modelo);
+                if($modelo === ''){
+                    continue;
+                }
+
+                $idproducto = $this->guardar('', $idmarca, $idtemporada, '', $modelo, $idset_talla, '', '', '', '', 'BORRADOR');
+
+                if(!$idproducto){
+                    fclose($handle);
+                    if(!$this->eliminar()){
                         return false;
                     }
 
-                    fclose($handle);
+                    return false;
                 }
-            
-            break;
-
-            case 3:
-
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
-
-                if ($handle !== false) {
-            
-                    fgetcsv($handle, 1000, ",", '"', "\\");
-                    $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea_count++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
-
-                        if($conteo_datos > 5 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        if($conteo_datos < 5 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        $linea      = $row[0];
-                        $referencia = explode('.',trim($row[1]));
-                        $modelo     = $referencia[0];
-                        $color_ref  = $referencia[1];
-
-                        if(!$idcolor = $COLOR->get_idcolor($color_ref)){
-                            $this->last_error = $COLOR->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-                        $material   = $row[2];
-                        $tallas     = explode('-',trim($row[3]));
-                        $precio = str_replace(['$', 'Q'], '', trim($row[4]));
-
-                        $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
-
-                        if(!$idset_talla){
-                            $this->last_error = $SET_TALLA->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-
-                        $idproducto = $this->guardar('',$idmarca,$idtemporada,$linea,$modelo,$idset_talla,$idcolor,'','','','BORRADOR');
-                        
-                        if (!$idproducto) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-    
-                        $PRODUCTOS[] = $idproducto;
-    
-                        if (!$PRODUCTO_PRECIO->guardar('', $idproducto, $material, $precio, 'BORRADOR')) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-                            $this->last_error = $PRODUCTO_PRECIO->last_error;
-
-                            return false;
-                        }
-
-                    }
-                    
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
-
+                if(!$PRODUCTO_PRECIO->guardar('', $idproducto, $precio,$idset_talla, 'BORRADOR')){
+                    fclose($handle);
+                    $this->last_error = $PRODUCTO_PRECIO->last_error;
+                    if(!$this->eliminar()){
                         return false;
                     }
 
-                    fclose($handle);
+                    return false;
                 }
+            }
+        }
 
-            break;
+        fclose($handle);
 
-            case 4:
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
+        if(!$this->activar()){
+            if(!$this->eliminar()){
+                return false;
+            }
 
-                if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",", '"', "\\");
-                    $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea_count++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
-
-                        if($conteo_datos > 3 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        if($conteo_datos < 3 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        $datos  = $row[0];
-                        preg_match('/^([0-9\/\-\s]+)\s+(.+)$/', trim($datos), $match);
-
-                        $modelos = explode('/',trim($match[1]));
-                        $colores = explode(',',trim($match[2]));
-                        $precio  = str_replace(['$', 'Q'], '', trim($row[1]));
-                        $tallas  = explode('-',trim($row[2]));
-
-                        $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
-
-                        if(!$idset_talla){
-                            $this->last_error = $SET_TALLA->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-                        foreach ($modelos as $modelo) {
-                            foreach ($colores as $color) {
-                                if (!$idcolor = $COLOR->get_idcolor($color)) {
-                                    $this->last_error = $COLOR->last_error;
-
-                                    return false;
-                                }
-                                
-                                $idproducto = $this->guardar('',$idmarca,$idtemporada,'',$modelo,$idset_talla,$idcolor,'','','','BORRADOR');
-                        
-                                if (!$idproducto) {
-                                    if(!$this->eliminar()){
-                            
-                                        return false;
-                                    }
-
-                                    return false;
-                                }
-            
-                                $PRODUCTOS[] = $idproducto;
-            
-                                if (!$PRODUCTO_PRECIO->guardar('', $idproducto, '', $precio, 'BORRADOR')) {
-                                    if(!$this->eliminar()){
-                            
-                                        return false;
-                                    }
-                                    $this->last_error = $PRODUCTO_PRECIO->last_error;
-
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
-
-                        return false;
-                    }
-
-                    fclose($handle);
-                }
-            break;
-
-            case 5:
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
-
-                if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",", '"', "\\");
-                    $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea_count++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
-
-                        if($conteo_datos > 5 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        if($conteo_datos < 5 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        $linea  = $row[0];
-                        $modelo = $row[1];
-                        $precio = str_replace(['$', 'Q'], '', trim($row[2]));
-                        $tallas = explode('-',trim($row[3]));
-                        $color  = $row[4];
-                        if (!$idcolor = $COLOR->get_idcolor($color)) {
-                            $this->last_error = $COLOR->last_error;
-
-                            return false;
-                        }
-
-                        $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
-
-                        if(!$idset_talla){
-                            $this->last_error = $SET_TALLA->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-                        $idproducto = $this->guardar('',$idmarca,$idtemporada,'',$modelo,$idset_talla,$idcolor,'','','','BORRADOR');
-                        
-                        if (!$idproducto) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-    
-                        $PRODUCTOS[] = $idproducto;
-    
-                        if (!$PRODUCTO_PRECIO->guardar('', $idproducto, '', $precio, 'BORRADOR')) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-                            $this->last_error = $PRODUCTO_PRECIO->last_error;
-
-                            return false;
-                        }
-                    }
-
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
-
-                        return false;
-                    }
-
-                    fclose($handle);
-                }
-            break;
-
-            case 6:
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
-
-                if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",", '"', "\\");
-                    $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea_count++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
-
-                        if($conteo_datos > 4 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        if($conteo_datos < 4 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        $modelo  = $row[0];
-                        $precio = str_replace(['$', 'Q'], '', trim($row[1]));
-                        $tallas = explode('-',trim($row[3]));                        
-                        $color  = $row[2];
-                        if (!$idcolor = $COLOR->get_idcolor($color)) {
-                            $this->last_error = $COLOR->last_error;
-
-                            return false;
-                        }
-
-                        $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
-
-                        if(!$idset_talla){
-                            $this->last_error = $SET_TALLA->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-                        $idproducto = $this->guardar('',$idmarca,$idtemporada,'',$modelo,$idset_talla,$idcolor,'','','','BORRADOR');
-                        
-                        if (!$idproducto) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-    
-                        $PRODUCTOS[] = $idproducto;
-    
-                        if (!$PRODUCTO_PRECIO->guardar('', $idproducto, '', $precio, 'BORRADOR')) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-                            $this->last_error = $PRODUCTO_PRECIO->last_error;
-
-                            return false;
-                        }
-                    }
-
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
-
-                        return false;
-                    }
-
-                    fclose($handle);
-                }
-            break;
-
-            case 7:
-                $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
-
-                if ($handle !== false) {
-                    fgetcsv($handle, 1000, ",", '"', "\\");
-                    $linea_count = 0;
-                    while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
-                        $linea_count++;
-                        $conteo_datos = count(array_filter($row, function($v) {
-                            return trim($v) !== '';
-                        }));
-
-                        if($conteo_datos > 7 ){
-                            $this->last_error = "Hay mas datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        if($conteo_datos < 7 ){
-                            $this->last_error = "Hay menos datos de los necesarios en la linea $linea_count";
-                            if(!$this->eliminar()){
-                            
-                                return false;
-                            }
-                            utils::report_error(validation_error, $linea_count,$this->last_error);
-
-                            return false;
-                        }
-
-                        $modelo = $row[0];
-                        $color  = $row[1];
-                        if (!$idcolor = $COLOR->get_idcolor($color)) {
-                            $this->last_error = $COLOR->last_error;
-
-                            return false;
-                        }
-                        $suela  = $row[2];
-                        if (!$idtipo_suela = $TIPO_SUELA->get_idtipo_suela($suela)) {
-                            $this->last_error = $TIPO_SUELA->last_error;
-
-                            return false;
-                        }
-                        $num = $row[3];
-                        $tallas = explode('-',trim($row[4]));
-                        $altura = $row[5];
-                        $precio = str_replace(['$', 'Q'], '', trim($row[6]));
-
-                        
-                        $idset_talla = $SET_TALLA->get_idset_talla(trim($tallas[0]),trim($tallas[1]));
-
-                        if(!$idset_talla){
-                            $this->last_error = $SET_TALLA->last_error;
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-
-                        $idproducto = $this->guardar('',$idmarca,$idtemporada,'',$modelo,$idset_talla,$idcolor,'',$idtipo_suela,'','BORRADOR');
-                        
-                        if (!$idproducto) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-
-                            return false;
-                        }
-    
-                        $PRODUCTOS[] = $idproducto;
-    
-                        if (!$PRODUCTO_PRECIO->guardar('', $idproducto, '', $precio, 'BORRADOR')) {
-                            if(!$this->eliminar()){
-                    
-                                return false;
-                            }
-                            $this->last_error = $PRODUCTO_PRECIO->last_error;
-
-                            return false;
-                        }
-                    }
-
-                    if(!$this->activar()){
-                        if(!$this->eliminar()){
-                            
-                            return false;
-                        }
-
-                        return false;
-                    }
-
-                    fclose($handle);
-                }
-            break;
-    
+            return false;
         }
 
         return true;
-    
     }
 
     public function eliminar()

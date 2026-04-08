@@ -1,12 +1,5 @@
 <div class="row">
     <div class="col-md-3">
-        <label for="idmarca">Marca</label>
-        <select name="idmarca" id="idmarca" class="form-control">
-            [marcas]
-        </select>
-    </div>
-
-    <div class="col-md-3">
         <label for="idtemporada">Temporada</label>
         <select name="idtemporada" id="idtemporada" class="form-control">
             [temporadas]
@@ -24,7 +17,7 @@
                 notify_success('Productos agregados correctamente.');
                 clearElements('idmarca,idtemporada,archivo');
             }
-            upload_file('idmarca,idtemporada','archivo','producto', 'cargar_productos', callback_cargar_productos)
+            upload_file('idtemporada','archivo','producto', 'cargar_productos', callback_cargar_productos)
         ">
             Cargar archivo
         </button>

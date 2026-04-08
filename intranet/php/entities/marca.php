@@ -228,4 +228,9 @@ class marca extends table
 
         return mysql::getoptions("SELECT idmarca as id, nombre as descripcion FROM marca WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
     }
+
+    public function get_idmarca($nombre)
+    {
+        return mysql::getvalue("SELECT idmarca FROM marca WHERE nombre = '{$nombre}'");
+    }
 }

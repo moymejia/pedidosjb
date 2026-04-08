@@ -39,8 +39,8 @@ class producto_precio extends table
             }
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence(['idproducto','material','precio'], $PARAMETROS, false)) {
-                    if ($resultado = $this->guardar($PARAMETROS['idproducto_precio'],$PARAMETROS['idproducto'],$PARAMETROS['material'],$PARAMETROS['precio'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
+                if (table::validate_parameter_existence(['idproducto','precio'], $PARAMETROS, false)) {
+                    if ($resultado = $this->guardar($PARAMETROS['idproducto_precio'],$PARAMETROS['idproducto'],$PARAMETROS['precio'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -63,7 +63,7 @@ class producto_precio extends table
         }
     }
 
-    public function guardar($idproducto_precio,$idproducto,$material,$precio,$estado = '',$mantenimiento = 'NO') 
+    public function guardar($idproducto_precio,$idproducto,$precio,$idset_talla,$estado = '',$mantenimiento = 'NO') 
     {   
         if($mantenimiento !== 'SI'){
             if($idproducto_precio == ''){
@@ -93,24 +93,17 @@ class producto_precio extends table
 
             $and = '';
 
-            if($material != '' && !empty($material)){
-                $and = "AND material = '$material'";
-            }else{
-                $and = "AND material is null";
-            }
             if(mysql::exists('producto_precio',"idproducto = '$idproducto' $and")){
                 $this->last_error = "Error al guardar el producto precio, ya existe un registro para el material del producto";
-                utils::report_error(bd_error, $idproducto."-".$material,$this->last_error);
+                utils::report_error(bd_error, $idproducto,$this->last_error);
 
                 return false;
             }
 
             $DATOS = [];
             $DATOS['idproducto']       = $idproducto;
-            if($material != ''){
-                $DATOS['material']         = $material;
-            }
             $DATOS['precio']           = $precio;
+            $DATOS['idset_talla']      = $idset_talla;
             $DATOS['estado']           = $estado != '' ?  "$estado" :'ACTIVO';
             $DATOS['usuario_creacion'] = $security->get_actual_user();
 
@@ -145,19 +138,11 @@ class producto_precio extends table
 
             $and = '';
 
-            if($material != ''){
-                $and = "AND material = '$material'";
-            }else{
-                $and = "AND material is null";
-            }
-
             $DATOS = [];
             $DATOS['idproducto_precio']    = $idproducto_precio;
             $DATOS['idproducto']           = $idproducto;
-            if($material != ''){
-                $DATOS['material']         = $material;
-            }
             $DATOS['precio']               = $precio;
+            $DATOS['idset_talla']          = $idset_talla;
             $DATOS['usuario_modificacion'] = $security->get_actual_user();
             $DATOS['fecha_modificacion']   = date("Y-m-d H:i:s");
             $llaves                        = ['idproducto_precio'];
