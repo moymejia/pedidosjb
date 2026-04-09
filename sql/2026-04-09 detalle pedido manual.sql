@@ -43,3 +43,31 @@ LEFT JOIN pedidosjb_pedidos.marca marca_pedido
     ON pe.idmarca = marca_pedido.idmarca
 LEFT JOIN pedidosjb_pedidos.set_talla st
     ON pd.idset_talla = st.idset_talla;
+
+
+CREATE OR REPLACE
+ALGORITHM = UNDEFINED VIEW pedidosjb_pedidos.view_producto_modelo AS
+select
+    p.idproducto AS idproducto,
+    p.modelo AS modelo,
+    p.linea AS linea,
+    p.idset_talla AS idset_talla,
+    c.idcolor AS idcolor,
+    c.nombre AS color,
+    p.idmarca AS idmarca,
+    m.nombre AS marca,
+    pp.idproducto_precio AS idproducto_precio,
+    '' AS material,
+    pp.precio AS precio,
+    pp.estado AS estado_material
+from
+    (((pedidosjb_pedidos.producto p
+join pedidosjb_pedidos.marca m on
+    ((m.idmarca = p.idmarca)))
+join pedidosjb_pedidos.color c on
+    ((p.idcolor = c.idcolor)))
+join pedidosjb_pedidos.producto_precio pp on
+    (((pp.idproducto = p.idproducto)
+        and (pp.estado = 'ACTIVO'))))
+where
+    (p.estado = 'ACTIVO');
