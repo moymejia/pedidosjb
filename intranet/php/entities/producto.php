@@ -122,6 +122,7 @@ class producto extends table{
     
             if(!$estilo){
                 $estilo = [
+                    'idproducto' => $row['idproducto'],
                     'codigo' => $modelo,
                     'descripcion' => $row['linea'],
                     'marca' => $row['marca'],

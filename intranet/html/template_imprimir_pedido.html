@@ -3,14 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Pedido Tallas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
+        @page {
+            size: A4 portrait;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
         body { font-family: Arial, sans-serif; font-size: 8px; }
+
+        .page {
+            min-height: 205mm;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
     
         .container { 
             width: [container_width];
-            margin: auto; 
+            margin: 0 auto;
             border: 1px solid transparent; 
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+
         }
     
         table { 
@@ -44,13 +66,13 @@
         }
     
         .totales { 
-            font-size: 18px; /* antes 18px */
+            font-size: 26px;
             color: red; 
             font-weight: bold; 
         }
     
         .titulo-totales { 
-            font-size: 13px; /* antes 13px */
+            font-size: 11px;
             font-weight: bold; 
         }
     
@@ -59,35 +81,47 @@
         }
 
         .observaciones {
-            font-size: 12px;
+            font-size: 11px;
             line-height: 1;
         }
 
         /* Quitar cuadrícula solo en encabezado */
         .encabezado td {
             border: none;
-            font-size: 15px;
+            font-size: 13px;
+            line-height: 1.1;
+            padding: 2px 1px;
+            word-break: break-word;
         }
 
         .encabezado .bold {
-            white-space: nowrap;
-            font-size: 13px; /* más compacto */
+            white-space: normal;
+            font-size: 11px;
+            line-height: 1.1;
         }
 
         .encabezado .azul,
         .encabezado .rojo {
             border-bottom: 1px solid #000;
+            font-size: 12px;
+            line-height: 1.1;
+        }
+
+        .encabezado .color-print {
+            font-size: 11px;
+            line-height: 1.1;
         }
 
         /* Quitar toda la cuadrícula */
         .firmas td {
             border: none;
+            font-size: 11px;
         }
 
         /* Líneas tipo firma */
         .linea-firma {
             border-top: 1px solid #000;
-            width: 60%;           /* controla el largo */
+            width: 80%;           /* controla el largo */
             margin: 25px auto 0;  /* centra la línea */
             padding-top: 2px;
             text-align: center;
@@ -110,7 +144,7 @@
 
 
         .titulo-observaciones {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             display: block;
             text-align: center;
@@ -131,7 +165,7 @@
 
         .talla-grupo {
             white-space: nowrap;
-            font-size: inherit;
+            font-size: 9px;
         }
 
         .talla-desc {
@@ -141,16 +175,57 @@
 
         .talla-grupo-producto {
             white-space: nowrap;
+            font-size: 9px;
         }
 
         .letra-grande {
             font-size: 22px;
         }
+
+        .detalle-wrapper {
+            flex: 1 1 auto;
+        }
+
+        .detalle-wrapper th {
+            font-size: 11px;
+            line-height: 1.05;
+            padding: 1px 0;
+        }
+
+        .firmas {
+            margin-top: auto;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        tr,
+        td,
+        th {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        @media print {
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        .print-container {
+            margin: -10mm; /* ajusta según lo que veas */
+        }
+        }
+
+        @media print {
+        body {
+            -webkit-print-color-adjust: exact;
+        }
+        }
     </style>
 </head>
 
 <body>
-
+    <div class="page">
     <div class="container">
 
         <table class="encabezado">
@@ -206,7 +281,7 @@
                 <td class="bold">Correo Electrónico:</td>
                 <td colspan="2" class="azul">[email]</td>
                 <td class="bold">Fecha de Entrega:</td>
-                <td class="rojo" style="font-size: 13px;">[fecha_entrega]</td>
+                <td class="rojo" style="font-size: 10px;">[fecha_entrega]</td>
                 <td class="bold">Transporte:</td>
                 <td class="azul">[transporte]</td>
             </tr>
@@ -217,6 +292,7 @@
             </tr>
         </table>
         <br>
+        <div class="detalle-wrapper">
         <table>
             [detalle_colgroup]
 
@@ -224,6 +300,7 @@
 
             [detalle_productos]
         </table>
+        </div>
 
         <table class="firmas">
             [firmas_colgroup]
@@ -234,7 +311,7 @@
                     Precios más flete de envío. Al recibir este pedido acepta las condiciones.
                     <span class="rojo">NO SE ACEPTAN DEVOLUCIONES.</span>
                 </td>
-                <td colspan="2" class="titulo-totales gris cuadricula" style="font-size: 15px;">Totales</td>
+                <td colspan="2" class="titulo-totales gris cuadricula" style="font-size: 11px;">Totales</td>
                 <td class="totales gris cuadricula">[total_pares]</td>
                 <td colspan="2" class="totales gris cuadricula">Q [total]</td>
             </tr>
@@ -265,6 +342,7 @@
             </tr>
         </table>
 
+    </div>
     </div>
 
 </body>

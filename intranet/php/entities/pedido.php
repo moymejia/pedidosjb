@@ -139,6 +139,7 @@ class pedido extends table{
 
             $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"
                     editar_registro('$str_data',this.parentNode.parentNode);
+                    if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
                     showElements('detalles_del_pedido');
                     hideElements('lista_pedidos');
                     if('".$estado_actual."' == 'CERRADO'){
@@ -397,7 +398,7 @@ class pedido extends table{
         $total_columns = count($column_weights);
         $totales_leyenda_colspan = max(1, $total_columns - 5);
         $observaciones_colspan = max(1, $total_columns - 8);
-        $container_width = max(950, 760 + ($max_tallas * 38)) . 'px';
+        $container_width = '98.5%';
 
         $rowspan_encabezado = count($sets_catalogo);
 
@@ -442,10 +443,10 @@ class pedido extends table{
             $tallas_header_block .= "</tr>";
         }
 
-        $sql = mysql::getresult("SELECT idproducto, idproducto_precio, codigo AS producto, imagen, idtalla, cantidad, precio_venta, color, material, idset_talla, COALESCE(grupo, '') AS grupo, COALESCE(set_descripcion, '') AS set_descripcion
+        $sql = mysql::getresult("SELECT codigo AS producto, COALESCE(descripcion, '') AS descripcion, imagen, idtalla, cantidad, precio_venta, color, material, idset_talla, COALESCE(grupo, '') AS grupo, COALESCE(set_descripcion, '') AS set_descripcion
             FROM view_pedido_detalle
             WHERE idpedido = '$idpedido'
-            ORDER BY idproducto ASC, idproducto_precio ASC, color ASC, material ASC, grupo ASC, set_descripcion ASC, idset_talla ASC, idtalla ASC");
+            ORDER BY codigo ASC, descripcion ASC, color ASC, material ASC, grupo ASC, set_descripcion ASC, idset_talla ASC, precio_venta ASC, idtalla ASC");
 
         if (!$sql) {
             $this->last_error = "Error al obtener el detalle del pedido para impresión.";
@@ -463,7 +464,15 @@ class pedido extends table{
 
         while ($row = mysql::getrowresult($sql)) {
 
-            $idp = $row['idproducto'].'_'.$row['idproducto_precio'].'_'.$row['idset_talla'];
+            $idp = implode('_', [
+                $row['idset_talla'],
+                trim((string)$row['producto']),
+                trim((string)$row['descripcion']),
+                trim((string)$row['color']),
+                trim((string)$row['material']),
+                (string)$row['precio_venta'],
+                trim((string)$row['imagen'])
+            ]);
 
             if (!isset($productos[$idp])) {
                 $productos[$idp] = [
@@ -518,7 +527,10 @@ class pedido extends table{
         $productos_chunks = [];
         $chunk_actual = [];
         $filas_actuales = 0;
-        $max_filas_por_hoja = 8;
+
+        // En vertical, el espacio util baja cuando hay mas filas de encabezado de tallas.
+        // Ajustamos el corte dinamicamente para que el footer permanezca pegado abajo.
+        $max_filas_por_hoja = max(15, 15 - $rowspan_encabezado);
 
         foreach ($productos_agrupados as $grupo_producto) {
             $filas_grupo = count($grupo_producto['filas']);
@@ -539,22 +551,24 @@ class pedido extends table{
 
         $html_final = '';
         $total_hojas = count($productos_chunks);
+        $total_pares_final = 0;
+        $total_general_final = 0;
+
+        foreach ($productos_agrupados as $grupo_producto) {
+            $total_pares_final += $grupo_producto['total'];
+            $total_general_final += $grupo_producto['monto'];
+        }
 
         foreach ($productos_chunks as $index => $chunk) {
 
             $numero_hoja    = $index + 1;
             $detalle_html   = '';
-            $total_pares    = 0;
-            $total_general  = 0;
 
             foreach ($chunk as $grupo_producto) {
                 $rowspan_producto = count($grupo_producto['filas']);
                 $precio_texto = count($grupo_producto['precios']) === 1
                     ? 'Q '.number_format(reset($grupo_producto['precios']), 2, '.', ',')
                     : 'VARIOS';
-
-                $total_pares    += $grupo_producto['total'];
-                $total_general  += $grupo_producto['monto'];
 
                 foreach ($grupo_producto['filas'] as $fila_index => $p) {
 
@@ -568,7 +582,7 @@ class pedido extends table{
                     if ($set_producto) {
                         foreach ($set_producto['tallas'] as $t) {
                             $cantidad = array_key_exists($t['idtalla'], $p['tallas']) ? $p['tallas'][$t['idtalla']] : '';
-                            $fila_tallas .= "<td style='font-size: 13px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
+                            $fila_tallas .= "<td style='font-size: 11px;'>".($cantidad === '' ? '&nbsp;' : $cantidad)."</td>";
                             $cantidad_tallas++;
                         }
                     }
@@ -585,29 +599,29 @@ class pedido extends table{
                             <td class='img' rowspan='{$rowspan_producto}'>
                                 <img src='".($grupo_producto['imagen'] ? '../'.$grupo_producto['imagen'] : "https://via.placeholder.com/50")."'>
                             </td>
-                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".htmlspecialchars($grupo_producto['producto'], ENT_QUOTES, 'UTF-8')."</td>
+                            <td style='font-size: 9px;' rowspan='{$rowspan_producto}'>".htmlspecialchars($grupo_producto['producto'], ENT_QUOTES, 'UTF-8')."</td>
                         ";
                     }
 
                     if ($fila_index === 0) {
                         $detalle_html .= "
-                            <td style='font-size: 10px;' class='center' rowspan='{$rowspan_producto}'>
+                            <td style='font-size: 9px;' class='center' rowspan='{$rowspan_producto}'>
                                 ".strtoupper($grupo_producto['color'])." - ".strtoupper($grupo_producto['material'])."
                             </td>
                         ";
                     }
 
                     if ($fila_index === 0) {
-                        $detalle_html .= "<td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".$grupo_producto['marca']."</td>";
+                        $detalle_html .= "<td style='font-size: 10px;' rowspan='{$rowspan_producto}'>".$grupo_producto['marca']."</td>";
                     }
 
                     $detalle_html .= $fila_tallas;
 
                     if ($fila_index === 0) {
                         $detalle_html .= "
-                            <td rowspan='{$rowspan_producto}'>".$grupo_producto['total']."</td>
-                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>".$precio_texto."</td>
-                            <td style='font-size: 12px;' rowspan='{$rowspan_producto}'>Q ".number_format($grupo_producto['monto'],2,'.',',')."</td>
+                            <td style='font-size: 9px;' rowspan='{$rowspan_producto}'>".$grupo_producto['total']."</td>
+                            <td style='font-size: 10px;' rowspan='{$rowspan_producto}'>".$precio_texto."</td>
+                            <td style='font-size: 10px;' rowspan='{$rowspan_producto}'>Q ".number_format($grupo_producto['monto'],2,'.',',')."</td>
                         ";
                     }
 
@@ -641,8 +655,8 @@ class pedido extends table{
             $DATA['observaciones_colspan']  = $observaciones_colspan;
             $DATA['tallas_header_block']    = $tallas_header_block;
             $DATA['detalle_productos']      = $detalle_html;
-            $DATA['total_pares']            = $total_pares;
-            $DATA['total']                  = number_format($total_general,2,'.',',');
+            $DATA['total_pares']            = $total_pares_final;
+            $DATA['total']                  = number_format($total_general_final,2,'.',',');
             $DATA['observaciones']          = $PEDIDO['observaciones_pedido'];
             $DATA['numero_hoja']            = $numero_hoja;
             $DATA['total_hojas']            = $total_hojas;

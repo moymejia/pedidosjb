@@ -49,6 +49,18 @@ class producto_precio extends table
                     self::end_error("Parametros faltantes");
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_precio_set') {
+                if (table::validate_parameter_existence(['idproducto','idset_talla'], $PARAMETROS, false)) {
+                    if ($resultado = $this->obtener_precio_set($PARAMETROS['idproducto'], $PARAMETROS['idset_talla'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Parametros faltantes");
+                }
+            }
         }
     }
 
@@ -283,5 +295,29 @@ class producto_precio extends table
         $tabla .= '</tbody></table>';
 
         return $tabla;
+    }
+
+    public function obtener_precio_set($idproducto, $idset_talla)
+    {
+        $idproducto = (int)$idproducto;
+        $idset_talla = (int)$idset_talla;
+
+        $row = mysql::getrow("SELECT idproducto_precio, precio
+            FROM producto_precio
+            WHERE idproducto = '$idproducto'
+            AND idset_talla = '$idset_talla'
+            AND estado = 'ACTIVO'
+            LIMIT 1");
+
+        if (!$row) {
+            $this->last_error = "No se encontro precio para el producto y set de tallas seleccionados.";
+            utils::report_error(validation_error, ['idproducto' => $idproducto, 'idset_talla' => $idset_talla], $this->last_error);
+            return false;
+        }
+
+        return json_encode([
+            'idproducto_precio' => (int)$row['idproducto_precio'],
+            'precio' => (float)$row['precio']
+        ]);
     }
 }

@@ -42,6 +42,18 @@ class marca extends table
                     self::end_error($this->last_error);
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_descripcion') {
+                if (table::validate_parameter_existence(['idmarca'], $PARAMETROS, false)) {
+                    if ($resultado = $this->obtener_descripcion($PARAMETROS['idmarca'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Faltan parámetros");
+                }
+            }
         }
     }
 
@@ -227,6 +239,20 @@ class marca extends table
     {
 
         return mysql::getoptions("SELECT idmarca as id, nombre as descripcion FROM marca WHERE estado = 'ACTIVO' ORDER BY nombre ASC");
+    }
+
+    public function obtener_descripcion($idmarca)
+    {
+        $idmarca = (int)$idmarca;
+        $descripcion = mysql::getvalue("SELECT descripcion FROM marca WHERE idmarca = '$idmarca'");
+
+        if ($descripcion === false || $descripcion === null) {
+            $this->last_error = "No se encontro la descripcion de la marca.";
+            utils::report_error(validation_error, $idmarca, $this->last_error);
+            return false;
+        }
+
+        return $descripcion !== '' ? $descripcion : 'Sin descripcion';
     }
 
     public function get_idmarca($nombre)

@@ -136,7 +136,12 @@
 
                             <div class="form-group col-md-3">
                                 <label>Marca</label>
-                                <select class="form-control" id="idmarca" name="idmarca">
+                                <select class="form-control" id="idmarca" name="idmarca" onchange="
+                                    callback_obtener_descripcion_marca = function(respuesta){
+                                        element('resumenSet').textContent = respuesta && respuesta !== 'null' ? respuesta : 'Sin descripcion';
+                                    }
+                                    upload_action('idmarca='+this.value,'marca','obtener_descripcion', callback_obtener_descripcion_marca);
+                                ">
                                     [marcas]
                                 </select>
                             </div>
@@ -163,30 +168,36 @@
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group m-b-6 col-md-4">
+                            <div class="form-group m-b-6 col-md-3">
                                 <label for="email">Correo electrónico</label>
                                 <input type="email" class="form-control" id="email" name="email">
                                 <span class="bar"></span>
                             </div>
-                            <div class="form-group col-md-2">
-                                <label>transporte</label>
+                            <div class="form-group col-md-3">
+                                <label>Transporte</label>
                                 <select class="form-control" id="idtransporte" name="idtransporte">
                                     [transportes]
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Entrega desde</label>
                                 <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
                             </div>
 
-                            <div class="form-group col-md-2">
-                                <label>Entrega hasta</label>
+                            <div class="form-group col-md-3">
+                                <label>Hasta</label>
                                 <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
                             </div>
 
+                            
+                            
+                        </div>
+
+                        <div class="form-row">
+
                             <div class="form-group m-b-6 col-md-2">
-                                <label for="monto_descuento">Descuento (%)</label>
+                                <label for="monto_descuento">Desc. (%)</label>
                                 <input type="number" class="form-control" id="monto_descuento" name="monto_descuento" value="0" min="0" max="99" onchange="
                                     var val = parseFloat(this.value);
                     
@@ -211,24 +222,21 @@
                                 ">
                                 <span class="bar"></span>
                             </div>
-                            
-                        </div>
 
-                        <div class="form-row">
-
-                            <div class="form-group col-md-9">
+                            <div class="form-group col-md-6">
                                 <label>Observaciones generales</label>
                                 <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
                                 ></textarea>
                             </div>
                             
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <br>
-                                <button type="button" id="btn_guardar_pedido" class="btn btn-success waves-effect waves-light m-r-10" onclick="
+                                <button type="button" id="btn_guardar_pedido" class="btn btn-success waves-effect waves-light m-r-5" onclick="
                                 callback_guardar_pedido =function(){
                                     notify_success('Pedido guardado exitosamente');
                                     showElements('detalles_del_pedido');
                                     hideElements('lista_pedidos');
+                                    if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
                                     disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
                                 }
                                 download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,nopedido','pedido','guardar','idpedido',callback_guardar_pedido);
@@ -236,7 +244,7 @@
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="
                                         clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento,email');
-                                    ">Limpiar</button>
+                                    "><i class="mdi mdi-eraser"></i></button>
 
                                     <button type="button" class="btn btn-warning" id="btn_imprimir" style="display: none;" onclick="
                                     callback_imprimir_pedido = function(respuesta){
@@ -274,7 +282,7 @@
 
                                     download_div_content('idpedido','pedido','imprimir_pedido','div_imprimir_pedido', callback_imprimir_pedido);
                                     ">
-                                    <i class="fas fa-print"></i> Imprimir
+                                    <i class="fas fa-print"></i>
                                     </button>
                                     <div id="div_imprimir_pedido" style="display: none;"></div>
                             </div>
@@ -315,8 +323,8 @@
     
                     <div class="col-md-3 mb-2">
                         <div class="border rounded p-3 h-100 bg-dark">
-                            <div class="small text-muted">Set activo</div>
-                            <div class="h6 mb-0 pt-2" id="resumenSet">Sin seleccionar</div>
+                            <div class="small text-muted">Descripción marca</div>
+                            <div class="h6 mb-0 pt-2" id="resumenSet">Sin descripcion</div>
                         </div>
                     </div>
     
@@ -369,17 +377,17 @@
                         <div class="form-row">
                             <div class="form-group col-md-3">
                                 <label>Color</label>
-                                <select class="form-control" id="color"></select>
+                                <input type="text" class="form-control" id="color" name="color" required>
                             </div>
     
                             <div class="form-group col-md-3">
                                 <label>Material</label>
-                                <select class="form-control" id="material"></select>
+                                <input type="text" class="form-control" id="material" name="material" required>
                             </div>
     
                             <div class="form-group col-md-3">
                                 <label>Precio</label>
-                                <input type="number" class="form-control text-right" id="precio" step="0.01" min="0">
+                                <input type="number" class="form-control text-right" id="precio" step="0.01" min="0.01" value="0" required>
                             </div>
 
                             <div class="form-group col-md-3">
