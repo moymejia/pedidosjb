@@ -96,93 +96,35 @@ class producto extends table{
 
         $modelo = addslashes($modelo);
         $idmarca = (int)$idmarca;
-    
-        $result = mysql::getresult("SELECT idproducto, modelo, linea, idcolor, color, idmarca, marca, material, precio, idproducto_precio
-            FROM view_producto_modelo 
-            WHERE modelo = '$modelo' 
-            AND idmarca = '$idmarca'
-            AND idproducto IN (
-                SELECT idproducto 
-                FROM producto 
-                WHERE idtemporada = '".intval($idtemporada)."'
-            )
-            ORDER BY color ASC
-        ");
-    
-        if(!$result || mysql::num_rows($result) == 0){
+        $idtemporada = (int)$idtemporada;
+
+        $row = mysql::getrow("SELECT
+                p.idproducto,
+                p.modelo,
+                p.linea,
+                p.idmarca,
+                m.nombre AS marca
+            FROM producto p
+            INNER JOIN marca m
+                ON m.idmarca = p.idmarca
+            WHERE p.modelo = '$modelo'
+            AND p.idmarca = '$idmarca'
+            AND p.idtemporada = '$idtemporada'
+            AND p.estado = 'ACTIVO'
+            LIMIT 1");
+
+        if(!$row){
             $this->last_error = "No se encontro el modelo.";
             utils::report_error(validation_error, $modelo, $this->last_error);
             return false;
         }
-    
-        $estilo = null;
-        $colores_map = [];
-    
-        while($row = mysql::getrowresult($result)){
-    
-            if(!$estilo){
-                $estilo = [
-                    'idproducto' => $row['idproducto'],
-                    'codigo' => $modelo,
-                    'descripcion' => $row['linea'],
-                    'marca' => $row['marca'],
-                    'colores' => []
-                ];
-            }
 
-            $colorKey = $row['idcolor'];
-    
-            if(!isset($colores_map[$colorKey])){
-                $colores_map[$colorKey] = [
-                    'id' => $row['idcolor'], 
-                    'idproducto' => $row['idproducto'],
-                    'nombre' => $row['color'],
-                    'material_default' => '',
-                    'precio' => 0,
-                    'imagen' => '',
-                    'materiales' => []
-                ];
-            }
-    
-            if(!empty($row['material'])){
-    
-                $materialObj = [
-                    'nombre' => $row['material'],
-                    'precio' => (float)$row['precio'],
-                    'idproducto_precio' => $row['idproducto_precio'] 
-                ];
-    
-                $existe = false;
-    
-                foreach($colores_map[$colorKey]['materiales'] as $m){
-                    if($m['idproducto_precio'] == $materialObj['idproducto_precio']){
-                        $existe = true;
-                        break;
-                    }
-                }
-    
-                if(!$existe){
-                    $colores_map[$colorKey]['materiales'][] = $materialObj;
-                }
-    
-                if($colores_map[$colorKey]['material_default'] == ''){
-                    $colores_map[$colorKey]['material_default'] = $materialObj['nombre'];
-                    $colores_map[$colorKey]['precio'] = $materialObj['precio'];
-                }
-            }
-        }
-    
-        foreach($colores_map as &$c){
-    
-            if($c['material_default'] == '' && count($c['materiales']) > 0){
-                $c['material_default'] = $c['materiales'][0]['nombre'];
-                $c['precio'] = $c['materiales'][0]['precio'];
-            }
-        }
-    
-        $estilo['colores'] = array_values($colores_map);
-    
-        return json_encode($estilo);
+        return json_encode([
+            'idproducto' => (int)$row['idproducto'],
+            'codigo' => $row['modelo'],
+            'descripcion' => $row['linea'],
+            'marca' => $row['marca']
+        ]);
     }
 
     public function cargar_opcion()

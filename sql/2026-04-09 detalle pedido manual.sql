@@ -52,20 +52,15 @@ select
     p.modelo AS modelo,
     p.linea AS linea,
     p.idset_talla AS idset_talla,
-    c.idcolor AS idcolor,
-    c.nombre AS color,
     p.idmarca AS idmarca,
     m.nombre AS marca,
     pp.idproducto_precio AS idproducto_precio,
-    '' AS material,
     pp.precio AS precio,
-    pp.estado AS estado_material
+    pp.idset_talla AS idset_talla_precio
 from
-    (((pedidosjb_pedidos.producto p
+    ((pedidosjb_pedidos.producto p
 join pedidosjb_pedidos.marca m on
     ((m.idmarca = p.idmarca)))
-join pedidosjb_pedidos.color c on
-    ((p.idcolor = c.idcolor)))
 join pedidosjb_pedidos.producto_precio pp on
     (((pp.idproducto = p.idproducto)
         and (pp.estado = 'ACTIVO'))))
