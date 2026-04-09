@@ -41,10 +41,10 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
         }
         activate_select2();
         activate_switch();
-        if (objeto("jsid") != undefined) {            
+        if (objeto("jsid") != undefined) {
             var jsid = element("jsid").value;
             var script = document.createElement('script');
-            script.src = '../js/'+jsid+'.js'  ; 
+            script.src = '../js/' + jsid + '.js';
             script.type = 'text/javascript';
             script.async = true; // o true, según lo que necesites
             document.head.appendChild(script);
@@ -52,7 +52,7 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
         }
 
     };
-    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal",callback_retorno);
+    download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal", callback_retorno);
     document.getElementById("contenedor_principal").innerHTML = "";
     document.getElementById("menu_actual").innerHTML = menu;
     document.getElementById("opcion_actual").innerHTML = opcion;
@@ -649,43 +649,43 @@ function activate_select2() {
 }
 
 //DATA TABLES
-function activar_tabla(idtabla) {      
-    //
-    
+function activar_tabla(idtabla) {
     //
 
-    var tabla = document.getElementById(idtabla);            
-    var ds = tabla.dataset;                                  
-    var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");          
-    var selectUser = ds.confSelect === "true";               
-    var buttonsUser = ds.confButtons === "true";             
+    //
+
+    var tabla = document.getElementById(idtabla);
+    var ds = tabla.dataset;
+    var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");
+    var selectUser = ds.confSelect === "true";
+    var buttonsUser = ds.confButtons === "true";
     var fixedHeaderDisponible = (typeof DataTable !== "undefined" && typeof DataTable.FixedHeader !== "undefined") ||
         (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.FixedHeader !== "undefined");
     var fixedHeaderUser = ds.confFixedheader === "true" && fixedHeaderDisponible;
-    var exportTitle = "Listado de Clientes";
+    var exportTitle = (ds.confTitulotabla) ? ds.confTitulotabla : "Listado";
     var exportCompany = "JBR Innovaciones y Servicios";
-    var exportFileName = "Listado_de_Clientes_JBR_Innovaciones_y_Servicios";
-    
-    var nombreABuscar = ds.confRowgroup; 
+    var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_JBR_Innovaciones_y_Servicios" : "Listado";
+
+    var nombreABuscar = ds.confRowgroup;
     var indiceReal = -1;
-    $('#' + idtabla + ' thead th').each(function(i) {
+    $('#' + idtabla + ' thead th').each(function (i) {
         if ($(this).text().trim() === nombreABuscar) {
-            indiceReal = i; 
+            indiceReal = i;
         }
     });
     var rowGroupUser = (indiceReal !== -1);
 
-    var responsiveUser = ds.confResponsive === "true";       
-    var colReorderUser = ds.confColreorder === "true";       
-    var columnControlUser = ds.confColumncontrol === "true"; 
+    var responsiveUser = ds.confResponsive === "true";
+    var colReorderUser = ds.confColreorder === "true";
+    var columnControlUser = ds.confColumncontrol === "true";
     var columnasAuto = [];
 
-    $('#' + idtabla + ' thead th').each(function() {
+    $('#' + idtabla + ' thead th').each(function () {
         columnasAuto.push({ name: $(this).text().trim() });
     });
 
     var botones = [];
-    if (buttonsUser) {  
+    if (buttonsUser) {
         botones.push(
             {
                 extend: "copy",
@@ -718,7 +718,7 @@ function activar_tabla(idtabla) {
                 filename: exportFileName,
                 orientation: "landscape",
                 pageSize: "LEGAL",
-                customize: function(doc) {
+                customize: function (doc) {
                     doc.pageMargins = [18, 40, 18, 24];
                     doc.defaultStyle = {
                         color: "#000000",
@@ -746,19 +746,19 @@ function activar_tabla(idtabla) {
                     if (doc.content && doc.content[2] && doc.content[2].table) {
                         doc.content[2].alignment = "center";
                         if (doc.content[2].table.widths) {
-                            doc.content[2].table.widths = doc.content[2].table.widths.map(function() {
+                            doc.content[2].table.widths = doc.content[2].table.widths.map(function () {
                                 return "*";
                             });
                         }
                         doc.content[2].layout = {
-                            hLineColor: function() { return "#000000"; },
-                            vLineColor: function() { return "#000000"; },
-                            hLineWidth: function() { return 0.5; },
-                            vLineWidth: function() { return 0.5; },
-                            paddingLeft: function() { return 4; },
-                            paddingRight: function() { return 4; },
-                            paddingTop: function() { return 3; },
-                            paddingBottom: function() { return 3; }
+                            hLineColor: function () { return "#000000"; },
+                            vLineColor: function () { return "#000000"; },
+                            hLineWidth: function () { return 0.5; },
+                            vLineWidth: function () { return 0.5; },
+                            paddingLeft: function () { return 4; },
+                            paddingRight: function () { return 4; },
+                            paddingTop: function () { return 3; },
+                            paddingBottom: function () { return 3; }
                         };
                     }
                 }
@@ -771,46 +771,46 @@ function activar_tabla(idtabla) {
                 messageTop: "",
                 filename: exportFileName,
                 autoPrint: true,
-                customize: function(win) {
+                customize: function (win) {
                     var doc = win.document;
                     $(doc.body).prepend(
                         '<div style="text-align:center; margin-bottom:12px; color:#000000;">' +
-                            '<div style="font-size:40px; font-weight:bold;">' + exportTitle + '</div>' +
-                            '<div style="font-size:20px; font-weight:normal;">' + exportCompany + '</div>' +
+                        '<div style="font-size:40px; font-weight:bold;">' + exportTitle + '</div>' +
+                        '<div style="font-size:20px; font-weight:normal;">' + exportCompany + '</div>' +
                         '</div>'
                     );
                     $(doc.head).append(
                         '<style>' +
                         '@page { size: landscape; margin: 8mm; }' +
                         'html, body { background: #ffffff !important; color: #000000 !important; ' +
-                            '-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
+                        '-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
                         'body { font-family: Arial, sans-serif; font-size: 8px; }' +
                         'h1, h2, h3, h4, h5, h6, div, span, p { color: #000000 !important; }' +
                         'table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; }' +
                         'table thead { display: table-header-group; }' +
                         'table thead th {' +
-                            'background: #ffffff !important;' +
-                            'color: #000000 !important;' +
-                            'border: 1px solid #000000 !important;' +
-                            'font-weight: bold !important;' +
-                            'font-size: 11px !important;' +
+                        'background: #ffffff !important;' +
+                        'color: #000000 !important;' +
+                        'border: 1px solid #000000 !important;' +
+                        'font-weight: bold !important;' +
+                        'font-size: 11px !important;' +
                         '}' +
                         'table th, table td {' +
-                            'border: 1px solid #000000 !important;' +
-                            'padding: 2px 3px !important;' +
-                            'color: #000000 !important;' +
-                            'background: #ffffff !important;' +
-                            'white-space: normal !important;' +
-                            'word-break: break-word !important;' +
-                            'line-height: 1.1 !important;' +
+                        'border: 1px solid #000000 !important;' +
+                        'padding: 2px 3px !important;' +
+                        'color: #000000 !important;' +
+                        'background: #ffffff !important;' +
+                        'white-space: normal !important;' +
+                        'word-break: break-word !important;' +
+                        'line-height: 1.1 !important;' +
                         '}' +
                         'table tbody td {' +
-                            'font-size: 12px !important;' +
+                        'font-size: 12px !important;' +
                         '}' +
                         '.dtrg-group td {' +
-                            'background: #ffffff !important;' +
-                            'color: #000000 !important;' +
-                            'font-weight: bold !important;' +
+                        'background: #ffffff !important;' +
+                        'color: #000000 !important;' +
+                        'font-weight: bold !important;' +
                         '}' +
                         '.dataTables_wrapper, .dataTables_wrapper * { color: #000000 !important; }' +
                         '.dt-print-view .dt-buttons, .dt-print-view .dataTables_filter, .dt-print-view .dataTables_length { display: none !important; }' +
@@ -820,10 +820,10 @@ function activar_tabla(idtabla) {
             }
         );
     }
-    if (rowGroupUser) { 
+    if (rowGroupUser) {
         botones.push({
             text: 'Limpiar Agrupación',
-            action: function(e, dt) {
+            action: function (e, dt) {
                 if (dt.rowGroup().enabled()) {
                     dt.rowGroup().disable();
                     dt.draw();
@@ -833,76 +833,76 @@ function activar_tabla(idtabla) {
         });
     }
 
-    if (selectUser) { 
+    if (selectUser) {
         botones.push({
             text: 'Deseleccionar',
-            action: function(e, dt) {
+            action: function (e, dt) {
                 dt.rows().deselect();
             }
         });
     }
 
     var configTopStart = [];
-    if (buttonsUser) configTopStart.push('buttons');   
-    if (pagingUser) configTopStart.push('pageLength'); 
+    if (buttonsUser) configTopStart.push('buttons');
+    if (pagingUser) configTopStart.push('pageLength');
     configTopStart.push('search');
 
     var layoutConfig = {
-        topStart: configTopStart.length > 0 ? { features: configTopStart } : null, 
-        topEnd: null,                              
-        bottomStart: pagingUser ? 'paging' : null, 
-        bottomEnd: null,                           
-        top: null,                                 
-        bottom: null                               
+        topStart: configTopStart.length > 0 ? { features: configTopStart } : null,
+        topEnd: null,
+        bottomStart: pagingUser ? 'paging' : null,
+        bottomEnd: null,
+        top: null,
+        bottom: null
     };
 
     var tabla_nueva = new DataTable('#' + idtabla, {
-        layout: layoutConfig,   
-        retrieve: true,         
+        layout: layoutConfig,
+        retrieve: true,
         fixedHeader: fixedHeaderUser,
-        columnControl: columnControlUser ? { 
-            target: 0, 
+        columnControl: columnControlUser ? {
+            target: 0,
             content: ['order', ['orderAsc', 'orderDesc', 'search']]
         } : false,
-        buttons: botones.map(function(btn) {
+        buttons: botones.map(function (btn) {
             var configBtn = (typeof btn === "string") ? { extend: btn } : Object.assign({}, btn);
             configBtn.exportOptions = Object.assign({}, configBtn.exportOptions, {
-                modifier: function() {
+                modifier: function () {
                     var seleccionadas = tabla_nueva.rows({ selected: true }).count();
-                    return (selectUser && seleccionadas > 0) 
-                        ? { selected: true }  
-                        : { selected: null }; 
+                    return (selectUser && seleccionadas > 0)
+                        ? { selected: true }
+                        : { selected: null };
                 }
             });
             return configBtn;
         }),
-        language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" }, 
-        responsive: responsiveUser,                         
-        colReorder: colReorderUser,                         
-        select: selectUser ? { style: 'multi' } : false,    
-        paging: true,                                       
-        pageLength: 10,                                     
-        lengthChange: pagingUser,                           
-        stateSave: true,                                    
-        stateDuration: 0,                                   
-        ordering: true,                                     
-        
+        language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" },
+        responsive: responsiveUser,
+        colReorder: colReorderUser,
+        select: selectUser ? { style: 'multi' } : false,
+        paging: true,
+        pageLength: 10,
+        lengthChange: pagingUser,
+        stateSave: true,
+        stateDuration: 0,
+        ordering: true,
+
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
         order: rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']],
 
-        createdRow: function (row, data, dataIndex) { 
-            if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex); 
+        createdRow: function (row, data, dataIndex) {
+            if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);
         },
-        lengthMenu: [[10,25,50,-1],[10,25,50,"All"]],
-        
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+
         // --- CAMBIO 4: Usar el índice numérico para el agrupamiento ---
         rowGroup: rowGroupUser ? {
-            dataSrc: indiceReal, 
+            dataSrc: indiceReal,
             enable: true,
-            startRender: function(rows, group) { return group + ' (' + rows.count() + ' registros)'; }
+            startRender: function (rows, group) { return group + ' (' + rows.count() + ' registros)'; }
         } : false,
 
-        stateSaveCallback: function(settings, data) {
+        stateSaveCallback: function (settings, data) {
             if (rowGroupUser) {
                 data.rowGroup = tabla_nueva.rowGroup().dataSrc();
                 data.rowGroupEnabled = tabla_nueva.rowGroup().enabled();
@@ -912,13 +912,13 @@ function activar_tabla(idtabla) {
             }
             localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data));
             if (typeof upload_action === "function") {
-                upload_action('idtabla=' + settings.sTableId +',estadotabla=' + encodeURIComponent(JSON.stringify(data)),'datatables','guardar_estado_datatables');
+                upload_action('idtabla=' + settings.sTableId + ',estadotabla=' + encodeURIComponent(JSON.stringify(data)), 'datatables', 'guardar_estado_datatables');
             }
         },
-        stateLoadCallback: function(settings) {
+        stateLoadCallback: function (settings) {
             var data = JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance));
             if (data) {
-                setTimeout(function() {
+                setTimeout(function () {
                     /*
                     if (rowGroupUser && data.rowGroup !== undefined) {
                         if (data.rowGroupEnabled) tabla_nueva.rowGroup().enable();
@@ -1016,9 +1016,9 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
 
         const params = json.parametros || {};
         const labels = params.labels || [];
-        const type   = params.type || 'bar';
-        const title  = params.title || "";
-        const ctx    = document.getElementById(destiny).getContext('2d');
+        const type = params.type || 'bar';
+        const title = params.title || "";
+        const ctx = document.getElementById(destiny).getContext('2d');
 
         if (ctx._chartInstance) ctx._chartInstance.destroy();
 
@@ -1026,7 +1026,7 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
         function darkenRgba(rgba, factor = 0.6) {
             const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
             if (!match) return 'rgba(0,0,0,1)';
-            let [ , r, g, b, a ] = match;
+            let [, r, g, b, a] = match;
             r = Math.floor(parseInt(r) * factor);
             g = Math.floor(parseInt(g) * factor);
             b = Math.floor(parseInt(b) * factor);
@@ -1075,9 +1075,9 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
 
         ctx._chartInstance = chart;
 
-        if (typeof callback_download !== "undefined") { 
-            callback_download(); 
-            delete callback_download; 
+        if (typeof callback_download !== "undefined") {
+            callback_download();
+            delete callback_download;
         }
 
         if (callback) callback(json);
