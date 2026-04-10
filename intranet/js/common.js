@@ -866,14 +866,17 @@ function activar_tabla(idtabla) {
         } : false,
         buttons: botones.map(function (btn) {
             var configBtn = (typeof btn === "string") ? { extend: btn } : Object.assign({}, btn);
-            configBtn.exportOptions = Object.assign({}, configBtn.exportOptions, {
-                modifier: function () {
-                    var seleccionadas = tabla_nueva.rows({ selected: true }).count();
-                    return (selectUser && seleccionadas > 0)
-                        ? { selected: true }
-                        : { selected: null };
-                }
+            var exportOptionsActual = Object.assign({}, configBtn.exportOptions);
+            var modifierActual = Object.assign({}, exportOptionsActual.modifier);
+
+            exportOptionsActual.modifier = Object.assign({}, modifierActual, {
+                search: 'applied',
+                order: 'applied',
+                page: 'all',
+                selected: null
             });
+
+            configBtn.exportOptions = exportOptionsActual;
             return configBtn;
         }),
         language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" },
