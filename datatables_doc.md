@@ -144,3 +144,43 @@ El name/id debe ser "datatableid"  y el value será el nombre con que se guardar
               `<table id="tabla_productos">`.
 - **Confirmación de Existencia:** Si no encuentra la tabla genérica, verifica si ya existe una tabla que use directamente el ID del input.
 - **Valor de Respaldo:** Si el input no existe, está vacío, o no se encuentra ninguna tabla coincidente, el script utiliza por defecto el nombre `tabla_datos`.
+
+---
+
+## 2º. En PHP 
+
+En el script que genera la tabla y antes de crear el encabezado de la tabla se deben crear las variables de configuracion
+
+```php
+       $columnControl = true;
+        $responsive    = true;
+        $colReorder    = true;
+        $select        = true;
+        $buttons       = true;
+        $paging        = false;
+        $ordering      = true;
+        $order         = true;
+        $rowGroup      = false;
+        $tituloTabla = ‘Listado de modelo: $modelo’
+        $fileName = ‘Modelos’
+```
+
+Estos se agregarán como valores data-  al encabezado de la tabla, para que sean leídos por el script de js activar_tabla. 
+
+```php
+        $data_ = "";
+        $data_  = " data-conf-columncontrol='" . ($columnControl ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup='Marca'";
+        $data_ .= " data-conf-titulotabla='$tituloTabla' ";
+        $data_ .= " data-conf-filename='$fileName' ";
+        $data_ .= " data-conf-responsive='"    . ($responsive    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-colreorder='"    . ($colReorder    ? "true" : "false") . "' ";
+        $data_ .= " data-conf-select='"        . ($select        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-buttons='"       . ($buttons       ? "true" : "false") . "' ";
+        $data_ .= " data-conf-paging='"        . ($paging        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
+        $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup='"       . (!$rowGroup        ? "true" : "false") . "' ";
+
+$tabla_productos = "<table id='tabla_datos'   $data_   class='display nowrap table table-hover   table-bordered datatable' cellspacing='0' width='100%'>
+```
