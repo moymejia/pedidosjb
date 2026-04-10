@@ -1,5 +1,8 @@
 (function () {
 
+  var IDS_CAMPOS_LINEA_EDITABLES = 'idset_talla,modelo,color,material';
+  var IDS_CAMPOS_LINEA_LIMPIAR = 'idset_talla,modelo,descripcionEstilo,color,material';
+
   // =========================
   // ESTADO
   // =========================
@@ -12,27 +15,27 @@
   // =========================
   // DOM
   // =========================
-  var $setTallas = document.getElementById("idset_talla");
-  var $areaTallas = document.getElementById("areaTallas");
-  var $resumenSet = document.getElementById("resumenSet");
-  var $alertaProducto = document.getElementById("alertaProducto");
+  var $setTallas = element("idset_talla");
+  var $areaTallas = element("areaTallas");
+  var $resumenSet = element("resumenSet");
+  var $alertaProducto = element("alertaProducto");
 
-  var $color = document.getElementById("color");
-  var $material = document.getElementById("material");
-  var $precio = document.getElementById("precio");
-  var $modelo = document.getElementById("modelo");
-  var $descripcionEstilo = document.getElementById("descripcionEstilo");
+  var $color = element("color");
+  var $material = element("material");
+  var $precio = element("precio");
+  var $modelo = element("modelo");
+  var $descripcionEstilo = element("descripcionEstilo");
   state.idproducto_precio = null;
 
   function limpiarContenedorImpresion() {
-    var contenedor = document.getElementById("div_imprimir_pedido");
+    var contenedor = element("div_imprimir_pedido");
     if (contenedor) {
       contenedor.innerHTML = "";
     }
   }
 
   function imprimirDesdeContenedor(divId) {
-    var contenedor = document.getElementById(divId);
+    var contenedor = element(divId);
 
     if (!contenedor || !contenedor.innerHTML.trim()) {
       notify_warning('No se pudo generar la vista de impresión.');
@@ -71,7 +74,7 @@
 
   function cargarDetallePedido(){
 
-    var idpedido = document.getElementById("idpedido").value;
+    var idpedido = elementValue("idpedido");
   
     if (!idpedido) return;
   
@@ -244,8 +247,7 @@
   // =========================
   // BUSCAR ESTILO
   // =========================
-  document.getElementById("btnBuscarEstilo").addEventListener("click", function(){
-
+  function buscarEstilo() {
     callback_buscar_estilo = function(resp){
 
       if (typeof resp === "string") {
@@ -253,7 +255,7 @@
       }
 
       state.idproducto = resp.idproducto || "";
-      document.getElementById("descripcionEstilo").value = resp.descripcion;
+      $descripcionEstilo.value = resp.descripcion;
       if (state.idproducto && $setTallas.value) {
         actualizarPrecioDesdeProductoSet();
       }
@@ -261,8 +263,7 @@
     };
 
     upload_action('modelo,idmarca,idtemporada','producto','obtener_modelo',callback_buscar_estilo);
-
-  });
+  }
 
   function getCantidadesTallas() {
 
@@ -311,6 +312,14 @@
     );
   }
 
+  function setCamposLineaBloqueados(bloqueados) {
+    if (bloqueados) {
+      disableElements(IDS_CAMPOS_LINEA_EDITABLES);
+      return;
+    }
+    enableElements(IDS_CAMPOS_LINEA_EDITABLES);
+  }
+
   function eliminarLinea(index){
 
     var linea = state.detalle[index];
@@ -319,7 +328,7 @@
   
     if (!confirm("¿Eliminar esta línea completa?")) return;
   
-    var idpedido = document.getElementById("idpedido").value;
+    var idpedido = elementValue("idpedido");
   
     var params = [];
   
@@ -342,12 +351,13 @@
     if (!linea) return;
     state.editIndex = index;
     state.idproducto = linea.idproducto || "";
-    document.getElementById("idset_talla").value = linea.idset_talla;
+    $setTallas.value = linea.idset_talla;
     $modelo.value = linea.estilo_codigo || "";
     $descripcionEstilo.value = linea.estilo_descripcion || "";
     $color.value = linea.color_nombre || "";
     $material.value = linea.material || "";
     $precio.value = linea.precio;
+    setCamposLineaBloqueados(true);
 
     callback_obtener_tallas = function(resp){
 
@@ -386,8 +396,8 @@
 
   function agregarProducto(){
 
-    var idpedido = document.getElementById("idpedido").value;
-    var idset_talla = document.getElementById("idset_talla").value;
+    var idpedido = elementValue("idpedido");
+    var idset_talla = elementValue("idset_talla");
   
     if (!idpedido) {
       notify_warning('Debe guardar el pedido antes de agregar productos');
@@ -465,7 +475,7 @@
   
     };
   
-    var inputImagen = document.getElementById("imagen_producto");
+    var inputImagen = element("imagen_producto");
     var tieneImagen = inputImagen && inputImagen.files && inputImagen.files.length > 0;
 
     if (tieneImagen) {
@@ -483,7 +493,7 @@
 
   function renderDetalle(){
 
-    var tbody = document.getElementById("detallePedidoBody");
+    var tbody = element("detallePedidoBody");
     tbody.innerHTML = "";
   
     if (!state.detalle.length) {
@@ -563,8 +573,9 @@
 
   function limpiarLinea(){
 
-    clearElements('idset_talla,modelo,descripcionEstilo,color,material');
-    $precio.value = "";
+    clearElements(IDS_CAMPOS_LINEA_LIMPIAR);
+    $precio.value = 0;
+    setCamposLineaBloqueados(false);
   
     var inputs = $areaTallas.querySelectorAll("[data-idtalla]");
     inputs.forEach(function(i){
@@ -574,7 +585,7 @@
     state.editIndex = -1;
     state.idproducto = "";
     state.idproducto_precio = null;
-    document.getElementById("imagen_producto").value = "";
+    element("imagen_producto").value = "";
   
   }
 
@@ -591,9 +602,9 @@
   
     });
   
-    document.getElementById("resumenLineas").textContent = totalLineas;
-    document.getElementById("resumenPares").textContent = totalPares;
-    document.getElementById("resumenMonto").textContent = "Q " + totalMonto.toLocaleString('en-US', {minimumFractionDigits: 2,maximumFractionDigits: 2
+    element("resumenLineas").textContent = totalLineas;
+    element("resumenPares").textContent = totalPares;
+    element("resumenMonto").textContent = "Q " + totalMonto.toLocaleString('en-US', {minimumFractionDigits: 2,maximumFractionDigits: 2
   });
   
   }
@@ -608,10 +619,9 @@
       state.idproducto = "";
       $descripcionEstilo.value = "";
     });
-    document.getElementById("btnAgregarLinea").addEventListener("click", agregarProducto);
-
-    document.getElementById("btnLimpiarLinea")
-  .addEventListener("click", limpiarLinea);
+    element("btnBuscarEstilo").addEventListener("click", buscarEstilo);
+    element("btnAgregarLinea").addEventListener("click", agregarProducto);
+    element("btnLimpiarLinea").addEventListener("click", limpiarLinea);
   }
 
   init();
