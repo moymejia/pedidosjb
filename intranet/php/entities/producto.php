@@ -10,6 +10,7 @@ require_once('../entities/tipo_suela.php');
 require_once('../entities/corte.php');
 require_once('../entities/color.php');
 require_once('../entities/concepto.php');
+require_once('../entities/set_talla.php');
 
 
 class producto extends table{
@@ -31,6 +32,7 @@ class producto extends table{
         $this->ACCIONES['crear_x_mante']       = 49;
         $this->ACCIONES['modificar_x_mante']   = 50;
         $this->ACCIONES['cambiar_est_x_mante'] = 51;
+        $this->ACCIONES['cambiar_estado']      = $this->ACCIONES['cambiar_est_x_mante'];
 
         if(isset($PARAMETROS['operacion'])){
 
@@ -42,7 +44,7 @@ class producto extends table{
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Faltan parámetros");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
@@ -54,19 +56,19 @@ class producto extends table{
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Parametros faltantes");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence(['idmarca','modelo','idset_talla'], $PARAMETROS, false)) {
-                    if ($resultado = $this->guardar($PARAMETROS['idproducto'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'],$PARAMETROS['linea'],$PARAMETROS['modelo'],$PARAMETROS['idset_talla'],$PARAMETROS['idcolor'],$PARAMETROS['idcorte'],$PARAMETROS['idtipo_suela'],$PARAMETROS['idconcepto'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
+                if (table::validate_parameter_existence(['idmarca','modelo'], $PARAMETROS, false)) {
+                    if ($resultado = $this->guardar($PARAMETROS['idproducto'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'],$PARAMETROS['linea'],$PARAMETROS['modelo'],$PARAMETROS['idcolor'],$PARAMETROS['idcorte'],$PARAMETROS['idtipo_suela'],$PARAMETROS['idconcepto'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Parametros faltantes");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
@@ -78,7 +80,7 @@ class producto extends table{
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Parametros faltantes");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
@@ -164,8 +166,6 @@ class producto extends table{
                 marca,
                 idtemporada,
                 temporada,
-                idset_talla,
-                set_talla,
                 idcolor,
                 color,
                 idcorte,
@@ -174,15 +174,16 @@ class producto extends table{
                 tipo_suela,
                 idconcepto,
                 concepto,
-                estado
+                estado,
+                precios
             FROM view_producto
         ");
 
         $columnControl = true;
-        $responsive    = true;
+        $responsive    = false;
         $colReorder    = true;
-        $select        = true;
-        $buttons       = false;
+        $select        = false;
+        $buttons       = true;
         $paging        = true;
         $ordering      = true;
         $order         = true;
@@ -203,18 +204,18 @@ class producto extends table{
         $tabla = '<table id="tabla_datos" '.$data_.' class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
                     <thead>
                         <tr>
+                            <th>Acciones</th>
                             <th>Id</th>
                             <th>Modelo</th>
                             <th>Línea</th>
                             <th>Marca</th>
                             <th>Temporada</th>
-                            <th>Set Talla</th>
                             <th>Color</th>
                             <th>Corte</th>
                             <th>Tipo Suela</th>
                             <th>Concepto</th>
+                            <th>Precios</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla_todos">';
@@ -226,11 +227,11 @@ class producto extends table{
             $linea       = $row['linea'];
             $marca       = $row['marca'];
             $temporada   = $row['temporada'];
-            $set_talla   = $row['set_talla'];
             $color       = $row['color'];
             $corte       = $row['corte'];
             $tipo_suela  = $row['tipo_suela'];
             $concepto    = $row['concepto'];
+            $precios     = $row['precios'];
             $estado      = $row['estado'];
 
             $str_data = "";
@@ -241,26 +242,29 @@ class producto extends table{
             $btn = "<button class='btn btn-info btn-sm' onclick='
                     editar_registro(\"$str_data\",this.parentNode.parentNode);
                     showElements(\"div_form_producto\");
-                    hideElements(\"div_tabla\");
+                    hideElements(\"boton_nuevo\");
                     element(\"modelo_b\").value = \"$modelo\";
-                    activar_tabla_precios($modelo);
+                    objeto(\"titulo_actual\").textContent = \"$modelo\";
+                    activar_tabla_precios();
+                    desactivar_tabla(\"tabla_productos_datos\");
+                    activar_tabla(\"tabla_productos_datos\");
                     goTop();
-                    showElements(\"btn_cambiar_estado,tab_producto_precio\");
+                    showElements(\"btn_cambiar_estado_producto,tab_producto_precio\");
                 '>Editar</button>";
 
             $tabla .= "<tr>
+                        <td>$btn</td>
                         <td>$idproducto</td>
                         <td>$modelo</td>
                         <td>$linea</td>
                         <td>$marca</td>
                         <td>$temporada</td>
-                        <td>$set_talla</td>
                         <td>$color</td>
                         <td>$corte</td>
                         <td>$tipo_suela</td>
                         <td>$concepto</td>
+                        <td>$precios</td>
                         <td>$estado</td>
-                        <td>$btn</td>
                     </tr>";
         }
 
@@ -281,7 +285,7 @@ class producto extends table{
         }
     }
 
-    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$idset_talla,$idcolor,$idcorte,$idtipo_suela,$idconcepto,$estado = '',$mantenimiento = 'NO') 
+    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$idcolor,$idcorte,$idtipo_suela,$idconcepto,$estado = '',$mantenimiento = 'NO') 
     {   
         if($mantenimiento !== 'SI'){
             if($idproducto == ''){
@@ -305,7 +309,7 @@ class producto extends table{
             $condicion_color = ($idcolor === '' || is_null($idcolor)) ? " AND idcolor IS NULL" : " AND idcolor = '$idcolor'";
 
             if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca'" . $condicion_color)){
-                $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
+                $this->last_error = "Ya existe este producto.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
                 return false;
             }
@@ -317,7 +321,6 @@ class producto extends table{
                 $DATOS['linea']        = $linea;
             }
             $DATOS['modelo']           = $modelo;
-            $DATOS['idset_talla']      = $idset_talla;
 
             if($idcolor != ''){
                 $DATOS['idcolor']          = $idcolor;
@@ -345,7 +348,7 @@ class producto extends table{
 
                 return $referencia;
             }else{
-                $this->last_error = "Error al guardar el producto";
+                $this->last_error = "No se pudo guardar el producto.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
 
                 return false;
@@ -360,7 +363,7 @@ class producto extends table{
             $condicion_color = ($idcolor === '' || is_null($idcolor)) ? " AND idcolor IS NULL" : " AND idcolor = '$idcolor'";
 
             if(mysql::exists('producto',"idtemporada = '$idtemporada' AND modelo = '$modelo' AND idmarca = '$idmarca' AND idproducto != '$idproducto'" . $condicion_color)){
-                $this->last_error = "Ya existe un producto con el mismo modelo, marca,color y temporada.";
+                $this->last_error = "Ya existe este producto.";
                 utils::report_error(validation_error, ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada], $this->last_error);
                 return false;
             }
@@ -370,7 +373,6 @@ class producto extends table{
             if($linea != ''){
                 $DATOS['linea']            = $linea;
             }
-            $DATOS['idset_talla']          = $idset_talla;
 
             if($idcolor != ''){
                 $DATOS['idcolor']          = $idcolor;
@@ -398,7 +400,7 @@ class producto extends table{
 
                 return $idproducto;
             }else{
-                $this->last_error = "Error al modificar el producto";
+                $this->last_error = "No se pudo actualizar el producto.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
 
                 return false;
@@ -417,7 +419,7 @@ class producto extends table{
         $handle = fopen($_FILES['file_uploaded']['tmp_name'], "r");
 
         if ($handle === false) {
-            $this->last_error = "No se pudo abrir el archivo cargado.";
+            $this->last_error = "No se pudo leer el archivo.";
             utils::report_error(validation_error, $_FILES, $this->last_error);
 
             return false;
@@ -439,7 +441,7 @@ class producto extends table{
 
             if (!isset($row[2], $row[4], $row[6])) {
                 fclose($handle);
-                $this->last_error = "Formato invalido en la linea $linea_count. Se esperaban al menos 7 columnas.";
+                $this->last_error = "Formato inválido en la línea $linea_count. Se esperan al menos 7 columnas.";
                 utils::report_error(validation_error, $row, $this->last_error);
 
                 return $this->eliminar();
@@ -448,7 +450,7 @@ class producto extends table{
             $idmarca = $MARCA->get_idmarca(addslashes($nombre_marca));
             if (!$idmarca) {
                 fclose($handle);
-                $this->last_error = "La marca '$nombre_marca' no existe.";
+                $this->last_error = "Marca no valida: " . $nombre_marca;
                 utils::report_error(validation_error, $nombre_marca, $this->last_error);
 
                 if(!$this->eliminar()){
@@ -518,7 +520,7 @@ class producto extends table{
 
             if ($precio === '') {
                 fclose($handle);
-                $this->last_error = "El precio esta vacio en la linea $linea_count.";
+                $this->last_error = "Falta el precio en la línea $linea_count.";
                 utils::report_error(validation_error, $row, $this->last_error);
 
                 if(!$this->eliminar()){
@@ -586,7 +588,7 @@ class producto extends table{
     
                 return true;
             }else{
-                $this->last_error = "Error al eliminar los productos.";
+                $this->last_error = "No se pudieron eliminar los productos.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
     
                 return false;
@@ -616,7 +618,7 @@ class producto extends table{
     
                 return true;
             }else{
-                $this->last_error = "Error al activar los productos.";
+                $this->last_error = "No se pudieron activar los productos.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
     
                 return false;
@@ -659,7 +661,7 @@ class producto extends table{
 
             return $this->estado($idproducto);
         } else {
-            $this->last_error = "Error al cambiar de estado";
+            $this->last_error = "No se pudo cambiar el estado.";
             utils::report_error(validation_error, $idproducto, $this->last_error);
 
             return false;

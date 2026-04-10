@@ -24,6 +24,7 @@ class producto_precio extends table
         $this->ACCIONES['modificar']        = 29;
         $this->ACCIONES['crear_x_mant']     = 52;
         $this->ACCIONES['modificar_x_mant'] = 53;
+        $this->ACCIONES['cambiar_estado']   = $this->ACCIONES['modificar_x_mant'];
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'tabla_producto_precio') {
@@ -34,19 +35,31 @@ class producto_precio extends table
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Parametros faltantes");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence(['idproducto','precio'], $PARAMETROS, false)) {
-                    if ($resultado = $this->guardar($PARAMETROS['idproducto_precio'],$PARAMETROS['idproducto'],$PARAMETROS['precio'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
+                if (table::validate_parameter_existence(['idproducto','precio','idset_talla'], $PARAMETROS, false)) {
+                    if ($resultado = $this->guardar($PARAMETROS['idproducto_precio'],$PARAMETROS['idproducto'],$PARAMETROS['precio'],$PARAMETROS['idset_talla'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
                     }
                 } else {
                     self::end_error("Parametros faltantes");
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'cambiar_estado') {
+                if (table::validate_parameter_existence(['idproducto_precio'], $PARAMETROS, false)) {
+                    if ($resultado = $this->cambiar_estado($PARAMETROS['idproducto_precio'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
 
@@ -58,7 +71,7 @@ class producto_precio extends table
                         self::end_error($this->last_error);
                     }
                 } else {
-                    self::end_error("Parametros faltantes");
+                    self::end_error("Faltan datos requeridos.");
                 }
             }
         }
@@ -88,6 +101,13 @@ class producto_precio extends table
                 }
             }
         }
+
+        if ($precio <= 0) {
+            $this->last_error = "Precio inválido. Debe ser mayor a 0.";
+            utils::report_error(validation_error, $precio, $this->last_error);
+
+            return false;
+        }
         
         if($idproducto_precio == ''){
             if($mantenimiento == 'SI'){
@@ -97,16 +117,20 @@ class producto_precio extends table
             }
 
             if((new producto())->estado($idproducto) == 'INACTIVO'){
-                $this->last_error = "Error al guardar el producto precio, el producto se encuentra inactivo.";
+                $this->last_error = "El producto está inactivo.";
                 utils::report_error(bd_error, $idproducto,$this->last_error);
 
                 return false;
             }
 
-            $and = '';
+            $condicion_duplicado = "idproducto = '$idproducto' AND idset_talla = '$idset_talla'";
 
-            if(mysql::exists('producto_precio',"idproducto = '$idproducto' $and")){
-                $this->last_error = "Error al guardar el producto precio, ya existe un registro para el material del producto";
+            if ($idproducto_precio != '') {
+                $condicion_duplicado .= " AND idproducto_precio <> '$idproducto_precio'";
+            }
+
+            if(mysql::exists('producto_precio', $condicion_duplicado)){
+                $this->last_error = "El precio ya existe para este producto.";
                 utils::report_error(bd_error, $idproducto,$this->last_error);
 
                 return false;
@@ -128,7 +152,7 @@ class producto_precio extends table
 
                 return true;
             }else{
-                $this->last_error = "Error al guardar el producto precio";
+                $this->last_error = "No se pudo guardar el precio.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
 
                 return false;
@@ -142,13 +166,20 @@ class producto_precio extends table
             
 
             if((new producto())->estado($idproducto) == 'INACTIVO'){
-                $this->last_error = "Error al modificar el producto precio, el producto se encuentra inactivo.";
+                $this->last_error = "El producto está inactivo.";
                 utils::report_error(bd_error, $idproducto,$this->last_error);
 
                 return false;
             }
 
-            $and = '';
+            $condicion_duplicado = "idproducto = '$idproducto' AND idset_talla = '$idset_talla' AND idproducto_precio <> '$idproducto_precio'";
+
+            if(mysql::exists('producto_precio', $condicion_duplicado)){
+                $this->last_error = "El precio ya existe para este producto.";
+                utils::report_error(bd_error, $idproducto,$this->last_error);
+
+                return false;
+            }
 
             $DATOS = [];
             $DATOS['idproducto_precio']    = $idproducto_precio;
@@ -168,7 +199,7 @@ class producto_precio extends table
 
                 return true;
             }else{
-                $this->last_error = "Error al modificar el producto precio";
+                $this->last_error = "No se pudo actualizar el precio.";
                 utils::report_error(bd_error, $DATOS,$this->last_error);
 
                 return false;
@@ -185,7 +216,7 @@ class producto_precio extends table
 
             return true;
         }else{
-            $this->last_error = "Error al eliminar los precios.";
+            $this->last_error = "No se pudieron eliminar los precios.";
             utils::report_error(bd_error, $DATOS,$this->last_error);
 
             return false;
@@ -208,7 +239,7 @@ class producto_precio extends table
 
             return true;
         }else{
-            $this->last_error = "Error al activar los precios.";
+            $this->last_error = "No se pudieron activar los precios.";
             utils::report_error(bd_error, $DATOS,$this->last_error);
 
             return false;
@@ -224,7 +255,8 @@ class producto_precio extends table
                 idproducto_precio,
                 idproducto,
                 modelo,
-                material,
+                idset_talla,
+                set_talla,
                 precio,
                 estado
             FROM view_producto_precio
@@ -234,7 +266,7 @@ class producto_precio extends table
         $columnControl = true;
         $responsive    = true;
         $colReorder    = true;
-        $select        = true;
+        $select        = false;
         $buttons       = true;
         $paging        = true;
         $ordering      = true;
@@ -244,6 +276,8 @@ class producto_precio extends table
         $data_ = "";
         $data_  = " data-conf-columncontrol='" . ($columnControl ? "true" : "false") . "' ";
         $data_ .= " data-conf-rowgroup=''";
+        $data_ .= " data-conf-titulotabla='Listado de modelo: $modelo' ";
+        $data_ .= " data-conf-filename='Modelo' ";
         $data_ .= " data-conf-responsive='"    . ($responsive    ? "true" : "false") . "' ";
         $data_ .= " data-conf-colreorder='"    . ($colReorder    ? "true" : "false") . "' ";
         $data_ .= " data-conf-select='"        . ($select        ? "true" : "false") . "' ";
@@ -257,7 +291,7 @@ class producto_precio extends table
                         <tr>
                             <th>Id</th>
                             <th>Modelo</th>
-                            <th>Material</th>
+                            <th>Set talla</th>
                             <th>Precio</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -268,24 +302,25 @@ class producto_precio extends table
         while($row = mysql::getrowresult($sql)){
             $idproducto        = $row['idproducto'];
             $idproducto_precio = $row['idproducto_precio'];
-            $modelo            = $row['modelo'];
-            $material          = $row['material'];
+            $idset_talla       = $row['idset_talla'];
+            $set_talla       = $row['set_talla'];
             $precio            = $row['precio'];
             $estado            = $row['estado'];
 
             $btn = "<button class='btn btn-info btn-sm' onclick='
                     element(\"idproducto\").value = \"$idproducto\";
                     element(\"idproducto_precio\").value = \"$idproducto_precio\";
-                    element(\"material\").value = \"$material\";
+                    element(\"idset_talla\").value = \"$idset_talla\";
                     element(\"precio\").value = \"$precio\";
-                    showElements(\"div_form_precio_producto\");
-                    hideElements(\"div_form_busqueda,div_tabla_precios,div_botones_precio\");
+                    element(\"estado_precio\").value = \"$estado\";
+                    showElements(\"div_form_precio_producto,btn_cambiar_estado_precio\");
+                    hideElements(\"div_form_busqueda,div_botones_precio\");
                 '>Editar</button>";
 
             $tabla .= "<tr>
                         <td>$idproducto_precio</td>
                         <td>$modelo</td>
-                        <td>$material</td>
+                        <td>$set_talla</td>
                         <td>$precio</td>
                         <td>$estado</td>
                         <td>$btn</td>
@@ -319,5 +354,34 @@ class producto_precio extends table
             'idproducto_precio' => (int)$row['idproducto_precio'],
             'precio' => (float)$row['precio']
         ]);
+    }
+
+    public function estado($idproducto_precio)
+    {
+        return mysql::getvalue("SELECT estado FROM producto_precio WHERE idproducto_precio = '$idproducto_precio'");
+    }
+
+    public function cambiar_estado($idproducto_precio)
+    {
+        $security = new security($this->ACCIONES['cambiar_estado']);
+        $estado_actual = $this->estado($idproducto_precio);
+
+        $DATOS = [];
+        $DATOS['idproducto_precio']           = $idproducto_precio;
+        $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
+        $DATOS['usuario_modificacion'] = $security->get_actual_user();
+        $DATOS['fecha_modificacion']   = date("Y-m-d H:i:s");
+        $llaves                        = ['idproducto_precio'];
+
+        if (table::update_record($DATOS, $llaves)) {
+            $security->registrar_bitacora($this->ACCIONES['cambiar_estado'], $idproducto_precio, $DATOS['estado']);
+
+            return $this->estado($idproducto_precio);
+        } else {
+            $this->last_error = "No se pudo cambiar el estado.";
+            utils::report_error(validation_error, $idproducto_precio, $this->last_error);
+
+            return false;
+        }
     }
 }

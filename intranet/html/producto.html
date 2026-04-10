@@ -21,14 +21,14 @@
                         <div id="div_form_producto" style="display: none;">
                             <div class="row">
                                 <input type="hidden" id="idproducto">
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Marca</label>
                                     <select id="idmarca" class="form-control">
                                         [marcas]
                                     </select>
                                 </div>
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Temporada</label>
                                     <select id="idtemporada" class="form-control">
@@ -45,19 +45,12 @@
                                     <label>Modelo</label>
                                     <input type="text" id="modelo" class="form-control">
                                 </div>
-    
-                                
-    
-                            </div>
-    
-                            <div class="row mt-2">
 
-                                <div class="col-md-3 form-group">
-                                    <label>Set de Tallas</label>
-                                    <select id="idset_talla" class="form-control">
-                                        [set_tallas]
-                                    </select>
-                                </div>
+
+
+                            </div>
+
+                            <div class="row mt-2">
 
                                 <div class="col-md-3 form-group">
                                     <label>Color</label>
@@ -65,38 +58,38 @@
                                         [colores]
                                     </select>
                                 </div>
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Corte</label>
                                     <select id="idcorte" class="form-control">
                                         [cortes]
                                     </select>
                                 </div>
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Tipo Suela</label>
                                     <select id="idtipo_suela" class="form-control">
                                         [tipo_suelas]
                                     </select>
                                 </div>
-    
-                            </div>
-    
-                            <div class="row mt-2">
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Concepto</label>
                                     <select id="idconcepto" class="form-control">
                                         [conceptos]
                                     </select>
                                 </div>
-                                
+
+                            </div>
+
+                            <div class="row mt-2">
+
                                 <div class="col-md-3 form-group">
                                     <label>Estado</label>
                                     <input type="text" id="estado" class="form-control" readonly value="ACTIVO">
                                 </div>
 
-                                <div class="col-md-6 form-group d-flex align-items-end">
+                                <div class="col-md-9 form-group d-flex align-items-end">
                                     <button class="btn btn-primary" onclick="
                                         callback_guardar_producto = function(){
                                             notify_success('Producto guardado correctamente.');
@@ -113,33 +106,36 @@
                                         Cancelar
                                     </button>
 
-                                    <button id="btn_cambiar_estado" style="display: none;" class="btn btn-success ml-2 " onclick="
+                                    <button id="btn_cambiar_estado_producto" style="display: none;"
+                                        class="btn btn-success ml-2 " onclick="
                                         callback_cambiar_estado = function(){
                                             notify_success('Estado cambiado correctamente.');
                                             download_div_content('','producto','tabla','tabla_productos');
                                         }
+                                        desactivar_tabla('tabla_productos_datos');
+                                        activar_tabla('tabla_productos_datos');
                                         download_input_value('idproducto','producto','cambiar_estado','estado',callback_cambiar_estado);
                                     ">
                                         Cambiar estado
                                     </button>
                                 </div>
-    
+
                             </div>
                         </div>
-                        
+
 
                         <div id="div_tabla">
                             <button class="btn btn-primary" onclick="
-                                clearElements('idproducto,idmarca,idtemporada,idset_talla,idcolor,idcorte,idtipo_suela,idconcepto,modelo,linea');
-                                hideElements('div_tabla');
+                                clearElements('idproducto,idmarca,idtemporada,idcolor,idcorte,idtipo_suela,idconcepto,modelo,linea');
+                                hideElements('boton_nuevo');
                                 showElements('div_form_producto');
-                            ">
+                            " id="boton_nuevo">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                             <div class="table-responsive" id="tabla_productos">
                                 [tabla_productos]
                             </div>
-                        
+
                         </div>
 
                     </div>
@@ -160,32 +156,36 @@
                         <div id="div_form_precio_producto" style="display: none;">
                             <div class="row mt-2">
                                 <input type="hidden" id="idproducto_precio">
+                                <input type="hidden" id="estado_precio" value="ACTIVO">
+
                                 <div class="col-md-3 form-group">
-                                    <label>Material</label>
-                                    <input type="text" id="material" class="form-control">
+                                    <label>Set talla</label>
+                                    <select id="idset_talla" class="form-control">
+                                        [set_tallas]
+                                    </select>
                                 </div>
-    
+
                                 <div class="col-md-3 form-group">
                                     <label>Precio</label>
-                                    <input type="number" id="precio" class="form-control" step="0.01">
+                                    <input type="number" min="1" id="precio" class="form-control" step="0.01">
                                 </div>
-    
+
                                 <div class="col-md-3 form-group d-flex align-items-end">
                                     <button class="btn btn-success" onclick="
                                         callback_guardar_precio = function(){
                                             
                                             notify_success('Precio guardado correctamente.');
-                                            hideElements('div_form_precio_producto,div_form_producto');
-                                            showElements('div_form_busqueda,div_tabla_precios,div_tabla,div_botones_precio');
+                                            hideElements('div_form_precio_producto,btn_cambiar_estado_precio');
+                                            showElements('div_form_busqueda,div_tabla_precios,div_botones_precio');
                                             if(element('modelo_b').value != ''){
                                                 callback_guardar_precio = function(){
-                                                    tabla = activar_tabla('tabla_precios');
+                                                    tabla = activar_tabla('tabla_datos');
                                                 }
                                                 download_div_content('modelo='+element('modelo_b').value,'producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
                                             }
                                         }
                                         upload_action(
-                                            'idproducto,idproducto_precio,material,precio,estado=,mantenimiento=SI',
+                                            'idproducto,idproducto_precio,idset_talla,precio,estado=,mantenimiento=SI',
                                             'producto_precio',
                                             'guardar',
                                             callback_guardar_precio
@@ -194,11 +194,27 @@
                                         Guardar Precio
                                     </button>
                                     <button class="btn btn-secondary ml-2" onclick="
-                                        hideElements('div_form_precio_producto');
+                                        hideElements('div_form_precio_producto,btn_cambiar_estado_precio');
                                         showElements('div_form_busqueda,div_botones_precio,div_tabla_precios');
-                                        clearElements('idproducto_precio,material,precio');
+                                        clearElements('idproducto_precio,idset_talla,precio,estado_precio');
+                                        element('estado_precio').value = 'ACTIVO';
                                     ">
                                         Cancelar
+                                    </button>
+                                    <button id="btn_cambiar_estado_precio" style="display: none;"
+                                        class="btn btn-success ml-2 " onclick="
+                                        callback_cambiar_estado = function(){
+                                            notify_success('Estado cambiado correctamente.');
+                                            if(element('modelo_b').value != ''){
+                                                callback_refrescar_estado_precio = function(){
+                                                    tabla = activar_tabla('tabla_datos');
+                                                }
+                                                download_div_content('modelo='+element('modelo_b').value,'producto_precio','tabla_producto_precio','tabla_producto_precio',callback_refrescar_estado_precio);
+                                            }
+                                        }
+                                        download_input_value('idproducto_precio','producto_precio','cambiar_estado','estado_precio',callback_cambiar_estado);
+                                    ">
+                                        Cambiar estado
                                     </button>
                                 </div>
 
@@ -212,23 +228,25 @@
                                         notify_error('Seleccione un producto para agregar precios.');
                                         return;
                                     }
+                                    clearElements('idproducto_precio,idset_talla,precio,estado_precio');
+                                    element('estado_precio').value = 'ACTIVO';
                                     showElements('div_form_precio_producto');
-                                    hideElements('div_form_busqueda,div_tabla_precios,div_botones_precio');
+                                    hideElements('div_form_busqueda,div_botones_precio,btn_cambiar_estado_precio');
                                 ">
                                     <i class="fas fa-plus"></i> Nuevo
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div id="div_tabla_precios">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div class="table-responsive"  id="tabla_producto_precio" class="mt-3">
+                                    <div class="table-responsive" id="tabla_producto_precio" class="mt-3">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
 
                     </div>
 
@@ -238,4 +256,3 @@
         </div>
     </div>
 </div>
-
