@@ -1,7 +1,9 @@
 <?php
 date_default_timezone_set('America/Guatemala');
 require_once 'mysql.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($_SESSION['usuario'])) {
     header('Location: login.php');
     die();
@@ -16,7 +18,11 @@ class security extends mysql
     { //verificar opcion
         parent::__construct(); //incia conexion de base de datos
         $this->user  = $_SESSION['usuario'];
-        $this->idrol = mysql::getvalue("SELECT idrol FROM usuario WHERE usuario = '" . $this->user . "' and estado = 'ACTIVO' ", 'idrol');
+        if (!defined('IDROLCONSTANTE')) {
+            $idrol_constante = mysql::getvalue("SELECT idrol FROM usuario WHERE usuario = '" . $this->user . "' and estado = 'ACTIVO' ", 'idrol');
+            define('IDROLCONSTANTE', $idrol_constante);
+        }
+        $this->idrol = IDROLCONSTANTE;
         if (isset($idaccion)) {
             $this->validar_permiso_accion($idaccion);
         }
@@ -63,7 +69,11 @@ class security extends mysql
 
     private function rol_has_permission($idrol, $accion)
     {
-        $exists = mysql::getvalue("SELECT count(1) existe FROM rol_accion WHERE idaccion = '$accion' and idrol = '$idrol' ", "existe");
+        if (is_numeric($accion)) {
+            $exists = mysql::getvalue("SELECT count(1) existe FROM rol_accion WHERE idaccion = '$accion' and idrol = '$idrol' ", "existe");
+        } else {
+            $exists = mysql::getvalue("SELECT count(1) existe FROM rol_accion WHERE nombre = '$accion' and idrol = '$idrol' ", "existe");
+        }
         if ($exists > 0) {
             return true;
         } else {
