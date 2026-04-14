@@ -31,7 +31,7 @@ class pedido extends table{
         if(isset($PARAMETROS['operacion'])){
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence([ 'nopedido','idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte'], $PARAMETROS, false)) {
+                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte'], $PARAMETROS, false)) {
 
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -91,6 +91,8 @@ class pedido extends table{
         $DATA['temporadas']     = (new temporada())->option_activos();
         $DATA['set_tallas']     = (new set_talla())->options_activos();
         $DATA['transportes']    = (new transporte())->option_activas();
+        $usuario_actual         = (new security())->get_actual_user();
+        $DATA['nopedido_sugerido'] = $this->obtener_nopedido_sugerido($usuario_actual);
 
         $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, cliente, temporada, marca, estado, 
             fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
@@ -172,10 +174,30 @@ class pedido extends table{
         return $html->get_html();
     }
 
+    private function obtener_nopedido_sugerido($usuario, $incremento = 0)
+    {
+        $correlativo_usuario = strtoupper(trim((new usuario())->get_correlativo($usuario)));
+        if ($correlativo_usuario == '') {
+            $correlativo_usuario = 'JB';
+        }
+
+        $ultimo_numero = mysql::getvalue("SELECT MAX(CAST(SUBSTRING_INDEX(nopedido, '-', -1) AS UNSIGNED))
+            FROM pedido
+            WHERE nopedido LIKE '" . addslashes($correlativo_usuario) . "-%'");
+
+        if (!$ultimo_numero) {
+            $ultimo_numero = 0;
+        }
+
+        $siguiente = $ultimo_numero + 1 + $incremento;
+        return $correlativo_usuario . '-' . str_pad($siguiente, 4, '0', STR_PAD_LEFT);
+    }
+
     public function guardar($PARAMETROS)
     {
         $security = new security($this->ACCIONES['crear']);
         $usuario  = $security->get_actual_user();
+        $nopedido_manual = isset($PARAMETROS['nopedido']) ? trim($PARAMETROS['nopedido']) : '';
 
         if ($PARAMETROS['monto_descuento'] < 0 || $PARAMETROS['monto_descuento'] > 99) {
             $this->last_error = "El descuento debe estar entre 0 y 99%.";
@@ -183,15 +205,15 @@ class pedido extends table{
             return false;
         }
 
-        if (mysql::exists("pedido", "nopedido = '" . addslashes($PARAMETROS['nopedido']) . "'")) {
+        if ($nopedido_manual != '' && mysql::exists("pedido", "nopedido = '" . addslashes($nopedido_manual) . "'")) {
             $this->last_error = "El número de pedido ya existe";
-            utils::report_error(validation_error,$PARAMETROS['nopedido'],$this->last_error);
+            utils::report_error(validation_error, $nopedido_manual, $this->last_error);
             return false;
         }
 
         $DATOS = [];
         $DATOS['idcliente']             = $PARAMETROS['idcliente'];
-        $DATOS['nopedido']              = $PARAMETROS['nopedido'];
+        $DATOS['nopedido']              = 'TMP-' . uniqid();
         $DATOS['idmarca']               = $PARAMETROS['idmarca'];
         $DATOS['fecha_desde']           = $PARAMETROS['fecha_desde'];
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
@@ -206,6 +228,26 @@ class pedido extends table{
 
         if ($resultado = table::insert_record($DATOS)) {
             $idpedido = mysql::last_id();
+            $nopedido = $nopedido_manual;
+
+            if ($nopedido == '') {
+                $intento = 0;
+                $nopedido = $this->obtener_nopedido_sugerido($usuario, $intento);
+                while (mysql::exists("pedido", "nopedido = '" . addslashes($nopedido) . "'") && $intento < 100) {
+                    $intento++;
+                    $nopedido = $this->obtener_nopedido_sugerido($usuario, $intento);
+                }
+            }
+
+            $DATOS_ACTUALIZAR = [];
+            $DATOS_ACTUALIZAR['idpedido'] = $idpedido;
+            $DATOS_ACTUALIZAR['nopedido'] = $nopedido;
+            if (!table::update_record($DATOS_ACTUALIZAR, ['idpedido'])) {
+                $this->last_error = "Error al generar correlativo de pedido.";
+                utils::report_error(bd_error, $DATOS_ACTUALIZAR, $this->last_error);
+                return false;
+            }
+
             $security->registrar_bitacora($this->ACCIONES['crear'], $resultado, $idpedido);
 
             return $idpedido;
@@ -324,7 +366,7 @@ class pedido extends table{
         $nombre_usuario = $usuarioObj->get_nombre($usuario);
 
 
-        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
+        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, temporada, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
             FROM view_pedidos
             WHERE idpedido = '$idpedido'");
 
@@ -643,8 +685,12 @@ class pedido extends table{
             $DATA['email']                  = $PEDIDO['email'];
             $fecha1                         = strtotime($PEDIDO['fecha_desde']);
             $fecha2                         = strtotime($PEDIDO['fecha_hasta']);
-            $DATA['fecha_entrega']          = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
-                                                date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
+            if (($PEDIDO['idtemporada'] . '') == '100') {
+                $DATA['fecha_entrega'] = 'Despacho inmediato';
+            } else {
+                $DATA['fecha_entrega'] = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
+                    date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
+            }
             $DATA['transporte']             = $PEDIDO['transporte'];
             $DATA['nopedido']               = $PEDIDO['nopedido'];
             $DATA['descripcion_marca']      = $PEDIDO['descripcion_marca'];

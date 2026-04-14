@@ -96,24 +96,8 @@ class producto extends table{
 
     public function obtener_modelo($modelo, $idmarca, $idtemporada){
 
-        $modelo = addslashes($modelo);
-        $idmarca = (int)$idmarca;
-        $idtemporada = (int)$idtemporada;
-
-        $row = mysql::getrow("SELECT
-                p.idproducto,
-                p.modelo,
-                p.linea,
-                p.idmarca,
-                m.nombre AS marca
-            FROM producto p
-            INNER JOIN marca m
-                ON m.idmarca = p.idmarca
-            WHERE p.modelo = '$modelo'
-            AND p.idmarca = '$idmarca'
-            AND p.idtemporada = '$idtemporada'
-            AND p.estado = 'ACTIVO'
-            LIMIT 1");
+        $row = mysql::getrow("SELECT idproducto, modelo, linea, idmarca, marca
+            FROM view_producto_modelo WHERE modelo = '$modelo' AND idmarca = '$idmarca' AND idtemporada = '$idtemporada' LIMIT 1");
 
         if(!$row){
             $this->last_error = "No se encontro el modelo.";
@@ -123,9 +107,9 @@ class producto extends table{
 
         return json_encode([
             'idproducto' => (int)$row['idproducto'],
-            'codigo' => $row['modelo'],
-            'descripcion' => $row['linea'],
-            'marca' => $row['marca']
+            'codigo'     => $row['modelo'],
+            'descripcion'=> $row['linea'],
+            'marca'      => $row['marca']
         ]);
     }
 
@@ -157,25 +141,8 @@ class producto extends table{
 
     public function tabla()
     {   
-        $sql = mysql::getresult("
-            SELECT 
-                idproducto,
-                modelo,
-                linea,
-                idmarca,
-                marca,
-                idtemporada,
-                temporada,
-                idcolor,
-                color,
-                idcorte,
-                corte,
-                idtipo_suela,
-                tipo_suela,
-                idconcepto,
-                concepto,
-                estado,
-                precios
+        $sql = mysql::getresult("SELECT idproducto, modelo, linea, idmarca, marca, idtemporada, temporada, idcolor, color, idcorte,
+                corte, idtipo_suela, tipo_suela, idconcepto, concepto, estado, precios
             FROM view_producto
         ");
 
@@ -536,7 +503,7 @@ class producto extends table{
                     continue;
                 }
 
-                $idproducto = $this->guardar('', $idmarca, $idtemporada, '', $modelo, $idset_talla, '', '', '', '', 'BORRADOR');
+                $idproducto = $this->guardar('', $idmarca, $idtemporada, $linea, $modelo, '', '', '', '', 'BORRADOR', '');
 
                 if(!$idproducto){
                     fclose($handle);

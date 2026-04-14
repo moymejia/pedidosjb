@@ -250,15 +250,7 @@ class producto_precio extends table
     {   
         $modelo = addslashes($modelo);
 
-        $sql = mysql::getresult("
-            SELECT 
-                idproducto_precio,
-                idproducto,
-                modelo,
-                idset_talla,
-                set_talla,
-                precio,
-                estado
+        $sql = mysql::getresult("SELECT idproducto_precio, idproducto, modelo, idset_talla, set_talla, precio, estado
             FROM view_producto_precio
             WHERE modelo = '$modelo'
         ");
@@ -334,8 +326,6 @@ class producto_precio extends table
 
     public function obtener_precio_set($idproducto, $idset_talla)
     {
-        $idproducto = (int)$idproducto;
-        $idset_talla = (int)$idset_talla;
 
         $row = mysql::getrow("SELECT idproducto_precio, precio
             FROM producto_precio

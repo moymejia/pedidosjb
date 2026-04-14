@@ -113,7 +113,7 @@
                         <div class="form-row">
                             <div class="form-group m-b-6 col-md-3">
                                 <label for="nopedido">No. Pedido</label>
-                                <input type="text" class="form-control" id="nopedido" name="nopedido" required>
+                                <input type="text" class="form-control" id="nopedido" name="nopedido" value="[nopedido_sugerido]" placeholder="Se genera automaticamente">
                                 <span class="bar"></span>
                             </div>
 
@@ -239,7 +239,7 @@
                                     if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
                                     disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
                                 }
-                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,nopedido','pedido','guardar','idpedido',callback_guardar_pedido);
+                                download_input_value('idpedido,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email','pedido','guardar','idpedido',callback_guardar_pedido);
                                 ">Guardar</button>
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="

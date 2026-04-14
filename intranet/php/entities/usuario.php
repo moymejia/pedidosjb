@@ -86,7 +86,7 @@ class usuario extends table
 
     public function tabla_todos_usuarios()
     {
-        $result         = mysql::getresult("SELECT usuario, '' clave, nombre, email, estado, idrol, color, pin FROM usuario   ");
+        $result         = mysql::getresult("SELECT usuario, '' clave, nombre, email, estado, idrol, correlativo_usuario FROM usuario   ");
         $tabla_usuarios = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
@@ -95,8 +95,7 @@ class usuario extends table
 				<th>Nombre</th>
 				<th>Email</th>
 				<th>Rol</th>
-				<th>Color</th>
-				<th>Pin de venta</th>
+                <th>Correlativo usuario</th>
 				<th>Estado</th>
 			</tr>
 		</thead>
@@ -107,9 +106,7 @@ class usuario extends table
             $clave   = $row['clave'];
             $email   = $row['email'];
             $idrol   = $row['idrol'];
-            $color   = $row['color'];
-            $pin     = $row['pin'];
-            $color   = "<span style='background:$color;display:inline-block;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+            $correlativo_usuario = $row['correlativo_usuario'];
             $estado  = $row['estado'];
             //$row_data = getrowmysql("SELECT * FROM area WHERE idarea = '$idarea' ");
             $row_data = $row;
@@ -124,8 +121,7 @@ class usuario extends table
 				<td>$nombre</td>
 				<td>$email</td>
 				<td>$idrol</td>
-				<td>$color</td>
-				<td>$pin</td>
+                <td>$correlativo_usuario</td>
 				<td>$estado</td>
 			</tr>";
         }
@@ -137,7 +133,7 @@ class usuario extends table
     {
         $DATA                  = [];
         $DATA['roles_activos'] = objects::get_object('../entities/', 'rol')->options_roles_activos();
-        $result                = mysql::getresult("SELECT usuario, '' clave, nombre, email, estado, idrol, color, pin FROM usuario  WHERE estado = 'ACTIVO' ");
+        $result                = mysql::getresult("SELECT usuario, '' clave, nombre, email, estado, idrol, correlativo_usuario FROM usuario  WHERE estado = 'ACTIVO' ");
         $tabla_usuarios        = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
@@ -146,8 +142,7 @@ class usuario extends table
 				<th>Nombre</th>
 				<th>Email</th>
 				<th>Rol</th>
-				<th>Color</th>
-				<th>Pin de venta</th>
+                <th>Correlativo usuario</th>
 				<th>Estado</th>
 			</tr>
 		</thead>
@@ -159,9 +154,7 @@ class usuario extends table
             $clave   = $row['clave'];
             $email   = $row['email'];
             $idrol   = $row['idrol'];
-            $color   = $row['color'];
-            $pin     = $row['pin'];
-            $color   = "<span style='background:$color;display:inline-block;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+            $correlativo_usuario = $row['correlativo_usuario'];
             $estado  = $row['estado'];
             //$row_data = getrowmysql("SELECT * FROM area WHERE idarea = '$idarea' ");
             $row_data = $row;
@@ -176,8 +169,7 @@ class usuario extends table
 				<td>$nombre</td>
 				<td>$email</td>
 				<td>$idrol</td>
-				<td>$color</td>
-				<td>$pin</td>
+                <td>$correlativo_usuario</td>
 				<td>$estado</td>
 			</tr>";
         }
@@ -197,38 +189,27 @@ class usuario extends table
     private function guardar_usuario($PARAMETROS)
     {
 
-        $parametros_necesarios = ["usuario", "nombre", "clave", "email", "estado", "idrol", "color", "pin"];
+        $parametros_necesarios = ["usuario", "nombre", "clave", "email", "estado", "idrol", "correlativo_usuario"];
         if (!table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             die("|ERROR|Datos incompletos.");
         }
 
         $PARAMETROS = table::sanitize_array($PARAMETROS);
-        // validar que el pin sea numerico
-        if (!is_numeric($PARAMETROS['pin'])) {
-            self::report_error(validation_error, $PARAMETROS, "Pin no es numerico.");
-            self::end_error("Pin no es numerico, no se guardó el registro");
-        }
 
         if ($PARAMETROS['idrol'] == "") {
             self::report_error(validation_error, $PARAMETROS, "Rol no colocado.");
             self::end_error("Rol de usuario no colocado");
         }
 
-        // validacioes para el pin de venta.
-        $existe_pin = mysql::getvalue("SELECT count(1) cantidad FROM usuario WHERE pin = '{$PARAMETROS['pin']}' AND usuario != '{$PARAMETROS['usuario']}' ");
-        if ($existe_pin > 0) {
-            self::report_error(validation_error, $PARAMETROS, "Pin existente con otro usuario");
-            self::end_error("Pin invalido, no se guardó el registro");
+        if (trim($PARAMETROS['correlativo_usuario']) == "") {
+            self::report_error(validation_error, $PARAMETROS, "Correlativo de usuario no colocado.");
+            self::end_error("Correlativo de usuario no colocado");
         }
 
-        if ($PARAMETROS['pin'] > 9999 || $PARAMETROS['pin'] < 1) {
-            self::report_error(validation_error, $PARAMETROS, "Pin fuera de rango.");
-            self::end_error("Pin invalido, no se guardó el registro");
-        }
         if (!mysql::exists('usuario', " usuario = '{$PARAMETROS['usuario']}' ")) { //es usuario nuevo
             $security = new security($this->ACCIONES['crear']);
 
-            $valores_necesarios = ["usuario", "nombre", "clave", "email", "estado", "idrol", "color", "pin"];
+            $valores_necesarios = ["usuario", "nombre", "clave", "email", "estado", "idrol", "correlativo_usuario"];
             $DATOS              = table::create_subarray($valores_necesarios, $PARAMETROS);
             $clave              = $DATOS['clave'];
             if ($resultado = table::insert_record($DATOS)) {
@@ -244,7 +225,7 @@ class usuario extends table
         } else {
             $security = new security($this->ACCIONES['modificar']); //modificar registro de usuario
 
-            $valores_necesarios = ["usuario", "nombre", "email", "estado", "idrol", "color", "pin"];
+            $valores_necesarios = ["usuario", "nombre", "email", "estado", "idrol", "correlativo_usuario"];
             $DATOS              = table::create_subarray($valores_necesarios, $PARAMETROS);
             $llaves             = ["usuario"];
             if ($resultado = table::update_record($DATOS, $llaves)) {
@@ -293,6 +274,17 @@ class usuario extends table
     public function get_nombre($usuario)
     {
         return mysql::getvalue("SELECT nombre FROM pedidosjb_seguridad.usuario WHERE usuario = '$usuario' ");
+    }
+
+    public function get_correlativo($usuario)
+    {
+        $correlativo = mysql::getvalue("SELECT correlativo_usuario FROM pedidosjb_seguridad.usuario WHERE usuario = '$usuario' ");
+
+        if (!$correlativo) {
+            return 'JB';
+        }
+
+        return $correlativo;
     }
 
     public function get_usuario_actual()
