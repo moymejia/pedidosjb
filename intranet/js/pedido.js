@@ -491,6 +491,13 @@
     return val;
   }
 
+  function formatearMonto(val){
+    return Number(val || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
   function renderDetalle(){
 
     var tbody = element("detallePedidoBody");
@@ -529,11 +536,11 @@
         '<td>'+safe(linea.color_nombre)+'</td>' +
         '<td>'+safe(linea.marca)+'</td>' +
         '<td>'+safe(linea.material)+'</td>' +
-        '<td class="text-right">Q '+linea.precio.toFixed(2)+'</td>' +
+        '<td class="text-right">Q '+formatearMonto(linea.precio || 0)+'</td>' +
         '<td style="text-align:center;">' + '<img src="' + imgSrc + '" class="shoe-thumb">' + '</td>' +
         '<td>'+tablaTallas+'</td>' +
         '<td class="text-center"><strong>'+linea.cantidad_total+'</strong></td>' +
-        '<td class="text-right"><strong>Q '+linea.subtotal.toFixed(2)+'</strong></td>' +
+        '<td class="text-right"><strong>Q '+formatearMonto(linea.subtotal || 0)+'</strong></td>' +
         '<td>' +
         '<button class="btn btn-warning btn-sm btn-editar" data-index="'+index+'">Editar</button> ' +
         '<button class="btn btn-danger btn-sm btn-eliminar" data-index="'+index+'">Eliminar</button>' +

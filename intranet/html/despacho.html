@@ -1,0 +1,162 @@
+<input type="hidden" id="jsid" name="jsid" value="despacho">
+<input type="hidden" id="datatableid" name="datatableid" value="tabla_despachos_pedidos">
+<input type="hidden" id="idpedido" name="idpedido" value="">
+<input type="hidden" id="iddespacho" name="iddespacho" value="">
+
+<style>
+	#despachoApp .shoe-thumb {
+		width: 64px;
+		height: 48px;
+		object-fit: cover;
+		border-radius: 6px;
+		border: 1px solid #dee2e6;
+		background: #f8f9fa;
+	}
+
+	#despachoApp .tabla-tallas {
+		width: 100%;
+		text-align: center;
+		font-size: 11px;
+		border-collapse: collapse;
+	}
+
+	#despachoApp .tabla-tallas td {
+		border: none;
+		padding: 2px 4px;
+	}
+</style>
+
+<h4 class="card-title m-b-5 header-titulo">Despacho de pedidos</h4>
+
+<div class="margen-formulario" id="despachoApp">
+	<div id="div_tabla">
+		<button type="button" class="btn btn-primary m-b-10" onclick="despachoNuevo();">
+			<span class="btn-label"><i class="fas fa-plus"></i></span>Nuevo
+		</button>
+
+		<div class="table-responsive" id="lista_despachos_proceso">
+			[tabla_despachos_proceso]
+		</div>
+	</div>
+
+	<div id="div_form_despacho" style="display:none;">
+	<div class="card border mb-3">
+		<div class="card-header bg-info text-white">
+			<strong>Encabezado del despacho</strong>
+		</div>
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-2 form-group">
+					<label>Despacho</label>
+					<input type="text" id="despacho_seleccionado" class="form-control" readonly value="Nuevo">
+				</div>
+				<div class="col-md-4 form-group">
+					<label>Pedido seleccionado</label>
+					<input type="text" id="pedido_seleccionado" class="form-control" readonly value="Sin selección">
+				</div>
+				<div class="col-md-2 form-group">
+					<label>Monto flete <span class="text-danger">*</span></label>
+					<input type="number" id="monto_flete" class="form-control" value="" min="0.01" step="0.01" placeholder="0.00" required>
+				</div>
+				<div class="col-md-2 form-group">
+					<label>Monto otros</label>
+					<input type="number" id="monto_otros" class="form-control" value="0" min="0" step="0.01">
+				</div>
+				<div class="col-md-2 form-group">
+					<label>Fecha factura <span class="text-danger">*</span></label>
+					<input type="date" id="fecha_factura" class="form-control" required>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-4 form-group">
+					<label>Número de factura <span class="text-danger">*</span></label>
+					<input type="text" id="numero_factura" class="form-control" placeholder="Ej: FAC-2026-001" maxlength="50" required>
+				</div>
+				<div class="col-md-8 form-group">
+					<label>Observaciones</label>
+					<textarea id="observaciones" class="form-control" rows="2" maxlength="500" placeholder="Notas adicionales del despacho..."></textarea>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="panel_seleccion_pedido" class="card border mb-3">
+		<div class="card-header bg-secondary text-white">
+			<strong>Seleccione el pedido para crear el despacho</strong>
+		</div>
+		<div class="card-body">
+			<div id="lista_pedidos_cerrados" class="table-responsive">
+				[tabla_pedidos_cerrados]
+			</div>
+		</div>
+	</div>
+
+	<div id="detalle_despacho" style="display: none;">
+	<div class="row">
+		<div class="col-md-12">
+			<h5>Detalle del pedido por set</h5>
+			<p class="text-muted m-b-10">La selección se realiza por producto/set y se despachan todas las tallas pendientes de ese set.</p>
+		</div>
+	</div>
+
+		<div class="row mb-2 align-items-stretch">
+			<div class="col-md-3 mb-2">
+				<div class="border rounded p-2 h-100 bg-dark">
+					<div class="small text-muted">Líneas pendientes</div>
+					<div class="h5 mb-0" id="despacho_resumen_lineas">0</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-2">
+				<div class="border rounded p-2 h-100 bg-dark">
+					<div class="small text-muted">Pares pendientes</div>
+					<div class="h5 mb-0" id="despacho_resumen_pares">0</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-2">
+				<div class="border rounded p-2 h-100 bg-dark">
+					<div class="small text-muted">Subtotal pendiente</div>
+					<div class="h5 mb-0" id="despacho_resumen_subtotal">Q 0.00</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-2 d-flex align-items-end justify-content-md-end">
+				<button type="button" id="btn_todos" class="btn btn-secondary waves-effect waves-light" onclick="despachoMarcarTodosActivos();">Todos</button>
+			</div>
+		</div>
+
+		<div class="table-responsive">
+			<table class="display nowrap table table-hover table-bordered" cellspacing="0" width="100%">
+				<thead>
+					<tr>
+						<th>Seleccionar</th>
+						<th>Producto</th>
+						<th>Set</th>
+						<th>Color</th>
+						<th>Marca</th>
+						<th>Material</th>
+						<th>Precio</th>
+						<th>Imagen</th>
+						<th>Tallas</th>
+						<th>Pares</th>
+						<th>Subtotal</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody id="detalleDespachoBody">
+					<tr><td colspan="12" class="text-center text-muted py-4">Seleccione un pedido para ver el detalle.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+
+	<div id="acciones_despacho" class="m-t-10">
+		<button type="button" id="btn_despachar" class="btn btn-success waves-effect waves-light" onclick="despachoDespacharSeleccionadas();">
+			Despachar seleccionados
+		</button>
+		<button type="button" id="btn_cerrar_despacho" class="btn btn-danger waves-effect waves-light m-l-10" style="display:none;" onclick="despachoCerrarActual();">
+			Cerrar despacho
+		</button>
+		<button type="button" class="btn btn-inverse waves-effect waves-light m-l-10" onclick="despachoVolverLista();">Salir</button>
+	</div>
+	</div>
+</div>
