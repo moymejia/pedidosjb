@@ -139,7 +139,7 @@ class pedido extends table{
             $estado_actual = $this->estado($idpedido);
 
 
-            $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"
+                $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light btn-editar-pedido\" data-type=\"idpedido\" data-idpedido=\"$idpedido\" type=\"button\" onclick=\"
                     editar_registro('$str_data',this.parentNode.parentNode);
                     if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
                     showElements('detalles_del_pedido');

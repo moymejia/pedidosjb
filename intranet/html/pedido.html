@@ -92,6 +92,7 @@
     <input type="hidden" name="table" id="table" value="pedido">
     <input type="hidden" class="form-control form-control-sm" id="idpedido" name="idpedido" value="" readonly>
     <input type="hidden" class="form-control form-control-sm" id="idpedido_detalle" name="idpedido_detalle" value="" readonly>
+    <input type="hidden" id="idpedido_cargar" name="idpedido_cargar">
 
     <h4 class="card-title header-titulo">Pedidos</h4>
 
@@ -100,7 +101,7 @@
 
         <div class="card shadow-sm border-0">
 
-            <form class="" onsubmit="">
+            <form class="" onsubmit="" id="formulario_registro">
                 <!-- Encabezado -->
                 <div class="card mb-3 border">
                     
@@ -298,7 +299,7 @@
 
             <!-- Resumen -->
             <div class="" id="detalles_del_pedido" style="display: none;" >
-                <div class="row mb-3">
+                <div class="row mb-3" id="detalles_pedido">
 
                     <div class="col-md-3 mb-2">
                         <div class="border rounded p-3 h-100 bg-dark">
@@ -331,7 +332,7 @@
                 </div>
     
                 <!-- Ingreso de producto -->
-                <div class="card border mb-3">
+                <div class="card border mb-3" id="ingreso_producto"> 
     
                     <div class="card-header bg-warning d-flex justify-content-between align-items-center">
                         <strong>Agregar producto</strong>
@@ -431,7 +432,7 @@
     
                         <div class="table-responsive">
     
-                            <table class="table table-sm table-bordered table-hover mb-0 align-middle">
+                            <table class="table table-sm table-bordered table-hover mb-0 align-middle" id="tabla_detalles">
     
                                 <thead class="thead-light">
     

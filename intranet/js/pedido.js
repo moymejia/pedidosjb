@@ -617,6 +617,8 @@
   
   }
 
+  
+
   // =========================
   // EVENTOS
   // =========================
@@ -630,6 +632,29 @@
     element("btnBuscarEstilo").addEventListener("click", buscarEstilo);
     element("btnAgregarLinea").addEventListener("click", agregarProducto);
     element("btnLimpiarLinea").addEventListener("click", limpiarLinea);
+
+    var idpedido_cargar = elementValue('idpedido_cargar');
+    if (idpedido_cargar) {
+      element('idpedido_cargar').value = '';
+      element('idpedido').value = idpedido_cargar;
+
+      var contenedor = document.getElementById('detallePedidoBody');
+
+      if (contenedor) {
+        var observer = new MutationObserver(function () {
+          document.querySelectorAll('button')
+            .forEach(function(btn){ btn.disabled = true; });
+
+          observer.disconnect();
+        });
+
+        observer.observe(contenedor, { childList: true, subtree: true });
+      }
+
+      cargarDetallePedido();
+      hideElements('formulario_registro,ingreso_producto,tabla_datos_wrapper,btn_eliminar_pedido,btn_cerrar_pedido');
+      showElements('detalles_del_pedido,btn_imprimir');
+    }
   }
 
   init();
