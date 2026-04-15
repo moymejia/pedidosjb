@@ -353,7 +353,7 @@ class despacho extends table
 
 	public function crear_despacho($PARAMETROS)
 	{
-		$security = new security($this->ACCIONES['crear_despacho']);
+		$security = new security($this->ACCIONES['Crear_despacho']);
 		$usuario  = $security->get_actual_user();
 
 		$idpedido = addslashes($PARAMETROS['idpedido']);
@@ -446,7 +446,7 @@ class despacho extends table
 		}
 
 		$iddespacho = mysql::last_id();
-		$security->registrar_bitacora($this->ACCIONES['crear_despacho'], $iddespacho, 'CREAR_DESPACHO_MANUAL');
+		$security->registrar_bitacora($this->ACCIONES['Crear_despacho'], $iddespacho, 'CREAR_DESPACHO_MANUAL');
 
 		return json_encode([
 			'iddespacho' => (int)$iddespacho,
@@ -456,7 +456,7 @@ class despacho extends table
 
 	public function cerrar_despacho($iddespacho)
 	{
-		$security = new security($this->ACCIONES['cerrar_despacho']);
+		$security = new security($this->ACCIONES['Cerrar_despacho']);
 		$usuario  = $security->get_actual_user();
 
 		$iddespacho = addslashes($iddespacho);
@@ -500,7 +500,7 @@ class despacho extends table
 			return false;
 		}
 
-		$security->registrar_bitacora($this->ACCIONES['cerrar_despacho'], $iddespacho, 'ACTIVO->CERRADO');
+		$security->registrar_bitacora($this->ACCIONES['Cerrar_despacho'], $iddespacho, 'ACTIVO->CERRADO');
 		return true;
 	}
 
@@ -582,7 +582,7 @@ class despacho extends table
 
 	public function despachar_lineas($PARAMETROS)
 	{
-		$security = new security($this->ACCIONES['despachar_lineas']);
+		$security = new security($this->ACCIONES['Despachar_lineas']);
 		$usuario  = $security->get_actual_user();
 
 		$iddespacho = addslashes($PARAMETROS['iddespacho']);
@@ -756,7 +756,7 @@ class despacho extends table
 				return false;
 			}
 
-			$security->registrar_bitacora($this->ACCIONES['despachar_lineas'], $linea['idpedido_detalle'], 'PENDIENTE->DESPACHADO');
+			$security->registrar_bitacora($this->ACCIONES['Despachar_lineas'], $linea['idpedido_detalle'], 'PENDIENTE->DESPACHADO');
 		}
 
 		return json_encode(['iddespacho' => (int)$iddespacho]);

@@ -8,17 +8,20 @@ INSERT INTO pedidosjb_seguridad.opcion
 VALUES(51, 7, 'Despacho', 'despacho', 'cargar_opcion', 20, 'ACTIVO');
 
 INSERT INTO pedidosjb_seguridad.accion
-(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(243, 51, 'Opcion despacho', 'SI', NULL, NULL, NULL, 'ACTIVO');
+(idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES (51, 'Opcion despacho', 'SI', NULL, NULL, NULL, 'ACTIVO');
+
 INSERT INTO pedidosjb_seguridad.accion
-(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(244, 51, 'Crear_despacho', 'NO', NULL, NULL, NULL, 'ACTIVO');
+(idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES (51, 'Crear_despacho', 'NO', NULL, NULL, NULL, 'ACTIVO');
+
 INSERT INTO pedidosjb_seguridad.accion
-(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(245, 51, 'Despachar_lineas', 'NO', NULL, NULL, NULL, 'ACTIVO');
+(idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES (51, 'Despachar_lineas', 'NO', NULL, NULL, NULL, 'ACTIVO');
+
 INSERT INTO pedidosjb_seguridad.accion
-(idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(246, 51, 'Cerrar_despacho', 'NO', NULL, NULL, NULL, 'ACTIVO');
+(idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
+VALUES (51, 'Cerrar_despacho', 'NO', NULL, NULL, NULL, 'ACTIVO');
 
 
 

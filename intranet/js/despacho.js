@@ -182,7 +182,7 @@
             var tr = document.createElement('tr');
             var esSeleccionable = Number(linea.pares || 0) > 0 && despachoEsEditable();
             if (linea.selected) {
-                tr.classList.add('table-success');
+                tr.classList.add('despacho-selected-row');
             }
 
             var imgSrc = linea.imagen ? '../' + linea.imagen + '?x=' + Date.now() : 'https://via.placeholder.com/50';
@@ -225,8 +225,7 @@
         element('fecha_factura').value = '';
         setCamposEncabezadoEditable(true);
 
-        hideElements('detalle_despacho,btn_cerrar_despacho');
-        showElements('btn_despachar,btn_todos');
+        hideElements('detalle_despacho,btn_cerrar_despacho,btn_despachar,btn_todos');
         showElements('panel_seleccion_pedido');
     }
 
