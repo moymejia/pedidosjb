@@ -91,7 +91,8 @@ class pedido_detalle extends table{
 
     public function guardar($PARAMETROS)
     {
-        $security = new security($this->ACCIONES['crear_detalle']);
+        $es_edicion = isset($PARAMETROS['idpedido_detalle']);
+        $security = new security($es_edicion ? $this->ACCIONES['modificar_detalle'] : $this->ACCIONES['crear_detalle']);
         $usuario  = $security->get_actual_user();
 
         $idpedido           = (int)$PARAMETROS['idpedido'];
@@ -106,7 +107,7 @@ class pedido_detalle extends table{
         $ids_editar = [];
         $imagen_actual = null;
 
-        if (isset($PARAMETROS['idpedido_detalle'])) {
+        if ($es_edicion) {
             $ids_editar = is_array($PARAMETROS['idpedido_detalle']) ? $PARAMETROS['idpedido_detalle'] : [$PARAMETROS['idpedido_detalle']];
             $ids_editar = array_values(array_filter(array_map('intval', $ids_editar)));
         }
@@ -182,24 +183,131 @@ class pedido_detalle extends table{
             $security->registrar_bitacora($this->ACCIONES['crear_detalle'],$codigo_estilo,"Imagen guardada correctamente");
         }
 
+        $TALLAS = [];
+        foreach ($PARAMETROS as $key => $valor) {
+            if (strpos($key, 'talla_') !== 0) {
+                continue;
+            }
+
+            $idtalla = (int) str_replace('talla_', '', $key);
+            if ($idtalla <= 0) {
+                continue;
+            }
+
+            $TALLAS[$idtalla] = (int)$valor;
+        }
+
+        if (empty($TALLAS)) {
+            $this->last_error = "Debe ingresar al menos una talla.";
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+            return false;
+        }
+
         if (!empty($ids_editar)) {
-            foreach ($ids_editar as $idpedido_detalle) {
+            $sql_detalle_actual = mysql::getresult("SELECT idpedido_detalle, idtalla, cantidad_despachada, cantidad_pendiente, imagen
+                FROM pedido_detalle
+                WHERE idpedido_detalle IN (" . implode(',', $ids_editar) . ")");
+
+            if (!$sql_detalle_actual) {
+                $this->last_error = "Error al obtener el detalle actual del pedido.";
+                utils::report_error(bd_error, $ids_editar, $this->last_error);
+                return false;
+            }
+
+            $DETALLE_ACTUAL = [];
+            while ($row_detalle_actual = mysql::getrowresult($sql_detalle_actual)) {
+                $DETALLE_ACTUAL[(int)$row_detalle_actual['idtalla']] = $row_detalle_actual;
+            }
+
+            foreach ($TALLAS as $idtalla => $cantidad) {
+                if (isset($DETALLE_ACTUAL[$idtalla])) {
+                    $detalle_actual = $DETALLE_ACTUAL[$idtalla];
+                    $cantidad_despachada = (int)$detalle_actual['cantidad_despachada'];
+
+                    if ($cantidad < $cantidad_despachada) {
+                        $this->last_error = "La cantidad no puede ser menor a la cantidad ya despachada en la talla $idtalla.";
+                        utils::report_error(validation_error, ['idtalla' => $idtalla, 'cantidad' => $cantidad, 'cantidad_despachada' => $cantidad_despachada], $this->last_error);
+                        return false;
+                    }
+
+                    $DATOS = [];
+                    $DATOS['idpedido_detalle']      = (int)$detalle_actual['idpedido_detalle'];
+                    $DATOS['idproducto_precio']     = 'NULL';
+                    $DATOS['idproducto']            = $idproducto;
+                    $DATOS['idset_talla']           = $idset_talla;
+                    $DATOS['cantidad']              = $cantidad;
+                    $DATOS['precio_lista']          = $precio;
+                    $DATOS['precio_venta']          = $precio;
+                    $DATOS['imagen']                = $ruta_bd ? $ruta_bd : (!empty($imagen_actual) ? $imagen_actual : (!empty($detalle_actual['imagen']) ? $detalle_actual['imagen'] : 'NULL'));
+                    $DATOS['color_texto']           = $color_texto;
+                    $DATOS['material_texto']        = $material_texto;
+                    $DATOS['subtotal']              = $cantidad * $precio;
+                    $DATOS['cantidad_pendiente']    = $cantidad - $cantidad_despachada;
+                    $DATOS['usuario_modificacion']  = $usuario;
+
+                    if (!table::update_record($DATOS, ['idpedido_detalle'])) {
+                        $this->last_error = "Error al actualizar el detalle del pedido.";
+                        utils::report_error(bd_error, $DATOS, $this->last_error);
+                        return false;
+                    }
+
+                    $security->registrar_bitacora($this->ACCIONES['modificar_detalle'], $DATOS['idpedido_detalle']);
+                    unset($DETALLE_ACTUAL[$idtalla]);
+                    continue;
+                }
+
                 $DATOS = [];
-                $DATOS['idpedido_detalle'] = $idpedido_detalle;
+                $DATOS['idpedido']             = $idpedido;
+                $DATOS['idproducto_precio']    = 'NULL';
+                $DATOS['idproducto']           = $idproducto;
+                $DATOS['idset_talla']          = $idset_talla;
+                $DATOS['idtalla']              = $idtalla;
+                $DATOS['cantidad']             = $cantidad;
+                $DATOS['precio_lista']         = $precio;
+                $DATOS['precio_venta']         = $precio;
+                $DATOS['imagen']               = $ruta_bd ? $ruta_bd : (!empty($imagen_actual) ? $imagen_actual : 'NULL');
+                $DATOS['color_texto']          = $color_texto;
+                $DATOS['material_texto']       = $material_texto;
+                $DATOS['subtotal']             = $cantidad * $precio;
+                $DATOS['cantidad_despachada']  = 0;
+                $DATOS['cantidad_pendiente']   = $cantidad;
+                $DATOS['estado']               = 'ACTIVO';
+                $DATOS['usuario_creacion']     = $usuario;
+
+                if (table::insert_record($DATOS)) {
+                    $id = mysql::last_id();
+                    $security->registrar_bitacora($this->ACCIONES['modificar_detalle'], $id);
+                } else {
+                    $this->last_error = "Error al guardar talla $idtalla.";
+                    utils::report_error(bd_error, $DATOS, $this->last_error);
+                    return false;
+                }
+            }
+
+            foreach ($DETALLE_ACTUAL as $idtalla => $detalle_actual) {
+                $cantidad_despachada = (int)$detalle_actual['cantidad_despachada'];
+                if ($cantidad_despachada > 0) {
+                    $this->last_error = "No se puede eliminar la talla $idtalla porque ya tiene despacho registrado.";
+                    utils::report_error(validation_error, $detalle_actual, $this->last_error);
+                    return false;
+                }
+
+                $DATOS = [];
+                $DATOS['idpedido_detalle'] = (int)$detalle_actual['idpedido_detalle'];
 
                 if (!table::delete_record($DATOS)) {
                     $this->last_error = "Error al actualizar el detalle del pedido.";
                     utils::report_error(bd_error, $DATOS, $this->last_error);
                     return false;
                 }
+
+                $security->registrar_bitacora($this->ACCIONES['modificar_detalle'], $DATOS['idpedido_detalle'], 'Eliminar talla no incluida en edición');
             }
+
+            return true;
         }
 
-        foreach ($PARAMETROS as $key => $valor) {
-
-            if (strpos($key, 'talla_') !== 0) continue;
-            $idtalla  = (int) str_replace('talla_', '', $key);
-            $cantidad = (int)$valor;
+        foreach ($TALLAS as $idtalla => $cantidad) {
 
             $DATOS = [];
             $DATOS['idpedido']             = $idpedido;

@@ -1,6 +1,7 @@
 (function () {
 
   var IDS_CAMPOS_LINEA_EDITABLES = 'idset_talla,modelo,color,material';
+  var IDS_CAMPOS_LINEA_BLOQUEADOS_EDICION = 'idset_talla,modelo';
   var IDS_CAMPOS_LINEA_LIMPIAR = 'idset_talla,modelo,descripcionEstilo,color,material';
 
   // =========================
@@ -314,10 +315,10 @@
 
   function setCamposLineaBloqueados(bloqueados) {
     if (bloqueados) {
-      disableElements(IDS_CAMPOS_LINEA_EDITABLES);
+      disableElements(IDS_CAMPOS_LINEA_BLOQUEADOS_EDICION);
       return;
     }
-    enableElements(IDS_CAMPOS_LINEA_EDITABLES);
+    enableElements(IDS_CAMPOS_LINEA_BLOQUEADOS_EDICION);
   }
 
   function eliminarLinea(index){

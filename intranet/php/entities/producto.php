@@ -32,7 +32,7 @@ class producto extends table{
         $this->ACCIONES['crear_x_mante']       = 49;
         $this->ACCIONES['modificar_x_mante']   = 50;
         $this->ACCIONES['cambiar_est_x_mante'] = 51;
-        $this->ACCIONES['cambiar_estado']      = $this->ACCIONES['cambiar_est_x_mante'];
+        $this->ACCIONES['cambiar_estado']      = 51;
 
         if(isset($PARAMETROS['operacion'])){
 
@@ -99,6 +99,14 @@ class producto extends table{
         $row = mysql::getrow("SELECT idproducto, modelo, linea, idmarca, marca
             FROM view_producto_modelo WHERE modelo = '$modelo' AND idmarca = '$idmarca' AND idtemporada = '$idtemporada' LIMIT 1");
 
+        if (!$row && $this->es_temporada_despacho_inmediato($idtemporada)) {
+            $row = mysql::getrow("SELECT idproducto, modelo, linea, idmarca, marca
+                FROM view_producto_modelo
+                WHERE modelo = '$modelo' AND idmarca = '$idmarca'
+                ORDER BY idtemporada DESC, idproducto DESC
+                LIMIT 1");
+        }
+
         if(!$row){
             $this->last_error = "No se encontro el modelo.";
             utils::report_error(validation_error, $modelo, $this->last_error);
@@ -111,6 +119,18 @@ class producto extends table{
             'descripcion'=> $row['linea'],
             'marca'      => $row['marca']
         ]);
+    }
+
+    private function es_temporada_despacho_inmediato($idtemporada)
+    {
+        $idtemporada = (int)$idtemporada;
+
+        if ($idtemporada === 100) {
+            return true;
+        }
+
+        $nombre_temporada = mysql::getvalue("SELECT nombre FROM temporada WHERE idtemporada = '$idtemporada' LIMIT 1");
+        return stripos((string)$nombre_temporada, 'despacho inmediato') !== false;
     }
 
     public function cargar_opcion()
@@ -397,11 +417,27 @@ class producto extends table{
         while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
             $linea_count++;
 
+            // 🔥 LIMPIEZA COMPLETA DEL CSV (AQUÍ VA)
+            $row = array_map(function($value){
+                $value = trim($value);
+
+                // eliminar BOM (problema principal)
+                $value = preg_replace('/^\xEF\xBB\xBF/', '', $value);
+
+                // limpiar espacios raros
+                $value = str_replace(["\xC2\xA0"], ' ', $value);
+
+                // normalizar espacios
+                $value = preg_replace('/\s+/', ' ', $value);
+
+                return $value;
+            }, $row);
+
             if (!isset($row[0]) || trim($row[0]) === '') {
                 continue;
             }
 
-            $nombre_marca = trim($row[0]);
+            $nombre_marca = $row[0];
             if (strtoupper($nombre_marca) === 'MARCA') {
                 continue;
             }

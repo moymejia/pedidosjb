@@ -362,12 +362,6 @@ class despacho extends table
 		$_PEDIDO = new pedido();
 		$estado_pedido = $_PEDIDO->estado($idpedido);
 
-		if (!$estado_pedido) {
-			$this->last_error = 'Pedido no encontrado.';
-			utils::report_error(validation_error, $idpedido, $this->last_error);
-			return false;
-		}
-
 		if ($estado_pedido !== 'CERRADO') {
 			$this->last_error = 'El pedido debe estar en estado CERRADO.';
 			utils::report_error(validation_error, $idpedido, $this->last_error);
@@ -593,12 +587,6 @@ class despacho extends table
 			WHERE iddespacho = '" . $iddespacho . "'
 			LIMIT 1");
 
-		if (!$row_despacho) {
-			$this->last_error = 'Despacho no encontrado.';
-			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
-			return false;
-		}
-
 		if (($row_despacho['estado'] . '') !== 'ACTIVO') {
 			$this->last_error = 'El despacho seleccionado no esta ACTIVO.';
 			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -613,12 +601,6 @@ class despacho extends table
 
 		$_PEDIDO = new pedido();
 		$estado_pedido = $_PEDIDO->estado($idpedido);
-
-		if (!$estado_pedido) {
-			$this->last_error = 'Pedido no encontrado.';
-			utils::report_error(validation_error, $idpedido, $this->last_error);
-			return false;
-		}
 
 		if ($estado_pedido !== 'CERRADO') {
 			$this->last_error = 'El pedido debe estar en estado CERRADO.';
@@ -669,18 +651,6 @@ class despacho extends table
 				FROM pedido_detalle
 				WHERE idpedido_detalle = '" . addslashes($idpedido_detalle) . "'
 				LIMIT 1");
-
-			if (!$row_detalle) {
-				$this->last_error = 'La línea seleccionada no existe.';
-				utils::report_error(validation_error, $idpedido_detalle, $this->last_error);
-				return false;
-			}
-
-			if (($row_detalle['idpedido'] . '') !== ($idpedido . '')) {
-				$this->last_error = 'La línea no pertenece al pedido seleccionado.';
-				utils::report_error(validation_error, $idpedido_detalle, $this->last_error);
-				return false;
-			}
 
 			$cantidad_pendiente = $row_detalle['cantidad_pendiente'];
 			if ($cantidad_pendiente <= 0) {
