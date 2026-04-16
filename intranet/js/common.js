@@ -689,14 +689,10 @@ function activar_tabla(idtabla) {
             text: 'Reiniciar',
             className: 'btn btn-warning btn-sm',
             action: function (e, dt) {
-                dt.state.clear();
-                dt.search('');
-                var defaultOrder = rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']];
-                dt.order(defaultOrder);
-                if (colReorderUser && typeof dt.colReorder !== 'undefined' && typeof dt.colReorder.reset === 'function') {
-                    dt.colReorder.reset();
-                }
-                dt.draw();
+                var tableId = dt.table().node().id;
+                localStorage.removeItem('DataTables_' + dt.settings()[0].sInstance);
+                dt.destroy();
+                tabla = activar_tabla(tableId);
             }
         });
     }
