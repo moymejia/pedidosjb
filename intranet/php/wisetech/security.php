@@ -64,7 +64,15 @@ class security extends mysql
         $user        = $this->user;
         $referencia2 = ($referencia2 == null) ? 'null' : "'$referencia2'";
         $referencia3 = ($referencia3 == null) ? 'null' : "'$referencia3'";
-        mysql::put("INSERT INTO bitacora (idaccion, usuario, fechahora, referencia1, referencia2, referencia3) VALUES ('$idaccion', '$user', now(), '$referencia1', $referencia2, $referencia3 ) ");
+
+        // mysql::put("INSERT INTO bitacora (idaccion, usuario, fechahora, referencia1, referencia2, referencia3) VALUES ('$idaccion', '$user', now(), '$referencia1', $referencia2, $referencia3 ) ");
+        if (is_numeric($idaccion)) {
+            mysql::put("INSERT INTO bitacora (idaccion, usuario, fechahora, referencia1, referencia2, referencia3) 
+                        VALUES ('$idaccion', '$user', now(), '$referencia1', $referencia2, $referencia3)");
+        } else {
+            mysql::put("INSERT INTO bitacora (idaccion, accion, usuario, fechahora, referencia1, referencia2, referencia3) 
+                        VALUES (null, '$idaccion', '$user', now(), '$referencia1', $referencia2, $referencia3)");
+        }
     }
 
     private function rol_has_permission($idrol, $accion)
