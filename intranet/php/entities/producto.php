@@ -625,7 +625,7 @@ class producto extends table{
 
     public function cambiar_estado($idproducto)
     {
-        $security = new security($this->ACCIONES['cambiar_estado']);
+        $security = new security($this->ACCIONES['cambiar_est_x_mante']);
         $estado_actual = $this->estado($idproducto);
 
         $DATOS = [];
@@ -636,7 +636,7 @@ class producto extends table{
         $llaves                        = ['idproducto'];
 
         if (table::update_record($DATOS, $llaves)) {
-            $security->registrar_bitacora($this->ACCIONES['cambiar_estado'], $idproducto, $DATOS['estado']);
+            $security->registrar_bitacora($this->ACCIONES['cambiar_est_x_mante'], $idproducto, $DATOS['estado']);
 
             return $this->estado($idproducto);
         } else {

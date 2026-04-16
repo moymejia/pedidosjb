@@ -104,10 +104,13 @@
                                         class="btn btn-success ml-2 " onclick="
                                         callback_cambiar_estado = function(){
                                             notify_success('Estado cambiado correctamente.');
-                                            download_div_content('','producto','tabla','tabla_productos');
+                                            callback_activar_tabla = function(){
+                                                activar_tabla('tabla_productos_datos');
+                                            }
+                                            download_div_content('','producto','tabla','tabla_productos',callback_activar_tabla);
                                         }
                                         desactivar_tabla('tabla_productos_datos');
-                                        activar_tabla('tabla_productos_datos');
+                                        
                                         download_input_value('idproducto','producto','cambiar_estado','estado',callback_cambiar_estado);
                                     ">
                                         Cambiar estado
@@ -191,14 +194,14 @@
                                         Cancelar
                                     </button>
                                     <button id="btn_cambiar_estado_precio" style="display: none;"
-                                        class="btn btn-success ml-2 " onclick="
+                                        class="btn btn-warning ml-2 " onclick="
                                         callback_cambiar_estado = function(){
                                             notify_success('Estado cambiado correctamente.');
                                             if(element('modelo_b').value != ''){
                                                 callback_refrescar_estado_precio = function(){
                                                     tabla = activar_tabla('tabla_datos');
                                                 }
-                                                download_div_content('modelo='+element('modelo_b').value,'producto_precio','tabla_producto_precio','tabla_producto_precio',callback_refrescar_estado_precio);
+                                                download_div_content('modelo,idmarca','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_refrescar_estado_precio);
                                             }
                                         }
                                         download_input_value('idproducto_precio','producto_precio','cambiar_estado','estado_precio',callback_cambiar_estado);
