@@ -31,10 +31,10 @@ class usuario extends table
     {
         parent::__construct(prefijo . '_seguridad', 'usuario');
 
-        $this->ACCIONES['crear']          = 2;
-        $this->ACCIONES['modificar']      = 3;
-        $this->ACCIONES['cambiar_clave']  = 4;
-        $this->ACCIONES['cambiar_estado'] = 12;
+        $this->ACCIONES['crear']          = "Crear_usuario";
+        $this->ACCIONES['modificar']      = "Modificar_usuario";
+        $this->ACCIONES['cambiar_clave']  = "Cambiar_clave_usuario";
+        $this->ACCIONES['cambiar_estado'] = "Cambiar_estado_usuario";
 
         if (isset($PARAMETROS['operacion'])) {
 

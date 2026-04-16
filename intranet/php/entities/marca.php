@@ -16,10 +16,10 @@ class marca extends table
     {
         parent::__construct(prefijo . '_pedidos', 'marca');
 
-        $this->ACCIONES['opcion_marca']         = 210;
-        $this->ACCIONES['crear_marca']          = 211;
-        $this->ACCIONES['modificar_marca']      = 212;
-        $this->ACCIONES['cambiar_estado_marca'] = 213;
+        $this->ACCIONES['opcion_marca']         = "Opcion_marca";
+        $this->ACCIONES['crear_marca']          = "Crear_marca";
+        $this->ACCIONES['modificar_marca']      = "Modificar_marca";
+        $this->ACCIONES['cambiar_estado_marca'] = "Cambiar_estado_marca";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

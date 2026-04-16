@@ -17,9 +17,9 @@ class cliente_contacto extends table
     {
         parent::__construct(prefijo . '_pedidos', 'cliente_contacto');
 
-        $this->ACCIONES['crear_contacto']      = 34;
-        $this->ACCIONES['modificar_contacto']  = 35;
-        $this->ACCIONES['cambiar_estado']      = 36;
+        $this->ACCIONES['crear_contacto']      = "Crear_cliente_contacto";
+        $this->ACCIONES['modificar_contacto']  = "Modificar_cliente_contacto";
+        $this->ACCIONES['cambiar_estado']      = "Cambiar_estado_cliente_contacto";
 
         if (isset($PARAMETROS['operacion'])) {
 

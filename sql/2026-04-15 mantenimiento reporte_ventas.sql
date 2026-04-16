@@ -8,17 +8,18 @@ VALUES(52, 9, 'Ventas por temporada', 'ventas_temporada', 'cargar_opcion', 20, '
 
 INSERT INTO pedidosjb_seguridad.accion
 (idaccion, idopcion, nombre, indOpcion, referencia1, referencia2, referencia3, estado)
-VALUES(244, 52, 'opcion ventas temporada', 'SI', 'idpedido', 'idmarca', 'idtemporada', 'ACTIVO');
+VALUES(247, 52, 'opcion_ventas_temporada', 'SI', 'idpedido', 'idmarca', 'idtemporada', 'ACTIVO');
 
 INSERT INTO pedidosjb_seguridad.rol_accion
 (idrol, idaccion, indFavorito)
-VALUES(1, 244, 'NO');
+VALUES(1, 247, 'NO');
 
 -- pedidosjb_pedidos.view_ventas_temporada source
 
 CREATE OR REPLACE
 ALGORITHM = UNDEFINED VIEW `pedidosjb_pedidos`.`view_ventas_temporada` AS
 select
+    `p`.`nopedido` AS `nopedido`,
     `p`.`idpedido` AS `idpedido`,
     `p`.`idcliente` AS `idcliente`,
     `p`.`monto_total` AS `monto_total`,

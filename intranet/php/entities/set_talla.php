@@ -18,10 +18,10 @@ class set_talla extends table
     public function __construct($PARAMETROS = null)
     {
         parent::__construct(prefijo . '_pedidos', 'set_talla');
-        $this->ACCIONES['opcion']         = 214;
-        $this->ACCIONES['crear']          = 215;
-        $this->ACCIONES['modificar']      = 216;
-        $this->ACCIONES['cambiar_estado'] = 217;
+        $this->ACCIONES['opcion']         = "Opcion_set_talla";
+        $this->ACCIONES['crear']          = "Crear_set_talla";
+        $this->ACCIONES['modificar']      = "Modificar_set_talla";
+        $this->ACCIONES['cambiar_estado'] = "Cambiar_estado_set_talla";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

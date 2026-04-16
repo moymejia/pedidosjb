@@ -23,10 +23,10 @@ class pedido extends table{
 
         parent::__construct(prefijo . '_pedidos', 'pedido');
 
-        $this->ACCIONES['crear']            = 27;
-        $this->ACCIONES['eliminar']         = 28;
-        $this->ACCIONES['cerrar_pedido']    = 29;
-        $this->ACCIONES['imprimir_pedido']  = 33;
+        $this->ACCIONES['crear_pedido']     = "Crear_pedido";
+        $this->ACCIONES['eliminar_pedido']  = "Eliminar_pedido";
+        $this->ACCIONES['cerrar_pedido']    = "Cerrar_pedido";
+        $this->ACCIONES['imprimir_pedido']  = "Imprimir_pedido";
 
         if(isset($PARAMETROS['operacion'])){
 

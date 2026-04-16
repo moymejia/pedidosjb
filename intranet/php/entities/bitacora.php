@@ -14,7 +14,7 @@ class bitacora extends table
         parent::__construct(prefijo . '_seguridad', 'bitacora');
 
         $this->ACCIONES['opcion']             = 16;
-        $this->ACCIONES['consultar_bitacora'] = 17;
+        $this->ACCIONES['consultar_bitacora'] = "Consultar_bitacora";
 
         if (isset($PARAMETROS['operacion'])) {
 
@@ -68,7 +68,7 @@ class bitacora extends table
 
         $report->addTitle("Bitacora de operaciones");
 
-        $result = mysql::getresult("SELECT fecha, hora,  nombre_usuario usuario, opcion, accion, referencia_1, referencia_2, referencia_3
+        $result = mysql::getresult("SELECT fecha, hora,  nombre_usuario usuario, REPLACE(opcion, '_', ' ') opcion, REPLACE(accion, '_', ' ') accion, referencia_1, referencia_2, referencia_3
             FROM view_bitacora
             WHERE $filtro_fecha  $filtro_rol
             ORDER BY idbitacora DESC");

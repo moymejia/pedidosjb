@@ -17,9 +17,9 @@ class pedido_detalle extends table{
 
         parent::__construct(prefijo . '_pedidos', 'pedido_detalle');
 
-        $this->ACCIONES['crear_detalle']        = 30;
-        $this->ACCIONES['eliminar_detalle']     = 31;
-        $this->ACCIONES['modificar_detalle']    = 32;
+        $this->ACCIONES['crear_detalle']        = "Crear_detalle_pedido";
+        $this->ACCIONES['eliminar_detalle']     = "Eliminar_detalle_pedido";
+        $this->ACCIONES['modificar_detalle']    = "Modificar_detalle_pedido";
 
         if(isset($PARAMETROS['operacion'])){
 
@@ -68,7 +68,7 @@ class pedido_detalle extends table{
 
     public function obtener_por_pedido($idpedido)
     {
-        $result = mysql::getresult("SELECT idpedido_detalle, idpedido, idproducto, codigo, descripcion, idcolor, color, marca, material, precio_venta, cantidad, subtotal, 
+        $result = mysql::getresult("SELECT idpedido_detalle, idpedido, idproducto, codigo, descripcion, color, marca, material, precio_venta, cantidad, subtotal, 
             idtalla, talla, idproducto_precio, imagen, idset_talla, set_talla
         FROM view_pedido_detalle 
         WHERE idpedido = $idpedido

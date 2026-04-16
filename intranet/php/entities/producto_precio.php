@@ -18,18 +18,18 @@ class producto_precio extends table
 
         parent::__construct(prefijo . '_pedidos', 'producto_precio');
 
-        $this->ACCIONES['crear']            = 25;
-        $this->ACCIONES['eliminar']         = 26;
-        $this->ACCIONES['activar']          = 27;
-        $this->ACCIONES['modificar']        = 29;
-        $this->ACCIONES['crear_x_mant']     = 52;
-        $this->ACCIONES['modificar_x_mant'] = 53;
-        $this->ACCIONES['cambiar_estado']   = $this->ACCIONES['modificar_x_mant'];
+        $this->ACCIONES['crear']            = "Crear_color_producto_precio_carga_productos";
+        $this->ACCIONES['eliminar']         = "Eliminar_productos_borrador_carga_productos";
+        $this->ACCIONES['activar']          = "Activar_productos_carga_productos";
+        $this->ACCIONES['modificar']        = "Modificar_producto_carga_productos";
+        $this->ACCIONES['crear_x_mant']     = "Crear_producto_precio_mantenimiento";
+        $this->ACCIONES['modificar_x_mant'] = "Modificar_producto_precio_mantenimiento";
+        $this->ACCIONES['cambiar_estado']   = "Cambiar_estado_producto_precio";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'tabla_producto_precio') {
-                if (table::validate_parameter_existence(['modelo'], $PARAMETROS, false)) {
-                    if ($resultado = $this->tabla_producto_precio($PARAMETROS['modelo'])) {
+                if (table::validate_parameter_existence(['modelo','idmarca'], $PARAMETROS, false)) {
+                    if ($resultado = $this->tabla_producto_precio($PARAMETROS['modelo'], $PARAMETROS['idmarca'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -77,22 +77,16 @@ class producto_precio extends table
         }
     }
 
-    public function get_idproducto_precio($idproducto)
+    public function get_idproducto_precio($idproducto, $idset_talla)
     {
-        $row = mysql::getrow("SELECT idproducto_precio FROM producto_precio WHERE idproducto = '$idproducto'");
-
-        if(!empty($row['idproducto_precio'])){
-            return $row['idproducto_precio'];
-        }else{
-            return false;
-        }
+        return mysql::getvalue("SELECT idproducto_precio FROM producto_precio WHERE idproducto = '$idproducto' AND idset_talla = '$idset_talla'");
     }
 
     public function guardar($idproducto_precio,$idproducto,$precio,$idset_talla,$estado = '',$mantenimiento = 'NO') 
     {   
         if($mantenimiento !== 'SI'){
             if($idproducto_precio == ''){
-                $idprod_existente = $this->get_idproducto_precio($idproducto);
+                $idprod_existente = $this->get_idproducto_precio($idproducto, $idset_talla);
     
                 if($idprod_existente){
                     $idproducto_precio = $idprod_existente;
@@ -246,13 +240,14 @@ class producto_precio extends table
         }
     }
 
-    public function tabla_producto_precio($modelo)
+    public function tabla_producto_precio($modelo, $idmarca)
     {   
         $modelo = addslashes($modelo);
 
         $sql = mysql::getresult("SELECT idproducto_precio, idproducto, modelo, idset_talla, set_talla, precio, estado
             FROM view_producto_precio
             WHERE modelo = '$modelo'
+            AND idmarca = '$idmarca'
         ");
 
         $columnControl = true;

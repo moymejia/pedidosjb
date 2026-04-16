@@ -22,7 +22,7 @@ class ventas_temporada extends table
 
         parent::__construct(prefijo . '_pedidos', 'ventas_temporada');
 
-        $this->ACCIONES['opcion_ventas_temporada'] = 244;
+        $this->ACCIONES['opcion_ventas_temporada'] = "Opcion_ventas_temporada";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'reporte_ventas_temporada') {

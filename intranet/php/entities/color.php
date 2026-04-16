@@ -19,9 +19,9 @@ class color extends table
         parent::__construct(prefijo . '_pedidos', 'color');
 
         $this->ACCIONES['opcion_color']         = 227;
-        $this->ACCIONES['crear_color']          = 228;
-        $this->ACCIONES['modificar_color']      = 229;
-        $this->ACCIONES['cambiar_estado_color'] = 230;
+        $this->ACCIONES['crear_color']          = "Crear_color";
+        $this->ACCIONES['modificar_color']      = "Modificar_color";
+        $this->ACCIONES['cambiar_estado_color'] = "Cambiar_estado_color";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

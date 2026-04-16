@@ -15,10 +15,10 @@ class concepto extends table
     {
         parent::__construct(prefijo . '_pedidos', 'concepto');
 
-        $this->ACCIONES['opcion_concepto']         = 231;
-        $this->ACCIONES['crear_concepto']          = 232;
-        $this->ACCIONES['modificar_concepto']      = 233;
-        $this->ACCIONES['cambiar_estado_concepto'] = 234;
+        $this->ACCIONES['opcion_concepto']         = "Opcion_concepto";
+        $this->ACCIONES['crear_concepto']          = "Crear_concepto";
+        $this->ACCIONES['modificar_concepto']      = "Modificar_concepto";
+        $this->ACCIONES['cambiar_estado_concepto'] = "Cambiar_estado_concepto";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

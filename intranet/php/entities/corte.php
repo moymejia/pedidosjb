@@ -15,10 +15,10 @@ class corte extends table
     {
         parent::__construct(prefijo . '_pedidos', 'corte');
 
-        $this->ACCIONES['opcion_corte']         = 235;
-        $this->ACCIONES['crear_corte']          = 236;
-        $this->ACCIONES['modificar_corte']      = 237;
-        $this->ACCIONES['cambiar_estado_corte'] = 238;
+        $this->ACCIONES['opcion_corte']         = "Opcion_corte";
+        $this->ACCIONES['crear_corte']          = "Crear_corte";
+        $this->ACCIONES['modificar_corte']      = "Modificar_corte";
+        $this->ACCIONES['cambiar_estado_corte'] = "Cambiar_estado_corte";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

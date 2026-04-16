@@ -14,9 +14,9 @@ class rol extends table
     {
         parent::__construct(prefijo . '_seguridad', 'rol');
 
-        $this->ACCIONES['crear']          = 6;
-        $this->ACCIONES['modificar']      = 7;
-        $this->ACCIONES['cambiar_estado'] = 12;
+        $this->ACCIONES['crear']          = "Crear_rol";
+        $this->ACCIONES['modificar']      = "Modificar_rol";
+        $this->ACCIONES['cambiar_estado'] = "Cambiar_estado_rol";
 
         if (isset($PARAMETROS['operacion'])) {
 

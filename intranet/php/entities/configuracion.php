@@ -14,7 +14,7 @@ class configuracion extends table
     {
         parent::__construct(prefijo . '_seguridad', 'configuracion');
 
-        $this->ACCIONES['modificar'] = 19;
+        $this->ACCIONES['modificar'] = "Modificar_configuracion";
 
         if (isset($PARAMETROS['operacion'])) {
 

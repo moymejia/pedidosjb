@@ -16,10 +16,10 @@ class temporada extends table
     {
         parent::__construct(prefijo . '_pedidos', 'temporada');
 
-        $this->ACCIONES['opcion_temporada']         = 194;
-        $this->ACCIONES['crear_temporada']          = 195;
-        $this->ACCIONES['modificar_temporada']      = 196;
-        $this->ACCIONES['cambiar_estado_temporada'] = 197;
+        $this->ACCIONES['opcion_temporada']         = "Opcion_temporada";
+        $this->ACCIONES['crear_temporada']          = "Crear_temporada";
+        $this->ACCIONES['modificar_temporada']      = "Modificar_temporada";
+        $this->ACCIONES['cambiar_estado_temporada'] = "Cambiar_estado_temporada";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

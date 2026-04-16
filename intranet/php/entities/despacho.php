@@ -16,10 +16,10 @@ class despacho extends table
 	{
 		parent::__construct(prefijo . '_pedidos', 'despacho');
 
-		$this->ACCIONES['Opcion_despacho']            = 243;
-		$this->ACCIONES['Crear_despacho']    		  = 244;
-		$this->ACCIONES['Despachar_lineas']           = 245;
-		$this->ACCIONES['Cerrar_despacho']            = 246;
+		$this->ACCIONES['Opcion_despacho']            = "Opcion_despacho";
+		$this->ACCIONES['Crear_despacho']    		  = "Crear_despacho";
+		$this->ACCIONES['Despachar_lineas']           = "Despachar_lineas";
+		$this->ACCIONES['Cerrar_despacho']            = "Cerrar_despacho";
 
 		if (isset($PARAMETROS['operacion'])) {
 			if ($PARAMETROS['operacion'] == 'obtener_detalle_despacho') {

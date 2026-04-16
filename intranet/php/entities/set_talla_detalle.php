@@ -17,9 +17,9 @@ class set_talla_detalle extends table
     {
         parent::__construct(prefijo . '_pedidos', 'set_talla_detalle');
 
-        $this->ACCIONES['cargar_talla']  = 198;
-        $this->ACCIONES['agregar_talla'] = 220;
-        $this->ACCIONES['retirar_talla'] = 221;
+        $this->ACCIONES['cargar_talla']  = "Cargar_tallas_set_talla";
+        $this->ACCIONES['agregar_talla'] = "Agregar_talla";
+        $this->ACCIONES['retirar_talla'] = "Retirar_talla";
 
         if (isset($PARAMETROS['operacion'])) {
 

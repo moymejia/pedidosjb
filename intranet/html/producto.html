@@ -53,13 +53,6 @@
                             <div class="row mt-2">
 
                                 <div class="col-md-3 form-group">
-                                    <label>Color</label>
-                                    <select id="idcolor" class="form-control">
-                                        [colores]
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 form-group">
                                     <label>Corte</label>
                                     <select id="idcorte" class="form-control">
                                         [cortes]
@@ -80,22 +73,23 @@
                                     </select>
                                 </div>
 
-                            </div>
-
-                            <div class="row mt-2">
-
                                 <div class="col-md-3 form-group">
                                     <label>Estado</label>
                                     <input type="text" id="estado" class="form-control" readonly value="ACTIVO">
                                 </div>
 
+                            </div>
+
+                            <div class="row mt-2">
+
+                                
                                 <div class="col-md-9 form-group d-flex align-items-end">
                                     <button class="btn btn-primary" onclick="
                                         callback_guardar_producto = function(){
                                             notify_success('Producto guardado correctamente.');
                                             mostrar_opcion(10,'Producto','Mantenimientos');
                                         }
-                                        upload_action('idproducto,idmarca,idtemporada,linea,modelo,idset_talla,idcolor,idcorte,idtipo_suela,idconcepto,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
+                                        upload_action('idproducto,idmarca,idtemporada,linea,modelo,idset_talla,idcorte,idtipo_suela,idconcepto,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
                                     ">
                                         Guardar Producto
                                     </button>
@@ -126,7 +120,7 @@
 
                         <div id="div_tabla">
                             <button class="btn btn-primary" onclick="
-                                clearElements('idproducto,idmarca,idtemporada,idcolor,idcorte,idtipo_suela,idconcepto,modelo,linea');
+                                clearElements('idproducto,idmarca,idtemporada,idcorte,idtipo_suela,idconcepto,modelo,linea');
                                 hideElements('boton_nuevo');
                                 showElements('div_form_producto');
                             " id="boton_nuevo">
@@ -181,15 +175,10 @@
                                                 callback_guardar_precio = function(){
                                                     tabla = activar_tabla('tabla_datos');
                                                 }
-                                                download_div_content('modelo='+element('modelo_b').value,'producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
+                                                download_div_content('modelo,idmarca','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
                                             }
                                         }
-                                        upload_action(
-                                            'idproducto,idproducto_precio,idset_talla,precio,estado=,mantenimiento=SI',
-                                            'producto_precio',
-                                            'guardar',
-                                            callback_guardar_precio
-                                        );
+                                        upload_action('idproducto,idproducto_precio,idset_talla,precio,estado=,mantenimiento=SI','producto_precio','guardar',callback_guardar_precio);
                                     ">
                                         Guardar Precio
                                     </button>

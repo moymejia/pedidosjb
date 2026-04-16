@@ -17,10 +17,10 @@ class talla extends table
     {
         parent::__construct(prefijo . '_pedidos', 'talla');
 
-        $this->ACCIONES['opcion_talla']         = 198;
-        $this->ACCIONES['crear_talla']          = 199;
-        $this->ACCIONES['modificar_talla']      = 200;
-        $this->ACCIONES['cambiar_estado_talla'] = 201;
+        $this->ACCIONES['opcion_talla']         = "Opcion_talla";
+        $this->ACCIONES['crear_talla']          = "Crear_talla";
+        $this->ACCIONES['modificar_talla']      = "Modificar_talla";
+        $this->ACCIONES['cambiar_estado_talla'] = "Cambiar_estado_talla";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

@@ -16,10 +16,10 @@ class tipo_pago extends table
     {
         parent::__construct(prefijo . '_pedidos', 'tipo_pago');
 
-        $this->ACCIONES['opcion_tipo_pago']         = 202;
-        $this->ACCIONES['crear_tipo_pago']          = 203;
-        $this->ACCIONES['modificar_tipo_pago']      = 204;
-        $this->ACCIONES['cambiar_estado_tipo_pago'] = 205;
+        $this->ACCIONES['opcion_tipo_pago']         = "Opcion_tipo_pago";
+        $this->ACCIONES['crear_tipo_pago']          = "Crear_tipo_pago";
+        $this->ACCIONES['modificar_tipo_pago']      = "Modificar_tipo_pago";
+        $this->ACCIONES['cambiar_estado_tipo_pago'] = "Cambiar_estado_tipo_pago";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

@@ -181,6 +181,7 @@ $idubicacion = $row['idubicacion'];
                                     while ($row = $mysql->getrowresult($result)) {
 
                                         $menu       = $row['menu'];
+                                        $menu_mostrar = str_replace('_', ' ', $menu);
                                         $icono_menu = $row['icono'];
                                         $idmenu     = $row['idmenu'];
 
@@ -192,7 +193,7 @@ $idubicacion = $row['idubicacion'];
                                             <li>
                                                 <a class='has-arrow waves-effect waves-dark' href='#'>
                                                     <i class='$icono_menu'></i>
-                                                    <span class='hide-menu'>$menu</span>
+                                                    <span class='hide-menu'>$menu_mostrar</span>
                                                 </a>
 
                                                 <ul class='collapse'>
@@ -204,13 +205,14 @@ $idubicacion = $row['idubicacion'];
                                             while ($row_opcion = $mysql->getrowresult($result_opciones)) {
 
                                                 $opcion   = $row_opcion['opcion'];
+                                                $opcion_mostrar = str_replace('_', ' ', $opcion);
                                                 $idopcion = $row_opcion['idopcion'];
 
                                                 echo "
                                                     <li>
                                                         <a href='#'
-                                                        onclick=\"mostrar_opcion($idopcion,'$opcion','$menu');\">
-                                                            $opcion
+                                                        onclick=\"mostrar_opcion($idopcion,'$opcion_mostrar','$menu_mostrar');\">
+                                                            $opcion_mostrar
                                                         </a>
                                                     </li>
                                                 ";

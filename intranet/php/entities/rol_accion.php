@@ -13,11 +13,11 @@ class rol_accion extends table
     {
         parent::__construct(prefijo . '_seguridad', 'rol_accion');
 
-        $this->ACCIONES['cargar_permisos'] = 9;
-        $this->ACCIONES['agregar_permiso'] = 10;
-        $this->ACCIONES['retirar_permiso'] = 11;
-        $this->ACCIONES['agregar_opcion']  = 14;
-        $this->ACCIONES['retirar_opcion']  = 15;
+        $this->ACCIONES['cargar_permisos'] = "Cargar_permisos_rol";
+        $this->ACCIONES['agregar_permiso'] = "Agregar_permiso_accion";
+        $this->ACCIONES['retirar_permiso'] = "Retirar_permiso_accion";
+        $this->ACCIONES['agregar_opcion']  = "Agregar_opcion_accion";
+        $this->ACCIONES['retirar_opcion']  = "Retirar_opcion_accion";
 
         if (isset($PARAMETROS['operacion'])) {
 
@@ -138,6 +138,7 @@ class rol_accion extends table
         while ($OPCION = mysql::getrowresult($OPCIONES)) {
             $idopcion = $OPCION['idopcion'];
             $opcion   = $OPCION['opcion'];
+            $opcion_mostrar = str_replace('_', ' ', $opcion);
             $permisos_actuales .= "<div class=\"card m-b-10\">
                 <div class=\"card-header\" style=\"background:var(--icons-color); color:white;\">
                     
@@ -154,7 +155,7 @@ class rol_accion extends table
                             upload_action('idrol,idopcion','rol_accion','retirar_opcion');
                         \">
 
-                        <span style='text-transform:uppercase;font-weight:bold;'>$opcion</span>
+                        <span style='text-transform:uppercase;font-weight:bold;'>$opcion_mostrar</span>
                         <small>quitar</small>
 
                     </span>
@@ -186,6 +187,7 @@ class rol_accion extends table
             while ($ACCION = mysql::getrowresult($ACCIONES)) {
                 $idaccion     = $ACCION['idaccion'];
                 $accion       = $ACCION['accion'];
+                $accion_mostrar = str_replace('_', ' ', $accion);
                 $estado       = $ACCION['estado'];
                 $fondo_actual = ($estado == 'activo') ? 'lightgreen' : 'lightcoral';
                 $acciones .= "<p class=\"card-text\" id='accion_$idaccion' style='text-align:center;color:black;background:$fondo_actual;' onclick=\"
@@ -202,7 +204,7 @@ class rol_accion extends table
 					}
 				\">
 					<input type='hidden' id='estado_accion_$idaccion' value='$estado' >
-					$accion
+					$accion_mostrar
 				</p>";
             }
             $permisos_actuales = str_replace('[acciones]', $acciones, $permisos_actuales);
@@ -214,6 +216,7 @@ class rol_accion extends table
         while ($OPCION = mysql::getrowresult($OPCIONES)) {
             $idopcion = $OPCION['idopcion'];
             $opcion   = $OPCION['opcion'];
+            $opcion_mostrar = str_replace('_', ' ', $opcion);
             $permisos_disponibles .= "<div class=\"card\">
 			<div class=\"card-header\" onclick=\"
 				delete callback_upload;
@@ -224,7 +227,7 @@ class rol_accion extends table
 				}
 				element('idopcion').value = $idopcion
 				upload_action('idrol,idopcion','rol_accion','agregar_opcion');
-			\">$opcion</div>
+			\">$opcion_mostrar</div>
 			</div>
 			";
         }

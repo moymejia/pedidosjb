@@ -15,10 +15,10 @@ class tipo_suela extends table
     {
         parent::__construct(prefijo . '_pedidos', 'tipo_suela');
 
-        $this->ACCIONES['opcion_tipo_suela']         = 239;
-        $this->ACCIONES['crear_tipo_suela']          = 240;
-        $this->ACCIONES['modificar_tipo_suela']      = 241;
-        $this->ACCIONES['cambiar_estado_tipo_suela'] = 242;
+        $this->ACCIONES['opcion_tipo_suela']         = "Opcion_tipo_suela";
+        $this->ACCIONES['crear_tipo_suela']          = "Crear_tipo_suela";
+        $this->ACCIONES['modificar_tipo_suela']      = "Modificar_tipo_suela";
+        $this->ACCIONES['cambiar_estado_tipo_suela'] = "Cambiar_estado_tipo_suela";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

@@ -17,10 +17,10 @@ class tipo_contacto extends table
     {
         parent::__construct(prefijo . '_pedidos', 'tipo_contacto');
 
-        $this->ACCIONES['opcion_tipo_contacto']         = 190;
-        $this->ACCIONES['crear_tipo_contacto']          = 191;
-        $this->ACCIONES['modificar_tipo_contacto']      = 192;
-        $this->ACCIONES['cambiar_estado_tipo_contacto'] = 193;
+        $this->ACCIONES['opcion_tipo_contacto']         = "Opcion_tipo_contacto";
+        $this->ACCIONES['crear_tipo_contacto']          = "Crear_tipo_contacto";
+        $this->ACCIONES['modificar_tipo_contacto']      = "Modificar_tipo_contacto";
+        $this->ACCIONES['cambiar_estado_tipo_contacto'] = "Cambiar_estado_tipo_contacto";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

@@ -18,10 +18,10 @@ class cliente extends table
     {
         parent::__construct(prefijo . '_pedidos', 'cliente');
 
-        $this->ACCIONES['opcion_cliente']         = 36;
-        $this->ACCIONES['crear_cliente']          = 37;
-        $this->ACCIONES['modificar_cliente']      = 38;
-        $this->ACCIONES['cambiar_estado_cliente'] = 39;
+        $this->ACCIONES['opcion_cliente']         = "Opcion_cliente";
+        $this->ACCIONES['crear_cliente']          = "Crear_cliente";
+        $this->ACCIONES['modificar_cliente']      = "Modificar_cliente";
+        $this->ACCIONES['cambiar_estado_cliente'] = "Cambiar_estado_cliente";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

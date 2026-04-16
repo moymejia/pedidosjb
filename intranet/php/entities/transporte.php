@@ -17,10 +17,10 @@ class transporte extends table
 
         parent::__construct(prefijo . '_pedidos', 'transporte');
 
-        $this->ACCIONES['opcion_transporte']         = 223;
-        $this->ACCIONES['crear_transporte']          = 224;
-        $this->ACCIONES['modificar_transporte']      = 225;
-        $this->ACCIONES['cambiar_estado_transporte'] = 226;
+        $this->ACCIONES['opcion_transporte']         = "Opcion_transporte";
+        $this->ACCIONES['crear_transporte']          = "Crear_transporte";
+        $this->ACCIONES['modificar_transporte']      = "Modificar_transporte";
+        $this->ACCIONES['cambiar_estado_transporte'] = "Cambiar_estado_transporte";
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'guardar') {

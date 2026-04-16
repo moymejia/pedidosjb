@@ -12,7 +12,7 @@ class menu extends table{
     public function __construct($PARAMETROS = null){
         parent::__construct(prefijo . '_seguridad', 'usuario');
 
-        $this->ACCIONES['modificar'] = 21;
+        $this->ACCIONES['modificar'] = "Modificar_orden_de_menus";
 
         if(isset($PARAMETROS['operacion'])){
 
