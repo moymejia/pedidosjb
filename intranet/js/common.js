@@ -652,10 +652,6 @@ function activate_select2() {
 
 //DATA TABLES
 function activar_tabla(idtabla) {
-    //
-
-    //
-
     var tabla = document.getElementById(idtabla);
     var ds = tabla.dataset;
     var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");
@@ -677,6 +673,7 @@ function activar_tabla(idtabla) {
     });
     var rowGroupUser = (indiceReal !== -1);
 
+    var resetUser = ds.confReset === "true";
     var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
@@ -687,6 +684,22 @@ function activar_tabla(idtabla) {
     });
 
     var botones = [];
+    if (resetUser) {
+        botones.push({
+            text: 'Reiniciar',
+            className: 'btn btn-warning btn-sm',
+            action: function (e, dt) {
+                dt.state.clear();
+                dt.search('');
+                var defaultOrder = rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']];
+                dt.order(defaultOrder);
+                if (colReorderUser && typeof dt.colReorder !== 'undefined' && typeof dt.colReorder.reset === 'function') {
+                    dt.colReorder.reset();
+                }
+                dt.draw();
+            }
+        });
+    }
     if (buttonsUser) {
         botones.push(
             {

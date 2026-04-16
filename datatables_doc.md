@@ -101,6 +101,18 @@ Además:
 
 ---
 
+## **$reset**
+Agrega un botón **"Reiniciar"** al inicio de la barra de herramientas (antes de los botones de exportación).  
+
+Al presionarlo, la tabla vuelve a su estado inicial:
+- Limpia el estado guardado en localStorage
+- Borra el texto del buscador
+- Restaura el orden de columnas por defecto
+- Resetea el reordenamiento de columnas (si `colReorder` está activo)
+- Redibuja la tabla
+
+---
+
 ## **$tituloTabla**
 Esta función permite asignar un título descriptivo a la tabla que se va a imprimir o exportar.  
 
@@ -162,8 +174,7 @@ En el script que genera la tabla y antes de crear el encabezado de la tabla se d
         $order         = true;
         $rowGroup      = false;
         $tituloTabla = ‘Listado de modelo: $modelo’
-        $fileName = ‘Modelos’
-```
+        $fileName = ‘Modelos’        $reset       = true```
 
 Estos se agregarán como valores data-  al encabezado de la tabla, para que sean leídos por el script de js activar_tabla. 
 
@@ -180,7 +191,8 @@ Estos se agregarán como valores data-  al encabezado de la tabla, para que sean
         $data_ .= " data-conf-paging='"        . ($paging        ? "true" : "false") . "' ";
         $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
-        $data_ .= " data-conf-rowgroup='"       . (!$rowGroup        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup='"      . (!$rowGroup        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
 
 $tabla_productos = "<table id='tabla_datos'   $data_   class='display nowrap table table-hover   table-bordered datatable' cellspacing='0' width='100%'>
 ```
