@@ -259,6 +259,7 @@ class producto_precio extends table
         $ordering      = true;
         $order         = true;
         $rowGroup      = false;
+        $reset         = true;
 
         $data_ = "";
         $data_  = " data-conf-columncontrol='" . ($columnControl ? "true" : "false") . "' ";
@@ -272,6 +273,7 @@ class producto_precio extends table
         $data_ .= " data-conf-paging='"        . ($paging        ? "true" : "false") . "' ";
         $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
+        $data_ .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
 
         $tabla = '<table id="tabla_datos" '.$data_.' class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
                     <thead>

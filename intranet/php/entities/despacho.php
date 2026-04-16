@@ -119,6 +119,7 @@ class despacho extends table
 		$ordering      = true;
 		$order         = true;
 		$rowGroup      = false;
+		$reset         = true;
 		$tituloTabla   = 'Despachos en proceso';
 		$fileName      = 'Despachos_Proceso';
 
@@ -135,6 +136,7 @@ class despacho extends table
 		$data_ .= " data-conf-ordering='" . ($ordering ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
 
 		$tabla = "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
 			<thead>
@@ -207,6 +209,7 @@ class despacho extends table
 		$ordering      = true;
 		$order         = true;
 		$rowGroup      = false;
+		$reset         = true;
 		$tituloTabla   = 'Pedidos cerrados para despacho';
 		$fileName      = 'Despachos';
 
@@ -223,6 +226,7 @@ class despacho extends table
 		$data_ .= " data-conf-ordering='" . ($ordering ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
 
 		$tabla = "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
 			<thead>
