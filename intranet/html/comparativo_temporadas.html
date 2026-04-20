@@ -1,0 +1,61 @@
+<h4 class="card-title m-b-5 header-titulo">Ventas por temporada</h4>
+<form class="margen-formulario" id="formulario_reporte">
+
+    <input type="hidden" id="jsid" name="jsid" value="comparativo_temporadas">
+    <input type="hidden" id="idpedido_cargar" name="idpedido_cargar">
+
+    <div class="row">
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idtemporada">Temporada</label>
+            <select class="form-control select2" id="idtemporada" name="idtemporada" multiple onchange="
+                clearElements('idcliente,idmarca');
+                
+                var temporadas_parametro = get_temporadas_parametro();
+                download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_clientes_temporadas', 'idcliente');
+                download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_marcas_temporadas', 'idmarca');
+            ">
+                [temporadas_activas]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idcliente">Cliente</label>
+            <select class="form-control select2" id="idcliente" name="idcliente" onchange="
+                if (elementValue('idcliente') == '') { 
+                    enableElements('idmarca');
+                } else {
+                    disableElements('idmarca');
+                }
+            ">
+                [clientes_activos]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idmarca">Marca</label>
+            <select class="form-control select2" id="idmarca" name="idmarca" onchange="
+                if (elementValue('idmarca') == '') { 
+                    enableElements('idcliente');
+                } else {
+                    disableElements('idcliente');
+                }
+            ">
+                [marcas_activas]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group col-md-3 m-t-30">
+            <button type="button" class="btn btn-success waves-effect waves-light m-r-10" onclick="generar_comparativo();
+            ">Generar reporte</button>
+            <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                onclick="
+                    mostrar_opcion(53,'Comparativo por temporadas','Reportes de ventas');
+                ">Limpiar</button>
+        </div>
+    </div>
+</form>
+<hr>
+<!-- -->
+<div class="table-responsive" id="lista_ventas_temporada">
+    [tabla]
+</div>

@@ -638,7 +638,7 @@
       element('idpedido_cargar').value = '';
       element('idpedido').value = idpedido_cargar;
 
-      var contenedor = document.getElementById('detallePedidoBody');
+      var contenedor = objeto('detallePedidoBody');
 
       if (contenedor) {
         var observer = new MutationObserver(function () {
