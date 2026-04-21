@@ -1,8 +1,10 @@
-<h4 class="card-title m-b-5 header-titulo">Ventas por temporada</h4>
+<h4 class="card-title m-b-5 header-titulo">Comparativo de ventas por temporadas</h4>
 <form class="margen-formulario" id="formulario_reporte">
 
     <input type="hidden" id="jsid" name="jsid" value="comparativo_temporadas">
-    <input type="hidden" id="idpedido_cargar" name="idpedido_cargar">
+    <input type="hidden" id="idtemporada_cargar" name="idtemporada_cargar">
+    <input type="hidden" id="idcliente_cargar" name="idcliente_cargar">
+    <input type="hidden" id="idmarca_cargar" name="idmarca_cargar">
 
     <div class="row">
         <div class="form-group m-b-5 col-md-3">
@@ -14,7 +16,7 @@
                 if (temporadas_parametro == '') {
                     return false;
                 }
-                
+
                 download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_clientes_temporadas', 'idcliente');
                 download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_marcas_temporadas', 'idmarca');
             ">

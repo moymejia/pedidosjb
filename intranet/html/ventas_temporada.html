@@ -3,6 +3,9 @@
 
     <input type="hidden" id="jsid" name="jsid" value="ventas_temporada">
     <input type="hidden" id="idpedido_cargar" name="idpedido_cargar">
+    <input type="hidden" id="idtemporada_cargar" name="idtemporada_cargar">
+    <input type="hidden" id="idcliente_cargar" name="idcliente_cargar">
+    <input type="hidden" id="idmarca_cargar" name="idmarca_cargar">
 
     <div class="row">
         <div class="form-group m-b-5 col-md-3">
@@ -27,7 +30,7 @@
             <span class="bar"></span>
         </div>
         <div class="form-group col-md-3 m-t-30">
-            <button type="button" class="btn btn-success waves-effect waves-light m-r-10" onclick="
+            <button type="button" id="generar_reporte" class="btn btn-success waves-effect waves-light m-r-10" onclick="
                 callback_reporte = function () {
                     showElement('lista_ventas_temporada');
                 };
