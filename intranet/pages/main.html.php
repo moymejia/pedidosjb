@@ -49,6 +49,26 @@ $idubicacion = $row['idubicacion'];
     <link href="css/pages/tab-page.css" rel="stylesheet">
     <link href="css/colors/default-dark.css" id="theme" rel="stylesheet">
     <link href="../css/common.css" rel="stylesheet">
+    <style>
+        .inicio_logo_wrap {
+            min-height: 560px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ffffff, #3a3a3c, #f22800);
+            border-radius: 14px;
+            border: 1px solid #3A3A3C;
+            padding: 24px;
+        }
+
+        .inicio_logo_img {
+            width: 100%;
+            max-width: 420px;
+            height: auto;
+            display: inline-block;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.14));
+        }
+    </style>
     <!-- inicio de data table -->
     <link rel="stylesheet" href="../assets/plugins/datatables2/dataTables.dataTables.css" >
     <link rel="stylesheet" href="../assets/plugins/datatables2/columnControl.dataTables.min.css" >
@@ -289,6 +309,11 @@ $idubicacion = $row['idubicacion'];
                     <div class="col-12">
                         <div class="card">
                         <div class="card-body" id="contenedor_principal" style="min-height: 600px; border: 3px solid var(--border-card); padding:20px; background-color: var(--brg-card)">
+                                <div class="inicio_logo_wrap">
+                                    <div class="inicio_logo_card">
+                                        <img src="../img/jbr_logo.png" alt="JBR Logo" class="inicio_logo_img">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

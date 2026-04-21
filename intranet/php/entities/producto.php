@@ -401,9 +401,18 @@ class producto extends table{
             return false;
         }
 
+        $delimitador = $this->obtener_delimitador_csv($handle);
+        rewind($handle);
+
+        if(!$this->validar_formato_delimitador_csv($handle, $delimitador)){
+            fclose($handle);
+            return false;
+        }
+        rewind($handle);
+
         $linea_count = 0;
 
-        while (($row = fgetcsv($handle, 1000, ",", '"', "\\")) !== false) {
+        while (($row = fgetcsv($handle, 1000, $delimitador, '"', "\\")) !== false) {
             $linea_count++;
 
             $row = array_map(function($value){
@@ -552,6 +561,70 @@ class producto extends table{
             }
 
             return false;
+        }
+
+        return true;
+    }
+
+    private function obtener_delimitador_csv($handle)
+    {
+        $delimitador = ",";
+
+        while (($linea = fgets($handle)) !== false) {
+            $linea = preg_replace('/^\xEF\xBB\xBF/', '', trim($linea));
+            if ($linea === '') {
+                continue;
+            }
+
+            $columnas_coma       = str_getcsv($linea, ",", '"', "\\");
+            $columnas_punto_coma = str_getcsv($linea, ";", '"', "\\");
+
+            if (count($columnas_punto_coma) > count($columnas_coma)) {
+                $delimitador = ";";
+            }
+
+            break;
+        }
+
+        return $delimitador;
+    }
+
+    private function validar_formato_delimitador_csv($handle, $delimitador)
+    {
+        $delimitador_alterno = ($delimitador === ",") ? ";" : ",";
+        $linea_count = 0;
+
+        while (($linea = fgets($handle)) !== false) {
+            $linea_count++;
+            $linea = preg_replace('/^\xEF\xBB\xBF/', '', trim($linea));
+
+            if ($linea === '') {
+                continue;
+            }
+
+            $columnas_detectadas = str_getcsv($linea, $delimitador, '"', "\\");
+            $columnas_alternas   = str_getcsv($linea, $delimitador_alterno, '"', "\\");
+
+            $cantidad_detectadas = count($columnas_detectadas);
+            $cantidad_alternas   = count($columnas_alternas);
+
+            if ($cantidad_detectadas <= 1 && $cantidad_alternas <= 1) {
+                $this->last_error = "Formato CSV invalido en la linea $linea_count. No se reconoce separador ',' o ';'.";
+                utils::report_error(validation_error, ['linea' => $linea], $this->last_error);
+                return false;
+            }
+
+            if ($cantidad_detectadas <= 1 && $cantidad_alternas > 1) {
+                $this->last_error = "Formato CSV invalido en la linea $linea_count. Se detecto delimitador '$delimitador_alterno' en un archivo configurado con '$delimitador'.";
+                utils::report_error(validation_error, ['linea' => $linea], $this->last_error);
+                return false;
+            }
+
+            if ($cantidad_detectadas >= 7 && $cantidad_alternas >= 7) {
+                $this->last_error = "Formato CSV invalido en la linea $linea_count. Se detectaron delimitadores mezclados ',' y ';'.";
+                utils::report_error(validation_error, ['linea' => $linea], $this->last_error);
+                return false;
+            }
         }
 
         return true;
