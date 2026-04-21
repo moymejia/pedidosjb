@@ -249,6 +249,9 @@
   // BUSCAR ESTILO
   // =========================
   function buscarEstilo() {
+    state.idproducto = "";
+    state.idproducto_precio = null;
+
     callback_buscar_estilo = function(resp){
 
       if (typeof resp === "string") {
@@ -257,10 +260,20 @@
 
       state.idproducto = resp.idproducto || "";
       $descripcionEstilo.value = resp.descripcion;
-      if (state.idproducto && $setTallas.value) {
+      var precioOtraTemporada = !!resp.precio_otra_temporada;
+      var sinPrecioNingunaTemporada = !!resp.sin_precio_ninguna_temporada;
+
+      if (state.idproducto && $setTallas.value && !sinPrecioNingunaTemporada) {
         actualizarPrecioDesdeProductoSet();
       }
       notify_success('Producto encontrado');
+
+      if (sinPrecioNingunaTemporada) {
+        $precio.value = 0;
+        notify_warning('No se encontro precio para el modelo en ninguna temporada. Puede agregarlo y continuar con el pedido.');
+      } else if (precioOtraTemporada) {
+        notify_warning('No se encontro precio para el modelo en esta temporada, se tomo el precio de otra temporada.');
+      }
     };
 
     upload_action('modelo,idmarca,idtemporada','producto','obtener_modelo',callback_buscar_estilo);

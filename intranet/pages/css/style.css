@@ -955,18 +955,38 @@ File: scss
     padding-bottom:10px;
     z-index:1001;
     background:#edf0f5;
-    display:none;
+    display:block;
     padding-left:1px;
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(6px);
+    will-change:max-height, opacity, transform;
+    transition:max-height .24s ease, opacity .18s ease, transform .18s ease, visibility 0s linear .24s;
   }
 
   .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul,
-  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.collapse{
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.collapse,
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.in,
+  .mini-sidebar .sidebar-nav #sidebarnav > li:hover > ul.collapse.in{
     display:block;
     max-height:400px;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0);
+    transition:max-height .24s ease, opacity .18s ease, transform .18s ease;
   }
 
   .mini-sidebar .sidebar-nav #sidebarnav > li > a.has-arrow:after{
     display:none;
+  }
+
+  .mini-sidebar .sidebar-nav #sidebarnav > li > a.has-arrow{
+    cursor:default;
+    pointer-events:none;
   }
 
   .mini-sidebar .scroll-sidebar{

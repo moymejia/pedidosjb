@@ -55,18 +55,73 @@ $idubicacion = $row['idubicacion'];
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #ffffff, #3a3a3c, #f22800);
             border-radius: 14px;
-            border: 1px solid #3A3A3C;
             padding: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 172, 255, 0.35);
+            background-color: #050b15;
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 175, 255, 0.22) 0, rgba(0, 0, 0, 0) 58%);
+            background-size: 100% 100%;
+            box-shadow: inset 0 0 50px rgba(0, 124, 186, 0.35), 0 0 40px rgba(0, 46, 90, 0.35);
+        }
+
+        .inicio_logo_wrap::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('../img/circuit.png') center center / cover no-repeat;
+            opacity: 0.62;
+            filter: saturate(1.15) brightness(0.95);
+            pointer-events: none;
+        }
+
+        .inicio_logo_wrap::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 195, 255, 0.2) 0, rgba(0, 0, 0, 0.58) 70%);
+            pointer-events: none;
+        }
+
+        .inicio_logo_card {
+            z-index: 2;
+            border-radius: 24px;
+            padding: 28px 30px;
+            background: linear-gradient(165deg, rgba(16, 30, 58, 0.95), rgba(10, 21, 41, 0.95));
+            border: 1px solid rgba(84, 219, 255, 0.35);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45), 0 0 40px rgba(0, 170, 255, 0.22);
         }
 
         .inicio_logo_img {
+            padding-left: 10px;
             width: 100%;
-            max-width: 420px;
+            max-width: 360px;
             height: auto;
-            display: inline-block;
-            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.14));
+            display: block;      
+            margin: 0 auto;          
+            filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.65));
+            transition: transform 0.25s ease;
+        }
+
+        .inicio_logo_img:hover {
+            transform: scale(1.04);
+        }
+
+        @media (max-width: 768px) {
+            .inicio_logo_wrap {
+                min-height: 420px;
+                padding: 18px;
+            }
+
+            .inicio_logo_card {
+                padding: 18px 20px;
+                border-radius: 18px;
+            }
+
+            .inicio_logo_img {
+                max-width: 280px;
+            }
         }
     </style>
     <!-- inicio de data table -->

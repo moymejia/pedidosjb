@@ -94,16 +94,55 @@ class producto extends table{
 
     public function obtener_modelo($modelo, $idmarca, $idtemporada){
 
-    $modelo = preg_replace('/\s+/', ' ', trim($modelo));
-        $row = mysql::getrow("SELECT idproducto, modelo, linea, idmarca, marca
-            FROM view_producto_modelo WHERE modelo = '$modelo' AND idmarca = '$idmarca' AND idtemporada = '$idtemporada' LIMIT 1");
+        $modelo = addslashes(preg_replace('/\s+/', ' ', trim($modelo)));
 
-        if (!$row && $this->es_temporada_despacho_inmediato($idtemporada)) {
-            $row = mysql::getrow("SELECT idproducto, modelo, linea, idmarca, marca
-                FROM view_producto_modelo
-                WHERE modelo = '$modelo' AND idmarca = '$idmarca'
-                ORDER BY idtemporada DESC, idproducto DESC
-                LIMIT 1");
+        $row_temporada_con_precio = mysql::getrow("SELECT v.idproducto, v.modelo, v.linea, v.idmarca, v.marca, v.idtemporada
+            FROM view_producto_modelo v
+            WHERE v.modelo = '$modelo'
+                AND v.idmarca = '$idmarca'
+                AND v.idtemporada = '$idtemporada'
+                AND EXISTS (
+                    SELECT 1
+                    FROM producto_precio pp
+                    WHERE pp.idproducto = v.idproducto
+                        AND pp.estado = 'ACTIVO'
+                )
+            ORDER BY v.idproducto DESC
+            LIMIT 1");
+
+        $row_otra_temporada_con_precio = mysql::getrow("SELECT v.idproducto, v.modelo, v.linea, v.idmarca, v.marca, v.idtemporada
+            FROM view_producto_modelo v
+            WHERE v.modelo = '$modelo'
+                AND v.idmarca = '$idmarca'
+                AND v.idtemporada <> '$idtemporada'
+                AND EXISTS (
+                    SELECT 1
+                    FROM producto_precio pp
+                    WHERE pp.idproducto = v.idproducto
+                        AND pp.estado = 'ACTIVO'
+                )
+            ORDER BY v.idtemporada DESC, v.idproducto DESC
+            LIMIT 1");
+
+        $row_modelo_sin_precio = mysql::getrow("SELECT v.idproducto, v.modelo, v.linea, v.idmarca, v.marca, v.idtemporada
+            FROM view_producto_modelo v
+            WHERE v.modelo = '$modelo'
+                AND v.idmarca = '$idmarca'
+            ORDER BY (v.idtemporada = '$idtemporada') DESC, v.idtemporada DESC, v.idproducto DESC
+            LIMIT 1");
+
+        $row = null;
+        $precio_otra_temporada = false;
+        $sin_precio_ninguna_temporada = false;
+
+        if ($row_temporada_con_precio) {
+            $row = $row_temporada_con_precio;
+        } elseif ($row_otra_temporada_con_precio) {
+            $row = $row_otra_temporada_con_precio;
+            $precio_otra_temporada = true;
+        } elseif ($row_modelo_sin_precio) {
+            $row = $row_modelo_sin_precio;
+            $sin_precio_ninguna_temporada = true;
         }
 
         if(!$row){
@@ -112,12 +151,28 @@ class producto extends table{
             return false;
         }
 
-        return json_encode([
+        $RESPUESTA = [
             'idproducto' => (int)$row['idproducto'],
             'codigo'     => $row['modelo'],
             'descripcion'=> $row['linea'],
             'marca'      => $row['marca']
-        ]);
+        ];
+
+        if ($precio_otra_temporada) {
+            $RESPUESTA['precio_otra_temporada'] = true;
+            utils::report_error(validation_error,
+                ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada],
+                "No se encontro precio en la temporada seleccionada. Se utilizo la ultima temporada con precio.");
+        }
+
+        if ($sin_precio_ninguna_temporada) {
+            $RESPUESTA['sin_precio_ninguna_temporada'] = true;
+            utils::report_error(validation_error,
+                ['modelo' => $modelo, 'idmarca' => $idmarca, 'idtemporada' => $idtemporada],
+                "No se encontro precio para el modelo en ninguna temporada.");
+        }
+
+        return json_encode($RESPUESTA);
     }
 
     private function es_temporada_despacho_inmediato($idtemporada)
@@ -129,7 +184,12 @@ class producto extends table{
         }
 
         $nombre_temporada = mysql::getvalue("SELECT nombre FROM temporada WHERE idtemporada = '$idtemporada' LIMIT 1");
-        return stripos((string)$nombre_temporada, 'despacho inmediato') !== false;
+
+        if (!$nombre_temporada) {
+            return false;
+        }
+
+        return stripos($nombre_temporada, 'despacho inmediato') !== false;
     }
 
     public function cargar_opcion()
