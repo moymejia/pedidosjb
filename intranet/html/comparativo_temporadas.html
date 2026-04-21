@@ -11,6 +11,10 @@
                 clearElements('idcliente,idmarca');
                 
                 var temporadas_parametro = get_temporadas_parametro();
+                if (temporadas_parametro == '') {
+                    return false;
+                }
+                
                 download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_clientes_temporadas', 'idcliente');
                 download_select_options('idtemporada=' + temporadas_parametro, 'comparativo_temporadas', 'options_marcas_temporadas', 'idmarca');
             ">
