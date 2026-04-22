@@ -3,6 +3,7 @@
   var IDS_CAMPOS_LINEA_EDITABLES = 'idset_talla,modelo,color,material';
   var IDS_CAMPOS_LINEA_BLOQUEADOS_EDICION = 'idset_talla,modelo';
   var IDS_CAMPOS_LINEA_LIMPIAR = 'idset_talla,modelo,descripcionEstilo,color,material';
+  var IDS_DATOS_GENERALES_SOLO_LECTURA = 'idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido';
 
   // =========================
   // ESTADO
@@ -10,7 +11,8 @@
   var state = {
     detalle: [],
     editIndex: -1,
-    idproducto: ""
+    idproducto: "",
+    soloLectura: false
   };
 
   // =========================
@@ -216,7 +218,9 @@
       return;
     }
   
-    $resumenSet.textContent = nombre;
+    if ($resumenSet) {
+      $resumenSet.textContent = nombre || 'Sin seleccionar';
+    }
   
     var wrapper = document.createElement("div");
     wrapper.className = "size-grid";
@@ -534,10 +538,16 @@
   function renderDetalle(){
 
     var tbody = element("detallePedidoBody");
+    var columnaAcciones = document.querySelector('#tabla_detalles thead th:last-child');
+
+    if (columnaAcciones) {
+      columnaAcciones.style.display = state.soloLectura ? 'none' : '';
+    }
+
     tbody.innerHTML = "";
   
     if (!state.detalle.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-4">No hay productos agregados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + (state.soloLectura ? '10' : '11') + '" class="text-center text-muted py-4">No hay productos agregados.</td></tr>';
       return;
     }
   
@@ -563,6 +573,13 @@
       var tr = document.createElement("tr");
       var imgSrc = linea.imagen ? '../' + linea.imagen + '?x=' + Date.now() : 'https://via.placeholder.com/50';
   
+      var celdaAcciones = state.soloLectura
+        ? '<td style="display:none;"></td>'
+        : '<td>' +
+          '<button class="btn btn-warning btn-sm btn-editar" data-index="'+index+'">Editar</button> ' +
+          '<button class="btn btn-danger btn-sm btn-eliminar" data-index="'+index+'">Eliminar</button>' +
+          '</td>';
+
       tr.innerHTML =
         '<td><strong>'+safe(linea.estilo_codigo)+'</strong><br><small>'+safe(linea.estilo_descripcion)+'</small></td>' +
         '<td>'+safe(linea.set_talla_nombre)+'</td>'+
@@ -574,15 +591,16 @@
         '<td>'+tablaTallas+'</td>' +
         '<td class="text-center"><strong>'+linea.cantidad_total+'</strong></td>' +
         '<td class="text-right"><strong>Q '+formatearMonto(linea.subtotal || 0)+'</strong></td>' +
-        '<td>' +
-        '<button class="btn btn-warning btn-sm btn-editar" data-index="'+index+'">Editar</button> ' +
-        '<button class="btn btn-danger btn-sm btn-eliminar" data-index="'+index+'">Eliminar</button>' +
-        '</td>';
+        celdaAcciones;
   
       tbody.appendChild(tr);
   
     });
   
+    if (state.soloLectura) {
+      return;
+    }
+
     bindEventosDetalle();
   }
 
@@ -626,6 +644,10 @@
     state.idproducto = "";
     state.idproducto_precio = null;
     element("imagen_producto").value = "";
+
+    if ($resumenSet) {
+      $resumenSet.textContent = 'Sin seleccionar';
+    }
   
   }
 
@@ -667,24 +689,44 @@
 
     var idpedido_cargar = elementValue('idpedido_cargar');
     if (idpedido_cargar) {
+      state.soloLectura = true;
       element('idpedido_cargar').value = '';
       element('idpedido').value = idpedido_cargar;
+      disableElements(IDS_DATOS_GENERALES_SOLO_LECTURA);
 
-      var contenedor = objeto('detallePedidoBody');
+      callback_obtener_encabezado = function(resp) {
+        if (typeof resp === "string") {
+          resp = JSON.parse(resp);
+        }
 
-      if (contenedor) {
-        var observer = new MutationObserver(function () {
-          document.querySelectorAll('button')
-            .forEach(function(btn){ btn.disabled = true; });
+        if (resp) {
+          element('nopedido').value = resp.nopedido || '';
+          element('idcliente').value = resp.idcliente || '';
+          element('idmarca').value = resp.idmarca || '';
+          element('fecha_desde').value = resp.fecha_desde || '';
+          element('fecha_hasta').value = resp.fecha_hasta || '';
+          element('idtemporada').value = resp.idtemporada || '';
+          element('observaciones_pedido').value = resp.observaciones_pedido || '';
+          element('idtransporte').value = resp.idtransporte || '';
+          element('monto_descuento').value = resp.monto_descuento || 0;
+          element('email').value = resp.email || '';
 
-          observer.disconnect();
-        });
+          rellenarSelect2Pedido();
 
-        observer.observe(contenedor, { childList: true, subtree: true });
-      }
+          if (element('idmarca') && typeof element('idmarca').onchange === 'function') {
+            element('idmarca').onchange();
+          }
 
+          if (resp.estado === 'CERRADO') {
+            showElements('btn_imprimir');
+            hideElements('btn_cerrar_pedido');
+          }
+        }
+      };
+
+      upload_action('idpedido=' + idpedido_cargar, 'pedido', 'obtener_encabezado', callback_obtener_encabezado);
       cargarDetallePedido();
-      hideElements('formulario_registro,ingreso_producto,tabla_datos_wrapper,btn_eliminar_pedido,btn_cerrar_pedido');
+      hideElements('ingreso_producto,tabla_datos_wrapper,btn_eliminar_pedido,btn_cerrar_pedido');
       showElements('detalles_del_pedido,btn_imprimir');
     }
   }

@@ -30,6 +30,18 @@ class pedido extends table{
 
         if(isset($PARAMETROS['operacion'])){
 
+            if ($PARAMETROS['operacion'] == 'obtener_encabezado') {
+                if (table::validate_parameter_existence(['idpedido'], $PARAMETROS, false)) {
+                    if ($resultado = $this->obtener_encabezado($PARAMETROS['idpedido'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error("Parámetros faltantes");
+                }
+            }
+
             if ($PARAMETROS['operacion'] == 'guardar') {
                 if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte'], $PARAMETROS, false)) {
 
@@ -81,6 +93,23 @@ class pedido extends table{
             }
         
         }
+    }
+
+    public function obtener_encabezado($idpedido)
+    {
+        $idpedido = (int)$idpedido;
+        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca,
+            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, monto_descuento, email, estado
+            FROM view_pedidos
+            WHERE idpedido = '$idpedido'");
+
+        if (!$PEDIDO) {
+            $this->last_error = 'No se encontró el encabezado del pedido.';
+            utils::report_error(validation_error, $idpedido, $this->last_error);
+            return false;
+        }
+
+        return json_encode($PEDIDO);
     }
 
     public function cargar_opcion()
