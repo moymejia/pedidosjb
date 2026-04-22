@@ -70,6 +70,25 @@
   window.imprimirDesdeContenedor = imprimirDesdeContenedor;
 
   // =========================
+  // RELLENAR SELECT2
+  // =========================
+  function rellenarSelect2Pedido() {
+    var idCampo = 'idcliente';
+    
+    var elemento = element(idCampo);
+    if (!elemento) return;
+    
+    var $combo = $("#" + idCampo);
+    var valor = elemento.value;
+    
+    if (valor && $combo.find("option[value='" + valor + "']").length) {
+      $combo.val(valor).trigger("change");
+    }
+  }
+
+  window.rellenarSelect2Pedido = rellenarSelect2Pedido;
+
+  // =========================
   // RENDER TALLAS
   // =========================
 

@@ -141,6 +141,7 @@ class pedido extends table{
 
                 $boton_editar = "<button class=\"btn btn-sm btn-primary waves-effect waves-light btn-editar-pedido\" data-type=\"idpedido\" data-idpedido=\"$idpedido\" type=\"button\" onclick=\"
                     editar_registro('$str_data',this.parentNode.parentNode);
+                    rellenarSelect2Pedido();
                     if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
                     showElements('detalles_del_pedido');
                     hideElements('lista_pedidos');
