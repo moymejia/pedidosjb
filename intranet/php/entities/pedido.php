@@ -538,32 +538,17 @@ class pedido extends table{
         $productos_agrupados = [];
 
         foreach ($productos as $producto_info) {
-            $codigo_estilo = (string)$producto_info['producto'];
-            $color_material = trim((string)$producto_info['color']).'|'.trim((string)$producto_info['material']);
-            $grupo_key = $codigo_estilo.'|'.$color_material;
-
-            if (!isset($productos_agrupados[$grupo_key])) {
-                $productos_agrupados[$grupo_key] = [
-                    'producto' => $codigo_estilo,
-                    'imagen' => $producto_info['imagen'],
-                    'marca' => $PEDIDO['marca'],
-                    'color' => $producto_info['color'],
-                    'material' => $producto_info['material'],
-                    'filas' => [],
-                    'total' => 0,
-                    'monto' => 0,
-                    'precios' => []
-                ];
-            }
-
-            if (empty($productos_agrupados[$grupo_key]['imagen']) && !empty($producto_info['imagen'])) {
-                $productos_agrupados[$grupo_key]['imagen'] = $producto_info['imagen'];
-            }
-
-            $productos_agrupados[$grupo_key]['filas'][] = $producto_info;
-            $productos_agrupados[$grupo_key]['total'] += $producto_info['total'];
-            $productos_agrupados[$grupo_key]['monto'] += ($producto_info['total'] * $producto_info['precio']);
-            $productos_agrupados[$grupo_key]['precios'][(string)$producto_info['precio']] = $producto_info['precio'];
+            $productos_agrupados[] = [
+                'producto' => (string)$producto_info['producto'],
+                'imagen' => $producto_info['imagen'],
+                'marca' => $PEDIDO['marca'],
+                'color' => $producto_info['color'],
+                'material' => $producto_info['material'],
+                'precio' => $producto_info['precio'],
+                'filas' => [$producto_info],
+                'total' => $producto_info['total'],
+                'monto' => ($producto_info['total'] * $producto_info['precio'])
+            ];
         }
 
         $productos_chunks = [];
@@ -608,9 +593,7 @@ class pedido extends table{
 
             foreach ($chunk as $grupo_producto) {
                 $rowspan_producto = count($grupo_producto['filas']);
-                $precio_texto = count($grupo_producto['precios']) === 1
-                    ? 'Q '.number_format(reset($grupo_producto['precios']), 2, '.', ',')
-                    : 'VARIOS';
+                $precio_texto = 'Q '.number_format((float)$grupo_producto['precio'], 2, '.', ',');
 
                 foreach ($grupo_producto['filas'] as $fila_index => $p) {
 
