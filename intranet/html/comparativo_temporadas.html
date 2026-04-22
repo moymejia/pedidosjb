@@ -11,6 +11,8 @@
             <label for="idtemporada">Temporada</label>
             <select class="form-control select2" id="idtemporada" name="idtemporada" multiple onchange="
                 clearElements('idcliente,idmarca');
+                enableElements('idmarca');
+                enableElements('idcliente');
                 
                 var temporadas_parametro = get_temporadas_parametro();
                 if (temporadas_parametro == '') {
