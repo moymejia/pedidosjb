@@ -1184,10 +1184,22 @@ function restore_data_local_storage() {
 
 
 function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
-    var table = document.getElementById(idtabla);
+    var rootElement = document.getElementById(idtabla);
 
-    if (!table) {
-        console.error("No se encontró la tabla con id:", idtabla);
+    if (!rootElement) {
+        console.error("No se encontró el elemento con id:", idtabla);
+        return;
+    }
+
+    var exportNodes = [];
+    if (rootElement.tagName && ["table"].includes(rootElement.tagName.toLowerCase())) {
+        exportNodes = [rootElement];
+    } else {
+        exportNodes = Array.from(rootElement.querySelectorAll("h2, h4, table"));
+    }
+
+    if (exportNodes.length === 0) {
+        console.error("No se encontraron elementos exportables dentro de:", idtabla);
         return;
     }
 
@@ -1205,14 +1217,44 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
 
     try {
 
-        var wb = XLSX.utils.table_to_book(table, {
-            sheet: "Hoja 1",
-            raw: true
-        });
+        var AOA = [];
 
-        var ws = wb.Sheets[wb.SheetNames[0]];
+        for (var t = 0; t < exportNodes.length; t++) {
+            var node = exportNodes[t];
+            var tag = node.tagName.toLowerCase();
 
-        if (ws && ws["!ref"]) {
+            if (tag === "h2" || tag === "h4") {
+                var titulo = node.textContent.replace(/\s+/g, " ").trim();// limpiar espacios extra
+                if (AOA.length > 0) {
+                    AOA.push([]);
+                }
+                AOA.push([titulo]);// agregar título como fila separada
+            }
+
+            if (tag === "table") {
+                var tempSheet = XLSX.utils.table_to_sheet(node, { raw: true });
+                var tempData = XLSX.utils.sheet_to_json(tempSheet, { header: 1, raw: true });
+
+                if (AOA.length > 0) {
+                    AOA.push([]);
+                }
+
+                for (var i = 0; i < tempData.length; i++) {
+                    AOA.push(tempData[i]);
+                }
+            }
+        }
+
+        if (AOA.length === 0) {
+            console.error("Los elementos encontrados no contienen datos para exportar:", idtabla);
+            return;
+        }
+
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(AOA);
+        XLSX.utils.book_append_sheet(wb, ws, "Hoja 1");
+
+        if (ws && ws["!ref"]) {// si la hoja tiene datos, intentar convertir valores numéricos
 
             var range = XLSX.utils.decode_range(ws["!ref"]);
 

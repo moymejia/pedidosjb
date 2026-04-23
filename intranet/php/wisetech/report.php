@@ -11,7 +11,7 @@ class report extends mysql
             $buttons .= " <button type=\"button\" class=\"btn btn-secondary btn-circle btn-xl\" onclick=\"print_div('$report_name');\"><i class=\"mdi mdi-printer\"></i> </button> ";
         }
         if (isset($OPTIONS['excel']) && $OPTIONS['excel'] == true) {
-            $buttons .= " <a class=\"btn btn-secondary btn-circle btn-xl\" onclick=\"fnExcelReport('$report_name','$report_name','" . $report_name . "_link')\"  id='" . $report_name . "_link'><i class=\"mdi mdi-file-excel\"></i></a> ";
+            $buttons .= " <a class=\"btn btn-secondary btn-circle btn-xl\" onclick=\"export_to_xlsx('$report_name','$report_name.xlsx')\" id='" . $report_name . "_link'><i class=\"mdi mdi-file-excel\"></i></a> ";
         }
         $buttons .= "</span>";
         $this->html .= $buttons;
