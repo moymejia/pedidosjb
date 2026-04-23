@@ -37,12 +37,12 @@
                                 </div>
 
                                 <div class="col-md-3 form-group">
-                                    <label>Linea</label>
+                                    <label>Descripcion</label>
                                     <input type="text" id="linea" class="form-control">
                                 </div>
 
                                 <div class="col-md-3 form-group">
-                                    <label>Modelo</label>
+                                    <label>Estilo</label>
                                     <input type="text" id="modelo" class="form-control">
                                 </div>
 
@@ -51,45 +51,18 @@
                             </div>
 
                             <div class="row mt-2">
-
-                                <div class="col-md-3 form-group">
-                                    <label>Corte</label>
-                                    <select id="idcorte" class="form-control">
-                                        [cortes]
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 form-group">
-                                    <label>Tipo Suela</label>
-                                    <select id="idtipo_suela" class="form-control">
-                                        [tipo_suelas]
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 form-group">
-                                    <label>Concepto</label>
-                                    <select id="idconcepto" class="form-control">
-                                        [conceptos]
-                                    </select>
-                                </div>
-
                                 <div class="col-md-3 form-group">
                                     <label>Estado</label>
                                     <input type="text" id="estado" class="form-control" readonly value="ACTIVO">
                                 </div>
 
-                            </div>
-
-                            <div class="row mt-2">
-
-                                
                                 <div class="col-md-9 form-group d-flex align-items-end">
-                                    <button class="btn btn-primary" onclick="
+                                    <button class="btn btn-success" onclick="
                                         callback_guardar_producto = function(){
                                             notify_success('Producto guardado correctamente.');
                                             mostrar_opcion(10,'Producto','Mantenimientos');
                                         }
-                                        upload_action('idproducto,idmarca,idtemporada,linea,modelo,idset_talla,idcorte,idtipo_suela,idconcepto,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
+                                        upload_action('idproducto,idmarca,idtemporada,linea,modelo,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
                                     ">
                                         Guardar Producto
                                     </button>
@@ -101,7 +74,7 @@
                                     </button>
 
                                     <button id="btn_cambiar_estado_producto" style="display: none;"
-                                        class="btn btn-success ml-2 " onclick="
+                                        class="btn btn-warning ml-2 " onclick="
                                         callback_cambiar_estado = function(){
                                             notify_success('Estado cambiado correctamente.');
                                             callback_activar_tabla = function(){
@@ -123,7 +96,7 @@
 
                         <div id="div_tabla">
                             <button class="btn btn-primary" onclick="
-                                clearElements('idproducto,idmarca,idtemporada,idcorte,idtipo_suela,idconcepto,modelo,linea');
+                                clearElements('idproducto,idmarca,idtemporada,modelo,linea');
                                 hideElements('boton_nuevo');
                                 showElements('div_form_producto');
                             " id="boton_nuevo">
@@ -142,7 +115,7 @@
                         <div id="div_form_busqueda">
                             <div class="row">
                                 <div class="col-md-3 form-group">
-                                    <label for="modelo_b">Modelo</label>
+                                    <label for="modelo_b">Estilo</label>
                                     <input type="text" id="modelo_b" class="form-control" readonly onchange="
                                         
                                     ">

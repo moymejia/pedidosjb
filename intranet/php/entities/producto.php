@@ -6,9 +6,6 @@ require_once('../wisetech/utils.php');
 require_once('../entities/marca.php');
 require_once('../entities/temporada.php');
 require_once('../entities/producto_precio.php');
-require_once('../entities/tipo_suela.php');
-require_once('../entities/corte.php');
-require_once('../entities/concepto.php');
 require_once('../entities/set_talla.php');
 
 
@@ -60,7 +57,7 @@ class producto extends table{
 
             if ($PARAMETROS['operacion'] == 'guardar') {
                 if (table::validate_parameter_existence(['idmarca','modelo'], $PARAMETROS, false)) {
-                    if ($resultado = $this->guardar($PARAMETROS['idproducto'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'],$PARAMETROS['linea'],$PARAMETROS['modelo'],$PARAMETROS['idcorte'],$PARAMETROS['idtipo_suela'],$PARAMETROS['idconcepto'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
+                    if ($resultado = $this->guardar($PARAMETROS['idproducto'],$PARAMETROS['idmarca'],$PARAMETROS['idtemporada'],$PARAMETROS['linea'],$PARAMETROS['modelo'],$PARAMETROS['estado'],$PARAMETROS['mantenimiento'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -207,9 +204,6 @@ class producto extends table{
         $DATA['marcas']          = (new marca())->option_activos();
         $DATA['temporadas']      = (new temporada())->option_activos();
         $DATA['set_tallas']      = (new set_talla())->options_activos();
-        $DATA['cortes']          = (new corte())->option_activos();
-        $DATA['tipo_suelas']     = (new tipo_suela())->option_activos();
-        $DATA['conceptos']       = (new concepto())->option_activos();
         $DATA['tabla_productos'] = $this->tabla();
         $DATA['modelos']         = $this->modelos();
 
@@ -219,8 +213,7 @@ class producto extends table{
 
     public function tabla()
     {   
-        $sql = mysql::getresult("SELECT idproducto, modelo, linea, idmarca, marca, idtemporada, temporada, idcorte,
-                corte, idtipo_suela, tipo_suela, idconcepto, concepto, estado, precios
+        $sql = mysql::getresult("SELECT idproducto, modelo, linea, idmarca, marca, idtemporada, temporada, estado, precios
             FROM view_producto
         ");
 
@@ -254,13 +247,10 @@ class producto extends table{
                         <tr>
                             <th>Acciones</th>
                             <th>Id</th>
-                            <th>Modelo</th>
-                            <th>Línea</th>
+                            <th>Estilo</th>
+                            <th>Descripcion</th>
                             <th>Marca</th>
                             <th>Temporada</th>
-                            <th>Corte</th>
-                            <th>Tipo Suela</th>
-                            <th>Concepto</th>
                             <th>Precios</th>
                             <th>Estado</th>
                         </tr>
@@ -274,9 +264,6 @@ class producto extends table{
             $linea       = $row['linea'];
             $marca       = $row['marca'];
             $temporada   = $row['temporada'];
-            $corte       = $row['corte'];
-            $tipo_suela  = $row['tipo_suela'];
-            $concepto    = $row['concepto'];
             $precios     = $row['precios'];
             $estado      = $row['estado'];
 
@@ -305,9 +292,6 @@ class producto extends table{
                         <td>$linea</td>
                         <td>$marca</td>
                         <td>$temporada</td>
-                        <td>$corte</td>
-                        <td>$tipo_suela</td>
-                        <td>$concepto</td>
                         <td>$precios</td>
                         <td>$estado</td>
                     </tr>";
@@ -329,7 +313,7 @@ class producto extends table{
         }
     }
 
-    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$idcorte,$idtipo_suela,$idconcepto,$estado = '',$mantenimiento = 'NO') 
+    public function guardar($idproducto,$idmarca,$idtemporada,$linea,$modelo,$estado = '',$mantenimiento = 'NO') 
     {   
         $modelo = preg_replace('/\s+/', ' ', trim($modelo));
 
@@ -366,16 +350,6 @@ class producto extends table{
             }
             $DATOS['modelo']           = $modelo;
 
-            if($idcorte != ''){
-                $DATOS['idcorte']          = $idcorte;
-            }
-            if($idtipo_suela != ''){
-                $DATOS['idtipo_suela']       = $idtipo_suela;
-            }
-            if($idconcepto != ''){
-                $DATOS['idconcepto']       = $idconcepto;
-            }
-
             $DATOS['estado']           = $estado != '' ?  "$estado" :'ACTIVO';
             $DATOS['usuario_creacion'] = $security->get_actual_user();
 
@@ -411,16 +385,6 @@ class producto extends table{
             $DATOS['idproducto']           = $idproducto;
             if($linea != ''){
                 $DATOS['linea']            = $linea;
-            }
-
-            if($idcorte != ''){
-                $DATOS['idcorte']          = $idcorte;
-            }
-            if($idtipo_suela != ''){
-                $DATOS['idtipo_suela']     = $idtipo_suela;
-            }
-            if($idconcepto != ''){
-                $DATOS['idconcepto']       = $idconcepto;
             }
             $DATOS['usuario_modificacion'] = $security->get_actual_user();
             $DATOS['fecha_modificacion']   = date("Y-m-d H:i:s");
@@ -591,7 +555,7 @@ class producto extends table{
                     continue;
                 }
 
-                $idproducto = $this->guardar('', $idmarca, $idtemporada, $linea, $modelo, '', '', '', 'BORRADOR', '');
+                $idproducto = $this->guardar('', $idmarca, $idtemporada, $linea, $modelo, 'BORRADOR', '');
 
                 if(!$idproducto){
                     fclose($handle);
