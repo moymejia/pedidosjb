@@ -178,7 +178,7 @@
                                                 callback_guardar_precio = function(){
                                                     tabla = activar_tabla('tabla_datos');
                                                 }
-                                                download_div_content('modelo,idmarca','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
+                                                download_div_content('modelo,idmarca,idtemporada','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_guardar_precio);
                                             }
                                         }
                                         upload_action('idproducto,idproducto_precio,idset_talla,precio,estado=,mantenimiento=SI','producto_precio','guardar',callback_guardar_precio);
@@ -201,7 +201,7 @@
                                                 callback_refrescar_estado_precio = function(){
                                                     tabla = activar_tabla('tabla_datos');
                                                 }
-                                                download_div_content('modelo,idmarca','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_refrescar_estado_precio);
+                                                download_div_content('modelo,idmarca,idtemporada','producto_precio','tabla_producto_precio','tabla_producto_precio',callback_refrescar_estado_precio);
                                             }
                                         }
                                         download_input_value('idproducto_precio','producto_precio','cambiar_estado','estado_precio',callback_cambiar_estado);

@@ -28,8 +28,8 @@ class producto_precio extends table
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'tabla_producto_precio') {
-                if (table::validate_parameter_existence(['modelo','idmarca'], $PARAMETROS, false)) {
-                    if ($resultado = $this->tabla_producto_precio($PARAMETROS['modelo'], $PARAMETROS['idmarca'])) {
+                if (table::validate_parameter_existence(['modelo','idmarca','idtemporada'], $PARAMETROS, false)) {
+                    if ($resultado = $this->tabla_producto_precio($PARAMETROS['modelo'], $PARAMETROS['idmarca'], $PARAMETROS['idtemporada'])) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -240,7 +240,7 @@ class producto_precio extends table
         }
     }
 
-    public function tabla_producto_precio($modelo, $idmarca)
+    public function tabla_producto_precio($modelo, $idmarca, $idtemporada)
     {   
         $modelo = addslashes($modelo);
 
@@ -248,6 +248,7 @@ class producto_precio extends table
             FROM view_producto_precio
             WHERE modelo = '$modelo'
             AND idmarca = '$idmarca'
+            AND idtemporada = '$idtemporada'
         ");
 
         $columnControl = true;

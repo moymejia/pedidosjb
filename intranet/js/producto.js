@@ -7,5 +7,5 @@ function activar_tabla_precios() {
         tabla = activar_tabla('tabla_datos');
     }
 
-    download_div_content('modelo,idmarca', 'producto_precio', 'tabla_producto_precio', 'tabla_producto_precio', callback_tabla_precios);
+    download_div_content('modelo,idmarca,idtemporada', 'producto_precio', 'tabla_producto_precio', 'tabla_producto_precio', callback_tabla_precios);
 }
