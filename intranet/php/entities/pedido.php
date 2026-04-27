@@ -91,9 +91,10 @@ class pedido extends table{
                     self::end_error("Parámetros faltantes");
                 }
             }
+
+    }
         
         }
-    }
 
     public function obtener_encabezado($idpedido)
     {
@@ -120,8 +121,11 @@ class pedido extends table{
         $DATA['temporadas']     = (new temporada())->option_activos();
         $DATA['set_tallas']     = (new set_talla())->options_activos();
         $DATA['transportes']    = (new transporte())->option_activas();
-        $usuario_actual         = (new security())->get_actual_user();
-        $DATA['nopedido_sugerido'] = $this->obtener_nopedido_sugerido($usuario_actual);
+        $usuario_actual    = (new security())->get_actual_user();
+        $nopedido_full    = $this->obtener_nopedido_sugerido($usuario_actual);
+        $nopedido_partes  = explode('-', $nopedido_full, 2);
+        $DATA['nopedido_prefijo']  = isset($nopedido_partes[1]) ? $nopedido_partes[0] . '-' : '';
+        $DATA['nopedido_sugerido'] = isset($nopedido_partes[1]) ? $nopedido_partes[1] : $nopedido_full;
 
         $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, cliente, temporada, marca, estado, 
             fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
@@ -225,9 +229,11 @@ class pedido extends table{
 
     public function guardar($PARAMETROS)
     {
-        $security = new security($this->ACCIONES['crear']);
-        $usuario  = $security->get_actual_user();
-        $nopedido_manual = isset($PARAMETROS['nopedido']) ? trim($PARAMETROS['nopedido']) : '';
+        $security         = new security($this->ACCIONES['crear']);
+        $usuario          = $security->get_actual_user();
+        $nopedido_numero  = isset($PARAMETROS['nopedido'])         ? trim($PARAMETROS['nopedido'])         : '';
+        $nopedido_prefijo = isset($PARAMETROS['nopedido_prefijo']) ? trim($PARAMETROS['nopedido_prefijo']) : '';
+        $nopedido_manual  = $nopedido_numero !== '' ? $nopedido_prefijo . $nopedido_numero : '';
 
         if ($PARAMETROS['monto_descuento'] < 0 || $PARAMETROS['monto_descuento'] > 99) {
             $this->last_error = "El descuento debe estar entre 0 y 99%.";
@@ -685,11 +691,13 @@ class pedido extends table{
             }
 
             $DATA = [];
-            $DATA['codigo_cliente']         = $PEDIDO['idcliente'];
+            $codigo_cliente                  = (new cliente())->obtener_codigo($PEDIDO['idcliente']);
+            $DATA['codigo_cliente']         = $codigo_cliente ? $codigo_cliente : $PEDIDO['idcliente'];
             $fecha                          = strtotime($PEDIDO['fecha_creacion']);
             $DATA['fecha']                  = date('d', $fecha).' '.$meses[date('m', $fecha)].' '.date('Y', $fecha);
             $DATA['vendedor']               = $nombre_usuario;
-            $DATA['cliente']                = $PEDIDO['cliente'];
+            $nombre_cliente                 = (new cliente())->obtener_nombre($PEDIDO['idcliente']);
+            $DATA['cliente']                = $nombre_cliente ? $nombre_cliente : $PEDIDO['cliente'];
             $DATA['nit']                    = !empty($PEDIDO['nit']) ? $PEDIDO['nit'] : 'CF';
             $DATA['telefono']               = $PEDIDO['telefono'];
             $DATA['direccion']              = $PEDIDO['direccion'];

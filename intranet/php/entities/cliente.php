@@ -55,6 +55,18 @@ class cliente extends table
                     self::end_error($this->last_error);
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_codigo') {
+                if (table::validate_parameter_existence(['idcliente'], $PARAMETROS, false)) {
+                    if ($resultado = self::obtener_codigo($PARAMETROS['idcliente'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error($this->last_error);
+                }
+            }
             
         }
 
@@ -332,5 +344,19 @@ class cliente extends table
         }
     
         return $correo;
+    }
+
+    public function obtener_codigo($idcliente)
+    {
+        $codigo = mysql::getvalue("SELECT codigo FROM cliente WHERE idcliente = '$idcliente' LIMIT 1");
+
+        return $codigo;
+    }
+
+    public function obtener_nombre($idcliente)
+    {
+        $nombre = mysql::getvalue("SELECT nombre FROM cliente WHERE idcliente = '$idcliente' LIMIT 1");
+
+        return $nombre;
     }
 }
