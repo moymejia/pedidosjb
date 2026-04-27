@@ -677,6 +677,8 @@ function activar_tabla(idtabla) {
     var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
+    var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
+    var noOrderUser = (ds.confNoorder === "true");
     var columnasAuto = [];
 
     $('#' + idtabla + ' thead th').each(function () {
@@ -899,10 +901,10 @@ function activar_tabla(idtabla) {
         lengthChange: pagingUser,
         stateSave: true,
         stateDuration: 0,
-        ordering: true,
+        ordering: orderingUser,
 
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
-        order: rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']],
+        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']]),
 
         createdRow: function (row, data, dataIndex) {
             if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);

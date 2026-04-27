@@ -4,6 +4,8 @@ require_once('../wisetech/security.php');
 require_once('../wisetech/html.php');
 require_once('../wisetech/utils.php');
 require_once('../entities/pedido.php');
+require_once('../entities/cliente.php');
+require_once('../entities/temporada.php');
 
 class despacho extends table
 {
@@ -17,11 +19,20 @@ class despacho extends table
 		parent::__construct(prefijo . '_pedidos', 'despacho');
 
 		$this->ACCIONES['Opcion_despacho']            = "Opcion_despacho";
+		$this->ACCIONES['opcion_estado_de_cuenta']    = "opcion_estado_de_cuenta";
 		$this->ACCIONES['Crear_despacho']    		  = "Crear_despacho";
 		$this->ACCIONES['Despachar_lineas']           = "Despachar_lineas";
 		$this->ACCIONES['Cerrar_despacho']            = "Cerrar_despacho";
 
 		if (isset($PARAMETROS['operacion'])) {
+			if ($PARAMETROS['operacion'] == 'cargar_estado_de_cuenta') {
+				if ($resultado = $this->cargar_estado_de_cuenta()) {
+					self::end_success($resultado);
+				} else {
+					self::end_error($this->last_error);
+				}
+			}
+
 			if ($PARAMETROS['operacion'] == 'obtener_detalle_despacho') {
 				if ($this->validate_parameter_existence(['iddespacho'], $PARAMETROS, false)) {
 					if ($resultado = $this->obtener_detalle_despacho($PARAMETROS['iddespacho'])) {
@@ -79,6 +90,18 @@ class despacho extends table
 					}
 				} else {
 					self::end_error('Faltan parámetros');
+				}
+			}
+
+			if ($PARAMETROS['operacion'] == 'generar_estado_de_cuenta') {
+				if ($this->validate_parameter_existence(['idtemporada'], $PARAMETROS, false)) {
+					if ($resultado = $this->generar_estado_de_cuenta($PARAMETROS['idtemporada'], $PARAMETROS['idcliente'], $PARAMETROS['estado'], $PARAMETROS['idtipo_reporte'])) {
+						self::end_success($resultado);
+					} else {
+						self::end_error($this->last_error);
+					}
+				} else {
+					self::end_error('Debe seleccionar una temporada.');
 				}
 			}
 		}
@@ -736,5 +759,347 @@ class despacho extends table
 		return json_encode(['iddespacho' => (int)$iddespacho]);
 	}
 
+	public function cargar_estado_de_cuenta(){
+
+			$DATA = [];
+			$DATA['clientes_activos'] = "<option value=''></option>" . (new cliente())->option_activas();
+			$DATA['temporadas_activas'] = "<option value=''></option>" . (new temporada())->option_activos();
+
+			$html = new html('estado_de_cuenta', $DATA);
+			return $html->get_html();
+	}
+
+	private function generar_tabla_resumen($where_temporada, $where_cliente, $where_estado) {
+		$sql_resumen = mysql::getresult("SELECT
+				nombre_cliente,
+				CONCAT('Q ', FORMAT(SUM(monto_total), 2)) AS total_facturado,
+				CONCAT('Q ', FORMAT(SUM(monto_total_pagado), 2)) AS total_pagado,
+				CONCAT('Q ', FORMAT(SUM(monto_programado), 2)) AS total_programado,
+				CONCAT('Q ', FORMAT(SUM(saldo_pendiente), 2)) AS saldo
+			FROM view_estado_cuenta_despacho
+			WHERE 1 = 1
+				$where_temporada
+				$where_cliente
+				$where_estado
+			GROUP BY nombre_cliente
+			ORDER BY nombre_cliente ASC");
+
+		$tituloTablaResumen = 'Resumen estado de cuenta';
+		$fileNameResumen    = 'Resumen_estado_de_cuenta';
+		$data_resumen = "";
+		$data_resumen  = " data-conf-columncontrol='true' ";
+		$data_resumen .= " data-conf-rowgroup=''";
+		$data_resumen .= " data-conf-titulotabla='" . $tituloTablaResumen . "' ";
+		$data_resumen .= " data-conf-filename='" . $fileNameResumen . "' ";
+		$data_resumen .= " data-conf-responsive='true' ";
+		$data_resumen .= " data-conf-colreorder='true' ";
+		$data_resumen .= " data-conf-select='false' ";
+		$data_resumen .= " data-conf-buttons='true' ";
+		$data_resumen .= " data-conf-paging='true' ";
+		$data_resumen .= " data-conf-ordering='true' ";
+		$data_resumen .= " data-conf-noorder='false' ";
+		$data_resumen .= " data-conf-rowgroup='false' ";
+		$data_resumen .= " data-conf-reset='true' ";
+
+		$html = "<br><h2>Resumen por cliente</h2>";
+		$html .= "<table id='tabla_estado_cuenta_resumen' " . $data_resumen . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
+			<thead>
+				<tr>
+					<th>Cliente</th>
+					<th>Total facturado</th>
+					<th>Total pagado</th>
+					<th>Total programado</th>
+					<th>Saldo</th>
+				</tr>
+			</thead>
+			<tbody>";
+
+		while ($row_resumen = mysql::getrowresult($sql_resumen)) {
+			$html .= "<tr>
+				<td style='text-align:left;'>" . $row_resumen['nombre_cliente'] . "</td>
+				<td style='text-align:right;'>" . $row_resumen['total_facturado'] . "</td>
+				<td style='text-align:right;'>" . $row_resumen['total_pagado'] . "</td>
+				<td style='text-align:right;'>" . $row_resumen['total_programado'] . "</td>
+				<td style='text-align:right;'>" . $row_resumen['saldo'] . "</td>
+			</tr>";
+		}
+
+		$html .= "</tbody></table>";
+		return $html;
+	}
+
+	public function generar_estado_de_cuenta($idtemporada, $idcliente, $estado, $idtipo_reporte = 'resumido')
+	{
+		$security = new security($this->ACCIONES['opcion_despacho']);
+		$security->get_actual_user();
+
+		$where_temporada = ($idtemporada != '') ? " AND idtemporada = '" . $idtemporada . "'" : '';
+		$where_cliente   = ($idcliente != '') ? " AND idcliente = '" . $idcliente . "'" : '';
+		$where_estado    = ($estado != '') ? " AND estado = '" . $estado . "'" : '';
+
+		if ($idtipo_reporte == 'detallado') {
+			$sql_detallado = mysql::getresult("SELECT
+					iddespacho,
+					nombre_cliente,
+					numero_factura,
+					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					monto_total,
+					estado_pago,
+					monto_pago,
+					DATE_FORMAT(fecha_pago, '%d-%m-%Y') AS fecha_pago,
+					tipo_pago,
+					estado_pago_individual
+				FROM view_estado_cuenta_despacho_detallado
+				WHERE 1 = 1
+					$where_temporada
+					$where_cliente
+					$where_estado
+				ORDER BY nombre_cliente ASC, fecha_factura ASC, iddespacho ASC, fecha_pago ASC");
+
+			$GRUPOS = [];
+			while ($row_detalle = mysql::getrowresult($sql_detallado)) {
+				$iddespacho = $row_detalle['iddespacho'];
+
+				if (!isset($GRUPOS[$iddespacho])) {
+					$GRUPOS[$iddespacho] = [
+						'fecha_factura' => $row_detalle['fecha_factura'],
+						'nombre_cliente' => $row_detalle['nombre_cliente'],
+						'numero_factura' => $row_detalle['numero_factura'],
+						'monto_total' => (float)$row_detalle['monto_total'],
+						'pagos' => []
+					];
+				}
+
+				if (!empty($row_detalle['fecha_pago']) || ((float)$row_detalle['monto_pago']) > 0) {
+					$GRUPOS[$iddespacho]['pagos'][] = [
+						'fecha_pago' => $row_detalle['fecha_pago'],
+						'tipo_pago' => $row_detalle['tipo_pago'],
+						'numero_factura' => $row_detalle['numero_factura'],
+						'estado_pago' => $row_detalle['estado_pago'],
+						'estado_pago_individual' => $row_detalle['estado_pago_individual'],
+						'monto_pago' => (float)$row_detalle['monto_pago']
+					];
+				}
+			}
+
+			$columnControl = true;
+			$responsive    = true;
+			$colReorder    = false;
+			$select        = false;
+			$buttons       = true;
+			$paging        = true;
+			$ordering      = false;
+			$order         = false;
+			$rowGroup      = false;
+			$reset         = true;
+			$tituloTabla   = 'Estado de cuenta';
+			$fileName      = 'Estado_de_cuenta';
+
+			$data_ = "";
+			$data_  = " data-conf-columncontrol='" . ($columnControl ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-rowgroup=''";
+			$data_ .= " data-conf-titulotabla='" . $tituloTabla . "' ";
+			$data_ .= " data-conf-filename='" . $fileName . "' ";
+			$data_ .= " data-conf-responsive='" . ($responsive ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-colreorder='" . ($colReorder ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-select='" . ($select ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-buttons='" . ($buttons ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-paging='" . ($paging ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-ordering='" . ($ordering ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
+
+			$tabla_detallada = "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
+				<thead>
+					<tr>
+						<th>Tipo registro</th>
+						<th>Fecha despacho</th>
+						<th>Total facturado</th>
+						<th>Tipo de pago</th>
+						<th>Numero documento</th>
+						<th>Fecha pago</th>
+						<th>Valor pagado</th>
+						<th>Valor programado</th>
+						<th>Total pagos</th>
+						<th>Saldo</th>
+					</tr>
+				</thead>
+				<tbody>";
+
+			foreach ($GRUPOS as $iddespacho => $grupo) {
+				$total_pagos = 0;
+
+				$tabla_detallada .= "<tr class='bg-info' style='font-weight:bold; color: white; background-color: #438eb9;'>
+					<td>Cliente: " . $grupo['nombre_cliente'] . "</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>";
+
+				$tabla_detallada .= "<tr>
+					<td>DESPACHO</td>
+					<td nowrap>" . $grupo['fecha_factura'] . "</td>
+					<td style='text-align:right;'>Q. " . number_format($grupo['monto_total'], 2) . "</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>";
+
+				foreach ($grupo['pagos'] as $pago) {
+					$valor_pago = 0;
+					$valor_programado = 0;
+					
+					// Mostrar como programado si el estado_pago_individual contiene PROGRAMADO
+					if ($pago['estado_pago_individual'] === 'PROGRAMADO') {
+						$valor_programado = $pago['monto_pago'];
+					} else { // necesariamente será 'EJECUTADO'
+						$valor_pago = $pago['monto_pago'];
+						$total_pagos += $valor_pago;
+					}
+
+					$tabla_detallada .= "<tr>
+						<td>PAGO</td>
+						<td></td>
+						<td></td>
+						<td>" . $pago['tipo_pago'] . " (" . $pago['estado_pago_individual'] . ")" . "</td>
+						<td>" . $pago['numero_factura'] . "</td>
+						<td>" . $pago['fecha_pago'] . "</td>
+						<td style='text-align:right;'>" . (($valor_pago > 0) ? ('Q. ' . number_format($valor_pago, 2)) : '') . "</td>
+						<td style='text-align:right;'>" . (($valor_programado > 0) ? ('Q. ' . number_format($valor_programado, 2)) : '') . "</td>
+						<td></td>
+						<td></td>
+					</tr>";
+				}
+
+				$saldo = $grupo['monto_total'] - $total_pagos;
+
+				$tabla_detallada .= "<tr>
+					<td>TOTAL</td>
+					<td></td>
+					<td style='text-align:right;'>Q. " . number_format($grupo['monto_total'], 2) . "</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td style='text-align:right;'>Q. " . number_format($total_pagos, 2) . "</td>
+					<td style='text-align:right;'>Q. " . number_format($saldo, 2) . "</td>
+				</tr>";
+			}
+
+			$tabla_detallada .= "</tbody></table>";
+
+			$tabla_detallada .= $this->generar_tabla_resumen($where_temporada, $where_cliente, $where_estado);
+
+			return $tabla_detallada;
+		}
+
+		if ($idcliente == '' && $estado == '') {
+			$sql = mysql::getresult("SELECT
+					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					nombre_cliente,
+					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
+					CONCAT('Q ', FORMAT(monto_total_pagado, 2)) AS monto_total_pagado,
+					CONCAT('Q ', FORMAT(monto_programado, 2)) AS monto_total_programado,
+					CONCAT('Q ', FORMAT(saldo_pendiente, 2)) AS saldo_pendiente_pago,
+					proximidad,
+					estado
+				FROM view_estado_cuenta_despacho
+				WHERE 1 = 1
+					$where_temporada
+				ORDER BY fecha_factura ASC, nombre_cliente ASC");
+		} else {
+			$sql = mysql::getresult("SELECT
+					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					nombre_cliente,
+					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
+					CONCAT('Q ', FORMAT(monto_total_pagado, 2)) AS monto_total_pagado,
+					CONCAT('Q ', FORMAT(monto_programado, 2)) AS monto_total_programado,
+					CONCAT('Q ', FORMAT(saldo_pendiente, 2)) AS saldo_pendiente_pago,
+					proximidad,
+					estado
+				FROM view_estado_cuenta_despacho
+				WHERE 1 = 1
+					$where_temporada
+					$where_cliente
+					$where_estado
+				ORDER BY fecha_factura ASC, nombre_cliente ASC");
+		}
+
+		$columnControl = true;
+		$responsive    = true;
+		$colReorder    = true;
+		$select        = false;
+		$buttons       = true;
+		$paging        = true;
+		$ordering      = false;
+		$order         = true;
+		$rowGroup      = false;
+		$reset         = true;
+		$tituloTabla   = 'Estado de cuenta';
+		$fileName      = 'Estado_de_cuenta';
+
+		$data_ = "";
+		$data_  = " data-conf-columncontrol='" . ($columnControl ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-rowgroup=''";
+		$data_ .= " data-conf-titulotabla='" . $tituloTabla . "' ";
+		$data_ .= " data-conf-filename='" . $fileName . "' ";
+		$data_ .= " data-conf-responsive='" . ($responsive ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-colreorder='" . ($colReorder ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-select='" . ($select ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-buttons='" . ($buttons ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-paging='" . ($paging ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-ordering='" . ($ordering ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
+
+		$tabla = "<input type='hidden' id='datatableid' name='datatableid' value='tabla_estado_cuenta'>";
+		$tabla .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
+			<thead>
+				<tr>
+					<th>Facturado</th>
+					<th>Cliente</th>
+					<th>Total facturado</th>
+					<th>Total pagado</th>
+					<th>Total programado</th>
+					<th>Saldo</th>
+					<th>Proximidad</th>
+					<th>Estado</th>
+				</tr>
+			</thead>
+			<tbody>";
+
+		while ($row = mysql::getrowresult($sql)) {
+			$tabla .= "<tr>
+				<td style='text-align:left;'>" . $row['fecha_factura'] . "</td>
+				<td style='text-align:left;'>" . $row['nombre_cliente'] . "</td>
+				<td style='text-align:right;'>" . $row['monto_total_facturado'] . "</td>
+				<td style='text-align:right;'>" . $row['monto_total_pagado'] . "</td>
+				<td style='text-align:right;'>" . $row['monto_total_programado'] . "</td>
+				<td style='text-align:right;'>" . $row['saldo_pendiente_pago'] . "</td>
+				<td style='text-align:center;'>" . $row['proximidad'] . "</td>
+				<td>" . $row['estado'] . "</td>
+			</tr>";
+		}
+
+		$tabla .= "</tbody></table>";
+		$tabla .= $this->generar_tabla_resumen($where_temporada, $where_cliente, $where_estado);
+
+		$security->registrar_bitacora($this->ACCIONES['opcion_despacho'], 0, 'GENERAR_ESTADO_CUENTA');
+
+		return $tabla;
+	}
 }
 ?>

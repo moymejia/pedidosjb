@@ -1,0 +1,63 @@
+<h4 class="card-title m-b-5 header-titulo">Estado de cuenta</h4>
+<form class="margen-formulario" id="formulario_reporte">
+
+    <input type="hidden" id="jsid" name="jsid" value="estado_de_cuenta">
+
+    <div class="row">
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idtemporada">Temporada</label>
+            <select class="form-control select2" id="idtemporada" name="idtemporada" required onchange="">
+                [temporadas_activas]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idcliente">Cliente</label>
+            <select class="form-control select2" id="idcliente" name="idcliente" onchange="" value="">
+                [clientes_activos]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="estado">Estado</label>
+            <select class="form-control" id="estado" name="estado" onchange="" value="">
+                <option value="" selected></option>
+                <option value="A 30">A 30</option>
+                <option value="A 60">A 60</option>
+                <option value="A 90">A 90</option>
+                <option value="90 +">90 +</option>
+                <option value="Vencido">Vencido</option>
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idtipo_reporte">Tipo de reporte</label>
+            <select class="form-control" id="idtipo_reporte" name="idtipo_reporte">
+                <option value="resumido" selected>Resumido</option>
+                <option value="detallado">Detallado</option>
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group col-md-12 m-t-10">
+            <button type="button" id="generar_reporte" class="btn btn-success waves-effect waves-light m-r-10" onclick="
+                callback_reporte = function () {
+                    desactivar_tabla(tabla_datos);
+                    desactivar_tabla(tabla);
+
+                    tabla_datos = activar_tabla('tabla_datos');
+                    tabla_resumen = activar_tabla('tabla_estado_cuenta_resumen');
+                };
+
+                download_div_content('idtemporada,idcliente,estado,idtipo_reporte', 'despacho', 'generar_estado_de_cuenta', 'lista_estado_cuenta', callback_reporte);
+            ">Generar reporte</button>
+            <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                onclick="
+                    mostrar_opcion(54, 'Estado de cuenta', 'Reportes de ventas');
+                ">Limpiar</button>
+        </div>
+    </div>
+</form>
+<hr>
+<!-- -->
+<div class="table-responsive" id="lista_estado_cuenta">
+</div>
