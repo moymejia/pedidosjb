@@ -641,7 +641,9 @@ function habilitar_floating_labels() {
 }
 
 function activate_select2() {
-    $(".select2").select2();
+    $(".select2").select2({
+        width: '100%'
+    });
 }
 
 //DATA TABLES

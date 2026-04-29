@@ -27,7 +27,7 @@ function cambio_temporada(callback = null) {
 
 function abrir_pedido(idpedido) {
     element('idpedido_cargar').value = idpedido;
-    show_external_option(9,'Pedido','Clientes','jsid,idtemporada');
+    show_external_option(9,'Pedido','Clientes','jsid,idtemporada,idcliente,idmarca');
 }
 
 function init() {

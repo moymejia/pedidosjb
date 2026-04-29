@@ -279,7 +279,7 @@ class producto extends table{
                     element(\"modelo_b\").value = \"$modelo\";
                     objeto(\"titulo_actual\").textContent = \"$modelo\";
                     activar_tabla_precios();
-                    desactivar_tabla(\"tabla_productos_datos\");
+                    desactivar_tabla(\$(\"#tabla_productos_datos\").DataTable());
                     activar_tabla(\"tabla_productos_datos\");
                     goTop();
                     showElements(\"btn_cambiar_estado_producto,tab_producto_precio\");

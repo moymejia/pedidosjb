@@ -172,7 +172,7 @@ class datatables extends mysql {
     public function cargar_estado_datatables() {
         $db = new mysql();
         $usuario = (new security())->get_actual_user();
-        $sql = "SELECT tabla, estado FROM solomoda_seguridad.datatables WHERE usuario = '$usuario' ";
+        $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
         $result = $db->getresult($sql);
         $estados = [];
         while ($row = $db->getrowresult($result)) {
@@ -186,7 +186,7 @@ class datatables extends mysql {
     public function guardar_estado_datatables($tabla, $estado) {
         $usuario = (new security())->get_actual_user();
         $estado  = urldecode($estado);
-        $sql = "INSERT INTO solomoda_seguridad.datatables (usuario, tabla, estado)
+        $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, estado)
                 VALUES ('$usuario', '$tabla', '$estado')
                 ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
         $db = new mysql();

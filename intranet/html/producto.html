@@ -82,7 +82,7 @@
                                             }
                                             download_div_content('','producto','tabla','tabla_productos',callback_activar_tabla);
                                         }
-                                        desactivar_tabla('tabla_productos_datos');
+                                        desactivar_tabla($('#tabla_productos_datos').DataTable());
                                         
                                         download_input_value('idproducto','producto','cambiar_estado','estado',callback_cambiar_estado);
                                     ">
