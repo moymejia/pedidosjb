@@ -1,7 +1,9 @@
 //Variables generales.
 var tabla; // tabla datatables actual
+var tablas_activas = []; // tablas datatables activas
 var row_seleccionada; //fila seleccionada al editar registro.
 var crud_url = "../php/wisetech/crud.php";
+var version = 10;
 // si el path actual es 'empleos'
 cantidad_paths = window.location.pathname.split("/").length;
 if (window.location.pathname.split("/")[cantidad_paths - 2] == "empleos" || window.location.pathname.split("/")[cantidad_paths - 2] == "catalogo") {
@@ -17,40 +19,34 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
     delete callback_download;
     callback_download = function () {
         habilitar_floating_labels();
-        desactivar_tabla(tabla);
+        desactivar_tablas();
         if (objeto("tabla_datos") != undefined && objeto("tabla_datos").classList.contains("datatable")) {
             var inputDT = document.getElementById('datatableid');
-            var idFinal = 'tabla_datos'; // Valor por defecto
-
+            var idFinal = 'tabla_datos';
             if (inputDT && inputDT.value.trim() !== "") {
                 var nuevoId = inputDT.value.trim();
                 var tablaPorDefecto = document.getElementById('tabla_datos');
-
                 if (tablaPorDefecto) {
-                    // Si existe la tabla con el ID genérico, se lo cambiamos al del input
                     tablaPorDefecto.id = nuevoId;
                     idFinal = nuevoId;
                 } else if (document.getElementById(nuevoId)) {
-                    // Si no existe 'tabla_datos' pero ya existe una con el ID del input, la usamos
                     idFinal = nuevoId;
                 }
-
             }
-            var idtabla = idFinal;
-            tabla = activar_tabla(idtabla);
         }
+        tablas_activas = activar_tablas();
+        tabla = tablas_activas.length > 0 ? tablas_activas[0] : undefined;
         activate_select2();
         activate_switch();
         if (objeto("jsid") != undefined) {
             var jsid = element("jsid").value;
-            var script = document.createElement('script');
-            script.src = '../js/' + jsid + '.js';
-            script.type = 'text/javascript';
+            var script = document.createElement("script");
+            script.src = "../js/" + jsid + ".js?x=" + version;
+            script.type = "text/javascript";
             script.async = true; // o true, según lo que necesites
             document.head.appendChild(script);
-
         }
-
+        restore_data_local_storage();
     };
     download_div_content("idopcion_actual", "opcion", "cargar_opcion", "contenedor_principal", callback_retorno);
     document.getElementById("contenedor_principal").innerHTML = "";
@@ -645,12 +641,23 @@ function habilitar_floating_labels() {
 }
 
 function activate_select2() {
-    $(".select2").select2({
-        width: '100%'
-    });
+    $(".select2").select2();
 }
 
 //DATA TABLES
+function activar_tablas() {
+    var tablas_encontradas = document.querySelectorAll("table.datatable, table.datatables");
+    var tablas_activadas = [];
+
+    tablas_encontradas.forEach(function (tabla_html) {
+        if (tabla_html.id && tabla_html.id.trim() !== "") {
+            tablas_activadas.push(activar_tabla(tabla_html.id));
+        }
+    });
+
+    return tablas_activadas;
+}
+
 function activar_tabla(idtabla) {
     var tabla = document.getElementById(idtabla);
     var ds = tabla.dataset;
@@ -677,8 +684,6 @@ function activar_tabla(idtabla) {
     var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
-    var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
-    var noOrderUser = (ds.confNoorder === "true");
     var columnasAuto = [];
 
     $('#' + idtabla + ' thead th').each(function () {
@@ -699,6 +704,11 @@ function activar_tabla(idtabla) {
         });
     }
     if (buttonsUser) {
+        botones.push({
+            extend: "colvis",
+            text: "Seleccionar columnas",
+            columns: ":not(:first-child)"
+        });
         botones.push(
             {
                 extend: "copy",
@@ -901,10 +911,10 @@ function activar_tabla(idtabla) {
         lengthChange: pagingUser,
         stateSave: true,
         stateDuration: 0,
-        ordering: orderingUser,
+        ordering: true,
 
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
-        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']]),
+        order: rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']],
 
         createdRow: function (row, data, dataIndex) {
             if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);
@@ -955,13 +965,21 @@ function activar_tabla(idtabla) {
     return tabla_nueva;
 }
 
-function desactivar_tabla(tabla_instancia) {
-
-    if (!tabla_instancia) return;
-
-    if (typeof tabla_instancia.destroy === "function") {
-        tabla_instancia.destroy();
+function desactivar_tabla(tabla) {
+    if (tabla != undefined) {
+        tabla.destroy();
     }
+}
+
+function desactivar_tablas() {
+    if (Array.isArray(tablas_activas)) {
+        tablas_activas.forEach(function (instancia) {
+            if (instancia != undefined) {
+                instancia.destroy();
+            }
+        });
+    }
+    tablas_activas = [];
 }
 
 function agregar_fila_tabla(tabla, items) {
@@ -984,7 +1002,7 @@ function editar_fila_tabla(fila_seleccionada, items_nuevos) {
 //BOOTSTRAP SWITCH
 function activate_switch() {
     $("input[type='checkbox'], input[type='radio']").bootstrapSwitch();
-    $(".radio-switch").on("switch-change", function () {
+    ($(".radio-switch").on("switch-change", function () {
         $(".radio-switch").bootstrapSwitch("toggleRadioState");
     }),
         $(".radio-switch").on("switch-change", function () {
@@ -992,7 +1010,7 @@ function activate_switch() {
         }),
         $(".radio-switch").on("switch-change", function () {
             $(".radio-switch").bootstrapSwitch("toggleRadioStateAllowUncheck", !1);
-        });
+        }));
 }
 
 function download_chart_data(fields, table, operation, destiny, callback = null, error_callback = null) {
@@ -1016,7 +1034,7 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
         let json;
         try {
             let texto = respuesta.responseText.trim();
-            if (texto.startsWith('|correcto|')) texto = texto.split('|correcto|')[1];
+            if (texto.startsWith("|correcto|")) texto = texto.split("|correcto|")[1];
             json = JSON.parse(texto);
         } catch (e) {
             notify_error("Error al parsear JSON: " + e.message + " => " + respuesta.responseText);
@@ -1032,16 +1050,16 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
 
         const params = json.parametros || {};
         const labels = params.labels || [];
-        const type = params.type || 'bar';
+        const type = params.type || "bar";
         const title = params.title || "";
-        const ctx = document.getElementById(destiny).getContext('2d');
+        const ctx = document.getElementById(destiny).getContext("2d");
 
         if (ctx._chartInstance) ctx._chartInstance.destroy();
 
         // Función para oscurecer color
         function darkenRgba(rgba, factor = 0.6) {
             const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-            if (!match) return 'rgba(0,0,0,1)';
+            if (!match) return "rgba(0,0,0,1)";
             let [, r, g, b, a] = match;
             r = Math.floor(parseInt(r) * factor);
             g = Math.floor(parseInt(g) * factor);
@@ -1060,17 +1078,17 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
                     bg = Array(ds.data.length).fill(ds.backgroundColor[0]);
                 }
             } else {
-                bg = Array(ds.data.length).fill(ds.backgroundColor || 'rgba(0,0,0,0.5)');
+                bg = Array(ds.data.length).fill(ds.backgroundColor || "rgba(0,0,0,0.5)");
             }
 
-            let border = ds.borderColor || bg.map(c => darkenRgba(c, 0.6));
+            let border = ds.borderColor || bg.map((c) => darkenRgba(c, 0.6));
 
             return {
                 label: ds.label,
                 data: ds.data,
                 backgroundColor: bg,
                 borderColor: border,
-                borderWidth: 1
+                borderWidth: 1,
             };
         });
 
@@ -1078,15 +1096,15 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
             type: type,
             data: {
                 labels: labels,
-                datasets: finalDatasets
+                datasets: finalDatasets,
             },
             options: {
                 responsive: true,
-                scales: (type === 'bar' || type === 'line') ? { y: { beginAtZero: true } } : {},
+                scales: type === "bar" || type === "line" ? { y: { beginAtZero: true } } : {},
                 plugins: {
-                    title: { display: true, text: title }
-                }
-            }
+                    title: { display: true, text: title },
+                },
+            },
         });
 
         ctx._chartInstance = chart;
@@ -1104,52 +1122,45 @@ function download_chart_data(fields, table, operation, destiny, callback = null,
 }
 
 function show_external_option(idopcion, opcion, menu, prohibidos = null) {
-
     let datos = {};
 
     let idsProhibidos = [];
 
     if (prohibidos) {
-        idsProhibidos = prohibidos.split(',').map(id => id.trim());
+        idsProhibidos = prohibidos.split(",").map((id) => id.trim());
     }
 
     idsProhibidos.push("table");
 
-    let notSelector = idsProhibidos
-        .map(id => `:not(#${CSS.escape(id)})`)
-        .join('');
+    let notSelector = idsProhibidos.map((id) => `:not(#${CSS.escape(id)})`).join("");
 
-    const elementos = document.querySelectorAll(
-        `input${notSelector}, select${notSelector}, textarea${notSelector}`
-    );
+    const elementos = document.querySelectorAll(`input${notSelector}, select${notSelector}, textarea${notSelector}`);
 
     elementos.forEach(function (el) {
-
         const key = el.id || el.name;
         if (!key) return;
 
         if (el.type === "checkbox") {
             datos[key] = el.checked ? 1 : 0;
-
         } else if (el.type === "radio") {
             if (el.checked) {
                 datos[key] = el.value;
             }
-
         } else {
             datos[key] = el.value;
         }
     });
 
-    localStorage.setItem(
-        "datos_json_externo",
-        JSON.stringify(datos)
-    );
+    localStorage.setItem("datos_json_externo", JSON.stringify(datos));
 
-    const url = window.location.pathname +
-        "?idopcion=" + encodeURIComponent(idopcion) +
-        "&opcion=" + encodeURIComponent(opcion) +
-        "&menu=" + encodeURIComponent(menu);
+    const url =
+        window.location.pathname +
+        "?idopcion=" +
+        encodeURIComponent(idopcion) +
+        "&opcion=" +
+        encodeURIComponent(opcion) +
+        "&menu=" +
+        encodeURIComponent(menu);
 
     window.open(url, "_blank");
 }
@@ -1162,28 +1173,31 @@ function restore_data_local_storage() {
     const datos = JSON.parse(datosGuardados);
 
     Object.keys(datos).forEach(function (key) {
-
         const elemento = document.getElementById(key);
 
         if (!elemento) return;
 
         if (elemento.type === "checkbox") {
             elemento.checked = datos[key] == 1;
-        }
-        else if (elemento.type === "radio") {
-            const radio = document.querySelector(
-                "input[type='radio'][name='" + elemento.name + "'][value='" + datos[key] + "']"
-            );
+            elemento.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (elemento.type === "radio") {
+            const radio = document.querySelector("input[type='radio'][name='" + elemento.name + "'][value='" + datos[key] + "']");
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        } else if (elemento.type === "radio") {
+            const radio = document.querySelector("input[type='radio'][name='" + elemento.name + "'][value='" + datos[key] + "']");
             if (radio) radio.checked = true;
-        }
-        else {
+        } else {
             elemento.value = datos[key];
+            elemento.dispatchEvent(new Event("change", { bubbles: true }));
+            elemento.dispatchEvent(new Event("input", { bubbles: true }));
         }
-
     });
 
+    localStorage.removeItem("datos_json_externo");
 }
-
 
 function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
     var rootElement = document.getElementById(idtabla);
