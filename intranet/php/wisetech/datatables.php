@@ -52,11 +52,7 @@ class datatables extends mysql {
         $reset         = isset($PARAMETROS['reset']) ? $PARAMETROS['reset'] : false;
         $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
         $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
-        $hidden_columns = !empty($hidden_columns)
-            ? $hidden_columns
-            : (isset($PARAMETROS['hidden_columns']) && is_array($PARAMETROS['hidden_columns'])
-                ? $PARAMETROS['hidden_columns']
-                : []);
+        
 
         $titulo_tabla  = isset($PARAMETROS['titulotabla']) ? $PARAMETROS['titulotabla'] : false;
         $file_name     = isset($PARAMETROS['filename']) ? $PARAMETROS['filename'] : false;
