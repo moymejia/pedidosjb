@@ -502,7 +502,7 @@ class despacho_pago extends table
                 
                 // Si el monto cambió, actualizar la aplicación
                 if ($monto_anterior != $monto_actual) {
-                    $this->actualizar_aplicacion_anticipo($iddespacho_pago, $idcliente_anticipo_anterior, $idcliente_anticipo, $monto_anterior, $monto_actual, $PARAMETROS);
+                    $this->actualizar_aplicacion_anticipo($iddespacho_pago, $row_actual['iddespacho'], $idcliente_anticipo_anterior, $idcliente_anticipo, $monto_anterior, $monto_actual, $PARAMETROS);
                 }
                 // Si el anticipo cambió pero el monto es igual
                 elseif ($idcliente_anticipo_anterior !== $idcliente_anticipo) {
@@ -516,7 +516,7 @@ class despacho_pago extends table
                     $_CLIENTE_ANTICIPO->aplicar_anticipo($idcliente_anticipo, $monto_actual);
                     
                     // Actualizar registro de aplicación
-                    $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho_pago($iddespacho_pago);
+                    $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho($row_actual['iddespacho'], $idcliente_anticipo_anterior);
                     if ($row_aplicacion) {
                         $_CLIENTE_ANTICIPO_APLICACION->actualizar_aplicacion(
                             $row_aplicacion['idcliente_anticipo_aplicacion'],
@@ -539,7 +539,7 @@ class despacho_pago extends table
                 $_CLIENTE_ANTICIPO->revertir_anticipo($idcliente_anticipo_anterior, $monto_anterior);
                 
                 // Obtener y cancelar la aplicación
-                $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho_pago($iddespacho_pago);
+                $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho($row_actual['iddespacho'], $idcliente_anticipo_anterior);
                 if ($row_aplicacion) {
                     $_CLIENTE_ANTICIPO_APLICACION->cancelar_aplicacion($row_aplicacion['idcliente_anticipo_aplicacion']);
                 }
@@ -591,7 +591,6 @@ class despacho_pago extends table
 
         $idcliente_anticipo_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->crear_aplicacion(
             $idcliente_anticipo,
-            $iddespacho_pago,
             $iddespacho,
             $fecha,
             $monto,
@@ -608,7 +607,7 @@ class despacho_pago extends table
         return true;
     }
 
-    private function actualizar_aplicacion_anticipo($iddespacho_pago, $idcliente_anticipo_anterior, $idcliente_anticipo_nuevo, $monto_anterior, $monto_nuevo, $PARAMETROS)
+    private function actualizar_aplicacion_anticipo($iddespacho_pago, $iddespacho, $idcliente_anticipo_anterior, $idcliente_anticipo_nuevo, $monto_anterior, $monto_nuevo, $PARAMETROS)
     {
         $_CLIENTE_ANTICIPO = new cliente_anticipo();
         $_CLIENTE_ANTICIPO_APLICACION = new cliente_anticipo_aplicacion();
@@ -631,7 +630,7 @@ class despacho_pago extends table
         }
 
         // Actualizar registro en cliente_anticipo_aplicacion
-        $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho_pago($iddespacho_pago);
+        $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho($iddespacho, $idcliente_anticipo_anterior);
         
         if ($row_aplicacion) {
             $_CLIENTE_ANTICIPO_APLICACION->actualizar_aplicacion(
@@ -740,7 +739,7 @@ class despacho_pago extends table
             $_CLIENTE_ANTICIPO->revertir_anticipo($idcliente_anticipo, $monto);
             
             // Obtener y cancelar la aplicación
-            $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho_pago($iddespacho_pago);
+            $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho($row_despacho_pago['iddespacho'], $idcliente_anticipo);
             if ($row_aplicacion) {
                 $_CLIENTE_ANTICIPO_APLICACION->cancelar_aplicacion($row_aplicacion['idcliente_anticipo_aplicacion']);
             }

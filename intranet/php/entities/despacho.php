@@ -910,7 +910,8 @@ class despacho extends table
 			$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
 			$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
 
-			$tabla_detallada = "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
+			$tabla_detallada = "<br><h2>Estado de cuenta</h2>";
+			$tabla_detallada .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
 				<thead>
 					<tr>
 						<th>Tipo registro</th>
@@ -1065,7 +1066,8 @@ class despacho extends table
 		$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
 
-		$tabla = "<input type='hidden' id='datatableid' name='datatableid' value='tabla_estado_cuenta'>";
+		$tabla = "<br><h2>Estado de cuenta</h2>";
+		$tabla .= "<input type='hidden' id='datatableid' name='datatableid' value='tabla_estado_cuenta'>";
 		$tabla .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
 			<thead>
 				<tr>

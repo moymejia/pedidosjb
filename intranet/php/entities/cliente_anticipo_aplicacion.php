@@ -20,22 +20,20 @@ class cliente_anticipo_aplicacion extends table
         $this->ACCIONES['consultar_aplicacion']  = 'Consultar_cliente_anticipo_aplicacion';
     }
 
-    public function crear_aplicacion($idcliente_anticipo, $iddespacho_pago, $iddespacho, $fecha, $monto_aplicado, $observaciones = null)
+    public function crear_aplicacion($idcliente_anticipo, $iddespacho, $fecha, $monto_aplicado, $observaciones = null)
     {
         $idcliente_anticipo = trim($idcliente_anticipo . '');
-        $iddespacho_pago = trim($iddespacho_pago . '');
         $iddespacho = trim($iddespacho . '');
         $fecha = trim($fecha . '');
         $monto_aplicado = (float)$monto_aplicado;
         $PARAMETROS = [
             'idcliente_anticipo' => $idcliente_anticipo,
-            'iddespacho_pago' => $iddespacho_pago,
             'iddespacho' => $iddespacho,
             'fecha' => $fecha,
             'monto_aplicado' => $monto_aplicado
         ];
 
-        if (empty($idcliente_anticipo) || empty($iddespacho_pago) || empty($iddespacho) || empty($fecha)) {
+        if (empty($idcliente_anticipo) || empty($iddespacho) || empty($fecha)) {
             $this->last_error = 'Datos incompletos para crear aplicación de anticipo.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
@@ -51,7 +49,6 @@ class cliente_anticipo_aplicacion extends table
         
         $DATOS = [];
         $DATOS['idcliente_anticipo'] = $idcliente_anticipo;
-        $DATOS['iddespacho_pago']    = $iddespacho_pago;
         $DATOS['iddespacho']         = $iddespacho;
         $DATOS['fecha']              = $fecha;
         $DATOS['monto_aplicado']     = number_format($monto_aplicado, 2, '.', '');
@@ -142,13 +139,26 @@ class cliente_anticipo_aplicacion extends table
         return false;
     }
 
-    public function obtener_aplicacion_por_despacho_pago($iddespacho_pago)
+    public function obtener_aplicacion_por_despacho($iddespacho, $idcliente_anticipo = null)
     {
-        $iddespacho_pago = trim($iddespacho_pago . '');
+        $iddespacho = trim($iddespacho . '');
+        $idcliente_anticipo = trim($idcliente_anticipo . '');
+
+        if (empty($iddespacho)) {
+            return false;
+        }
+
+        $filtro_anticipo = '';
+        if ($idcliente_anticipo !== '') {
+            $filtro_anticipo = " AND idcliente_anticipo = '$idcliente_anticipo' ";
+        }
 
         $row = mysql::getrow("SELECT idcliente_anticipo_aplicacion, idcliente_anticipo, iddespacho, monto_aplicado, estado 
             FROM cliente_anticipo_aplicacion 
-            WHERE iddespacho_pago = '$iddespacho_pago' 
+            WHERE iddespacho = '$iddespacho' 
+              AND estado = 'ACTIVO'
+              $filtro_anticipo
+            ORDER BY idcliente_anticipo_aplicacion DESC
             LIMIT 1");
 
         return $row ? $row : false;
