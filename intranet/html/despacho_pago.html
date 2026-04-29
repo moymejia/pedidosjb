@@ -1,0 +1,149 @@
+<input type="hidden" id="jsid" name="jsid" value="despacho_pago">
+<input type="hidden" id="iddespacho" name="iddespacho" value="">
+
+<h4 class="card-title m-b-5 header-titulo">Registro de pagos por despacho</h4>
+
+<style>
+    #despachoPagoApp .card-header {
+        font-weight: 600;
+    }
+
+    #despachoPagoApp .nav-tabs .nav-link {
+        color: #1f2937;
+        background-color: #e5e7eb;
+    }
+
+    #despachoPagoApp .nav-tabs .nav-link.active {
+        color: #ffffff;
+        background-color: #0b6fa4;
+    }
+</style>
+
+<div class="margen-formulario" id="despachoPagoApp">
+    <div class="card border mb-3" id="card_seleccion_cliente">
+        <div class="card-header bg-info text-white">
+            <strong>Seleccion de cliente</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 form-group m-b-5">
+                    <label for="idcliente">Cliente <span class="text-danger">*</span></label>
+                    <select id="idcliente" class="form-control select2" onchange="despachoPagoCargarPendientes();" required>
+                        [options_clientes]
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end form-group m-b-5">
+                    <small class="text-muted">Seleccione un cliente para ver sus despachos con saldo pendiente de pago.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border mb-3" id="card_despachos_pendientes">
+        <div class="card-header bg-secondary text-white">
+            <strong>Despachos pendientes de pago</strong>
+        </div>
+        <div class="card-body">
+            <div id="div_despachos_pendientes" class="table-responsive">
+                <div class="text-muted">Seleccione un cliente para cargar la informacion.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="div_panel_pagos" class="card border" style="display:none;">
+        <div class="card-header bg-dark text-white">
+            <strong>Pagos del despacho seleccionado</strong>
+        </div>
+        <div class="card-body" id="div_contenido_pagos"></div>
+    </div>
+
+    <div id="div_btn_regresar" style="display:none; margin-top:15px;">
+        <button type="button" class="btn btn-secondary waves-effect waves-light" onclick="despachoPagoRegresar();">
+            <i class="fas fa-arrow-left"></i> Regresar
+        </button>
+    </div>
+</div>
+
+<script type="text/template" id="tpl_despacho_pago_formulario">
+    <div class='card border mb-3'>
+        <div class='card-header bg-info text-white'>
+            <strong>Registrar documento de pago</strong>
+        </div>
+        <div class='card-body'>
+            <form onsubmit='return despachoPagoGuardar();' id='form_despacho_pago'>
+                <input type='hidden' id='iddespacho_pago' value=''>
+                <div class='row'>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='idtipo_pago'>Tipo de pago <span class='text-danger'>*</span></label>
+                        <select id='idtipo_pago' class='form-control' onchange='despachoPagoManejarCambioTipoPago();' required>
+                            [options_tipos_pago]
+                        </select>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='idcliente_anticipo'>Anticipo</label>
+                        <select id='idcliente_anticipo' class='form-control' disabled>
+                            <option value=''>-- Seleccione un anticipo --</option>
+                        </select>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='idtipo_documento'>Tipo de documento <span class='text-danger'>*</span></label>
+                        <select id='idtipo_documento' class='form-control' required>
+                            [options_tipos_documento]
+                        </select>
+                    </div>
+                </div>
+                <div class='row'>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='correlativo_documento'>Correlativo <span class='text-danger'>*</span></label>
+                        <input type='text' id='correlativo_documento' class='form-control' maxlength='50' placeholder='Serie/numero' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='fecha'>Fecha <span class='text-danger'>*</span></label>
+                        <input type='date' id='fecha' class='form-control' value='[fecha_hoy]' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='estado'>Estado <span class='text-danger'>*</span></label>
+                        <select id='estado' class='form-control' required>
+                            <option value='PROGRAMADO'>PROGRAMADO</option>
+                            <option value='EJECUTADO'>EJECUTADO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class='row'>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='monto'>Monto <span class='text-danger'>*</span></label>
+                        <input type='text' id='monto' class='form-control' inputmode='decimal' placeholder='0.00' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='banco'>Banco</label>
+                        <input type='text' id='banco' class='form-control' maxlength='100' placeholder='Nombre del banco'>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='referencia_pago'>Referencia</label>
+                        <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.'>
+                    </div>
+                </div>
+                <div class='row'>
+                    <div class='col-md-12 form-group m-b-5'>
+                        <label for='observaciones'>Observaciones</label>
+                        <input type='text' id='observaciones' class='form-control' maxlength='500' placeholder='Observaciones del documento'>
+                    </div>
+                </div>
+                <br>
+                <div class='row'>
+                    <div class='col-md-12 form-group m-b-5 d-flex align-items-end'>
+                        <div>
+                            <button type='submit' id='btn_guardar_documento' class='btn btn-success waves-effect waves-light m-r-10'>Guardar documento</button>
+                            <button type='button' class='btn btn-inverse waves-effect waves-light' onclick='despachoPagoLimpiarFormulario();'>Limpiar</button>
+                            <button type='button' id='btn_imprimir_documento' class='btn btn-warning waves-effect waves-light m-l-10' style='display:none;' onclick='despachoPagoImprimirRegistro();'>
+                                <i class='fas fa-print'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</script>
+
+<div id="div_imprimir_recibo" style="display:none;"></div>

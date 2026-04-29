@@ -198,4 +198,9 @@ class forma_pago extends table
             return false;
         }
     }
+
+    public function option_activas()
+    {
+        return mysql::getoptions("SELECT idforma_pago AS id, descripcion FROM forma_pago WHERE estado = 'ACTIVO' ORDER BY descripcion ASC");
+    }
 }

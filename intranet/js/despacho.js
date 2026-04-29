@@ -180,14 +180,25 @@
             tablaTallas += '</tr></table>';
 
             var tr = document.createElement('tr');
-            var esSeleccionable = Number(linea.pares || 0) > 0 && despachoEsEditable();
+            var tienePendiente = Number(linea.pares || 0) > 0;
+            var esSeleccionable = tienePendiente && despachoEsEditable();
+            var textoBoton = 'Despachado';
+            var claseBoton = 'btn-secondary';
+
+            if (tienePendiente) {
+                textoBoton = linea.selected && esSeleccionable ? 'Marcado' : 'Despachar';
+                claseBoton = esSeleccionable
+                    ? (linea.selected ? 'btn-primary' : 'btn-success')
+                    : 'btn-warning';
+            }
+
             if (linea.selected) {
                 tr.classList.add('despacho-selected-row');
             }
 
             var imgSrc = linea.imagen ? '../' + linea.imagen + '?x=' + Date.now() : 'https://via.placeholder.com/50';
             tr.innerHTML =
-                '<td><button type="button" class="btn btn-sm ' + (esSeleccionable ? (linea.selected ? 'btn-primary' : 'btn-outline-primary') : 'btn-secondary') + '" ' + (esSeleccionable ? ('onclick="despachoToggleGrupo(' + i + ');"') : 'disabled') + '>' + (esSeleccionable ? (linea.selected ? 'Marcado' : 'Seleccionar') : 'Despachado') + '</button></td>' +
+                '<td><button type="button" class="btn btn-sm ' + claseBoton + '" ' + (esSeleccionable ? ('onclick="despachoToggleGrupo(' + i + ');"') : 'disabled') + '>' + textoBoton + '</button></td>' +
                 '<td><strong>' + safe(linea.codigo) + '</strong><br><small>' + safe(linea.descripcion) + '</small></td>' +
                 '<td>' + safe(linea.set_talla) + '</td>' +
                 '<td>' + safe(linea.color) + '</td>' +

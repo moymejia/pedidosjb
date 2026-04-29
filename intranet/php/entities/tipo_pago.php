@@ -47,12 +47,13 @@ class tipo_pago extends table
     public function cargar_opcion()
     {
         $DATA            = [];
-        $result          = mysql::getresult("SELECT idtipo_pago, descripcion, estado FROM tipo_pago ORDER BY idtipo_pago DESC");
+        $result          = mysql::getresult("SELECT idtipo_pago, descripcion, signo, estado FROM tipo_pago ORDER BY idtipo_pago DESC");
         $tabla_tipo_pago = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
 		<thead>
 			<tr>
                 <th style="text-align: center;">Acciones</th>
                 <th style="text-align: center;">Descripcion</th>
+                <th style="text-align: center;">Signo</th>
                 <th style="text-align: center;">Estado</th>
 			</tr>
 		</thead>
@@ -60,6 +61,7 @@ class tipo_pago extends table
 
         while ($row = mysql::getrowresult($result)) {
             $descripcion = $row['descripcion'];
+            $signo       = ((int)$row['signo'] > 0) ? '+' : '-';
             $estado      = $row['estado'];
             $row_data    = $row;
             $str_data    = "";
@@ -71,8 +73,9 @@ class tipo_pago extends table
             $boton_editar     = "<button  class=\"btn btn-sm btn-primary waves-effect waves-light\" type=\"button\" onclick=\"editar_registro('$str_data',this.parentNode.parentNode);objeto('idtipo_pago').readOnly = true;goTop();\"><span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar</button>";
             $tabla_tipo_pago .= "<tr>
 				<td>$boton_editar</td>
-                <td>$descripcion</td>
-                <td>$estado</td>
+                <td style='text-align:center;'>$descripcion</td>
+                <td style='text-align:center;'>$signo</td>
+                <td style='text-align:center;'>$estado</td>
 			</tr>";
         }
         $tabla_tipo_pago .= "</tbody>
@@ -86,7 +89,7 @@ class tipo_pago extends table
 
     public function guardar_tipo_pago($PARAMETROS)
     {
-        $parametros_necesarios = ["descripcion"]; //valida que se cuente con los parametros necesarios.
+        $parametros_necesarios = ["descripcion", "signo"]; //valida que se cuente con los parametros necesarios.
         if (! table::validate_parameter_existence($parametros_necesarios, $PARAMETROS)) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -108,6 +111,14 @@ class tipo_pago extends table
             return false;
         }
 
+        $signo = (int)$PARAMETROS['signo'];
+        if ($signo != 1 && $signo != -1) {
+            $this->last_error = 'El signo debe ser + o -.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+
+            return false;
+        }
+
         if ($PARAMETROS['idtipo_pago'] == '') { //es un nuevo tipo de pago
             $security = new security($this->ACCIONES['crear_tipo_pago']);
             if (mysql::exists('tipo_pago', " descripcion = '{$PARAMETROS['descripcion']}'")) { //verifica que el tipo de pago nuevo no exista ya
@@ -117,7 +128,7 @@ class tipo_pago extends table
                 return false;
             }
 
-            $valores_necesarios        = ["descripcion"];
+            $valores_necesarios        = ["descripcion", "signo"];
             $DATOS                     = table::create_subarray($valores_necesarios, $PARAMETROS);
             $DATOS['estado']           = "ACTIVO";
             $DATOS['usuario_creacion'] = $security->get_actual_user();
@@ -143,7 +154,7 @@ class tipo_pago extends table
                     return false;
                 }
 
-                $valores_necesarios            = ["idtipo_pago", "descripcion", "estado"];
+                $valores_necesarios            = ["idtipo_pago", "descripcion", "signo", "estado"];
                 $DATOS                         = table::create_subarray($valores_necesarios, $PARAMETROS);
                 $DATOS['usuario_modificacion'] = $security->get_actual_user();
                 $llaves                        = ["idtipo_pago"];
@@ -199,5 +210,10 @@ class tipo_pago extends table
 
             return false;
         }
+    }
+
+    public function option_activas()
+    {
+        return mysql::getoptions("SELECT idtipo_pago AS id, descripcion FROM tipo_pago WHERE estado != 'INACTIVO' ORDER BY descripcion ASC");
     }
 }

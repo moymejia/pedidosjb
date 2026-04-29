@@ -1,0 +1,102 @@
+<h4 class="card-title m-b-5 header-titulo">Anticipos de cliente</h4>
+<form class="margen-formulario" onsubmit="
+	delete callback_guardar_registro_correcto;
+	callback_guardar_registro_correcto = function(){
+		return mostrar_opcion([idopcion_cliente_anticipo],'pedidos','Anticipos de cliente');
+	};
+	guardar_registro(this);
+	return false;
+	" id="formulario_registro">
+
+    <input type="hidden" name="table" id="table" value="cliente_anticipo">
+    <input type="hidden" name="idcliente_anticipo" id="idcliente_anticipo">
+
+    <!-- Fila 1: cliente, fecha, tipo_pago, monto (todos col-md-3) -->
+    <div class="row">
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idcliente">Cliente:</label>
+            <select class="form-control select2" id="idcliente" name="idcliente" required>
+                [options_clientes]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="fecha">Fecha:</label>
+            <input type="date" class="form-control" id="fecha" name="fecha" value="[fecha_hoy]" required>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="idtipo_pago">Tipo de pago:</label>
+            <select class="form-control" id="idtipo_pago" name="idtipo_pago" required>
+                [options_tipos_pago]
+            </select>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="monto">Monto:</label>
+            <input type="number" class="form-control" id="monto" name="monto" min="0.01" step="0.01" required>
+            <span class="bar"></span>
+        </div>
+    </div>
+
+    <!-- Fila 2: saldo_disponible, estado, referencia_pago (todos col-md-3) -->
+    <div class="row">
+        <div class="form-group m-b-5 col-md-3">
+            <label for="saldo_disponible">Saldo disponible:</label>
+            <input type="number" class="form-control" id="saldo_disponible" name="saldo_disponible" min="0.00" step="0.01" readonly>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="estado">Estado:</label>
+            <input type="text" class="form-control" id="estado" name="estado" value="ACTIVO" readonly>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="referencia_pago">Referencia de pago:</label>
+            <input type="text" class="form-control" id="referencia_pago" name="referencia_pago" maxlength="100">
+            <span class="bar"></span>
+        </div>
+    </div>
+
+    <!-- Fila 3: observaciones (6) y botones (6) -->
+    <div class="row">
+        <div class="form-group m-b-5 col-md-6">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" class="form-control" id="observaciones" name="observaciones" maxlength="500">
+            <span class="bar"></span>
+        </div>
+        <div class="form-group col-md-6 m-t-30">
+            <button type="submit" class="btn btn-success waves-effect waves-light m-r-10" onclick="if(element('idcliente_anticipo').value == ''){element('saldo_disponible').value = element('monto').value;}">Guardar</button>
+            <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
+                onclick="hideElement('botones_edicion');objeto('idcliente_anticipo').value = '';objeto('idcliente_anticipo').readOnly = false;objeto('fecha').value='[fecha_hoy]';objeto('estado').value='ACTIVO';objeto('saldo_disponible').value='';">Cancelar</button>
+            <span id="botones_edicion" style="display: none;">
+                <button type="button" class="btn btn-info waves-effect waves-light" onclick="
+					delete callback_download;
+					callback_download = function(){
+						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
+						if(objeto('estado').value != 'PROTEGIDO'){ 
+							notify_success('El anticipo esta ahora '+objeto('estado').value);
+							return mostrar_opcion([idopcion_cliente_anticipo],'pedidos','Anticipos de cliente');
+						}
+					}
+					download_input_value('idcliente_anticipo','cliente_anticipo','cambiar_estado','estado');
+					">Cambiar estado</button>
+            </span>
+        </div>
+    </div>
+</form>
+<hr>
+<div class="table-responsive" id="lista_cliente_anticipo">
+    [tabla_cliente_anticipo]
+</div>
+<script>
+(function(){
+    if (objeto('monto') !== undefined) {
+        objeto('monto').addEventListener('input', function(){
+            if (elementValue('idcliente_anticipo') == '') {
+                objeto('saldo_disponible').value = this.value;
+            }
+        });
+    }
+})();
+</script>

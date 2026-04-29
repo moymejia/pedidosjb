@@ -1,8 +1,6 @@
 <h4 class="card-title m-b-5 header-titulo">Estado de cuenta</h4>
 <form class="margen-formulario" id="formulario_reporte">
 
-    <input type="hidden" id="jsid" name="jsid" value="estado_de_cuenta">
-
     <div class="row">
         <div class="form-group m-b-5 col-md-3">
             <label for="idtemporada">Temporada</label>
@@ -41,11 +39,11 @@
         <div class="form-group col-md-12 m-t-10">
             <button type="button" id="generar_reporte" class="btn btn-success waves-effect waves-light m-r-10" onclick="
                 callback_reporte = function () {
-                    desactivar_tabla(tabla_datos);
-                    desactivar_tabla(tabla);
-
-                    tabla_datos = activar_tabla('tabla_datos');
-                    tabla_resumen = activar_tabla('tabla_estado_cuenta_resumen');
+                    desactivar_tablas();
+                    tablas_activas = activar_tablas();
+                    tabla = tablas_activas.length > 0 ? tablas_activas[0] : undefined;
+                    tabla_datos = $('#tabla_datos').length ? $('#tabla_datos').DataTable() : undefined;
+                    tabla_resumen = $('#tabla_estado_cuenta_resumen').length ? $('#tabla_estado_cuenta_resumen').DataTable() : undefined;
                 };
 
                 download_div_content('idtemporada,idcliente,estado,idtipo_reporte', 'despacho', 'generar_estado_de_cuenta', 'lista_estado_cuenta', callback_reporte);
