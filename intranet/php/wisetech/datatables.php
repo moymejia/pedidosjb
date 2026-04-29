@@ -108,10 +108,6 @@ class datatables extends mysql {
             $tabla_marca .= "<th>$header</th>";
         }
 
-        foreach ($special_columns as $column => $column_content) {
-            $tabla_marca .= "<th>$column</th>";
-        }
-
         $tabla_marca .= '
             </tr>
         </thead>
@@ -149,16 +145,26 @@ class datatables extends mysql {
                 if (in_array($key, $hidden_columns)) {
                     continue;
                 }
+                //si esta en columna especial, reemplazo su contenido
+                if (isset($special_columns[$key])) {
+                    $column_content = $special_columns[$key];
+                    foreach ($row as $key => $value) {
+                        $column_content = str_replace("[$key]", $value, $column_content);
+                    }
+                }else{
+                    $column_content = $value;
+                }
+
                 $align = (isset($aligments[$key])) ? $aligments[$key] : "left";
-                $tabla_marca .= "<td style='text-align:$align'>$value</td>";
+                $tabla_marca .= "<td style='text-align:$align'>$column_content</td>";
             }
 
-            foreach ($special_columns as $column => $column_content) {
-                foreach ($row as $key => $value) {
-                    $column_content = str_replace("[$key]", $value, $column_content);
-                }
-                $tabla_marca .= "<td>$column_content</td>";
-            }
+            // foreach ($special_columns as $column => $column_content) {
+            //     foreach ($row as $key => $value) {
+            //         $column_content = str_replace("[$key]", $value, $column_content);
+            //     }
+            //     $tabla_marca .= "<td>$column_content</td>";
+            // }
 
             $tabla_marca .= "</tr>";
         }
