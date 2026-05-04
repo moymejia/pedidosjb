@@ -2,7 +2,7 @@
 <form class="margen-formulario" onsubmit="
 	delete callback_guardar_registro_correcto;
 	callback_guardar_registro_correcto = function(){
-		return mostrar_opcion([idopcion_cliente_anticipo],'pedidos','Anticipos de cliente');
+		return mostrar_opcion(54,'pedidos','Anticipos de cliente');
 	};
 	guardar_registro(this);
 	return false;
@@ -76,7 +76,7 @@
 						if(objeto('estado').value == 'PROTEGIDO') notify_warning('Registro protegido, no puede modificarse');
 						if(objeto('estado').value != 'PROTEGIDO'){ 
 							notify_success('El anticipo esta ahora '+objeto('estado').value);
-							return mostrar_opcion([idopcion_cliente_anticipo],'pedidos','Anticipos de cliente');
+							return mostrar_opcion(54,'pedidos','Anticipos de cliente');
 						}
 					}
 					download_input_value('idcliente_anticipo','cliente_anticipo','cambiar_estado','estado');
