@@ -18,7 +18,7 @@ class despacho extends table
 	{
 		parent::__construct(prefijo . '_pedidos', 'despacho');
 
-		$this->ACCIONES['Opcion_despacho']            = "Opcion_despacho";
+		$this->ACCIONES['opcion_despacho']            = "opcion_despacho";
 		$this->ACCIONES['opcion_estado_de_cuenta']    = "opcion_estado_de_cuenta";
 		$this->ACCIONES['Crear_despacho']    		  = "Crear_despacho";
 		$this->ACCIONES['Despachar_lineas']           = "Despachar_lineas";

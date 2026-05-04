@@ -768,14 +768,28 @@ function activar_tabla(idtabla) {
                         bold: true,
                         alignment: "center"
                     };
-                    if (doc.content && doc.content[2] && doc.content[2].table) {
-                        doc.content[2].alignment = "center";
-                        if (doc.content[2].table.widths) {
-                            doc.content[2].table.widths = doc.content[2].table.widths.map(function () {
-                                return "*";
-                            });
+                    var tableNode = null;
+                    if (Array.isArray(doc.content)) {
+                        for (var i = 0; i < doc.content.length; i++) {
+                            if (doc.content[i] && doc.content[i].table) {
+                                tableNode = doc.content[i];
+                                break;
+                            }
                         }
-                        doc.content[2].layout = {
+                    }
+
+                    if (tableNode && tableNode.table && Array.isArray(tableNode.table.body) && tableNode.table.body.length > 0) {
+                        var totalColumnas = tableNode.table.body[0].length;
+
+                        if (totalColumnas > 0) {
+                            tableNode.table.widths = new Array(totalColumnas).fill("*");
+                        }
+
+                        tableNode.alignment = "center";
+                        tableNode.margin = [0, 0, 0, 0];
+                        tableNode.table.dontBreakRows = true;
+
+                        tableNode.layout = {
                             hLineColor: function () { return "#000000"; },
                             vLineColor: function () { return "#000000"; },
                             hLineWidth: function () { return 0.5; },

@@ -8,6 +8,22 @@
         return isNaN(numero) ? 0 : numero;
     }
 
+    function renderPreviewImagenDocumento(ruta) {
+        var contenedor = objeto('preview_imagen_documento');
+        if (!contenedor) {
+            return;
+        }
+
+        if (!ruta) {
+            contenedor.innerHTML = 'Sin imagen seleccionada';
+            contenedor.classList.add('text-muted');
+            return;
+        }
+
+        contenedor.classList.remove('text-muted');
+        contenedor.innerHTML = "<img src='../" + ruta + "' alt='Imagen documento' style='max-width:100%; max-height:160px; object-fit:contain;'>";
+    }
+
     function formatearMontoMiles(valor) {
         return normalizarMonto(valor).toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -20,38 +36,6 @@
         if (contenedor) {
             contenedor.innerHTML = '';
         }
-    }
-
-    function imprimirReciboDesdeContenedor(divId) {
-        var contenedor = element(divId);
-
-        if (!contenedor || !contenedor.innerHTML.trim()) {
-            notify_warning('No se pudo generar la vista de impresion.');
-            limpiarContenedorImpresionRecibo();
-            return false;
-        }
-
-        var contenido = contenedor.innerHTML;
-        var ventanaImpresion = window.open('', 'PRINT', 'fullscreen=yes');
-
-        if (!ventanaImpresion) {
-            limpiarContenedorImpresionRecibo();
-            notify_warning('El navegador bloqueo la ventana de impresion.');
-            return false;
-        }
-
-        ventanaImpresion.document.write('<html><head><title>' + document.title + '</title>');
-        ventanaImpresion.document.write('</head><body>');
-        ventanaImpresion.document.write(contenido);
-        ventanaImpresion.document.write('</body></html>');
-        ventanaImpresion.document.close();
-
-        limpiarContenedorImpresionRecibo();
-
-        ventanaImpresion.focus();
-        ventanaImpresion.print();
-
-        return true;
     }
 
     function activarFormatoMonto() {
@@ -93,6 +77,7 @@
         }
 
         objeto('div_formulario_pago').innerHTML = objeto('tpl_despacho_pago_formulario').innerHTML;
+        renderPreviewImagenDocumento('');
         despachoPagoManejarCambioTipoPago();
     }
 
@@ -100,6 +85,7 @@
         var form = {};
         var ids = [
             'iddespacho_pago',
+            'imagen_documento_actual',
             'idtipo_pago',
             'idcliente_anticipo',
             'idtipo_documento',
@@ -175,6 +161,7 @@
             }
 
             if (objeto('iddespacho_pago') !== undefined) objeto('iddespacho_pago').value = row.iddespacho_pago || '';
+            if (objeto('imagen_documento_actual') !== undefined) objeto('imagen_documento_actual').value = row.imagen || '';
             if (objeto('idtipo_pago') !== undefined) objeto('idtipo_pago').value = row.idtipo_pago || '';
             idclienteAnticipoSeleccionado = row.idcliente_anticipo || '';
             if (objeto('idcliente_anticipo') !== undefined) objeto('idcliente_anticipo').value = idclienteAnticipoSeleccionado;
@@ -186,6 +173,8 @@
             if (objeto('banco') !== undefined) objeto('banco').value = row.banco || '';
             if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = row.referencia_pago || '';
             if (objeto('observaciones') !== undefined) objeto('observaciones').value = row.observaciones || '';
+            if (objeto('imagen_documento') !== undefined) objeto('imagen_documento').value = '';
+            renderPreviewImagenDocumento(row.imagen || '');
 
             activarFormatoMonto();
             despachoPagoManejarCambioTipoPago(idclienteAnticipoSeleccionado);
@@ -271,6 +260,8 @@
         var correlativo_documento = elementValue('correlativo_documento');
         var monto = normalizarMonto(elementValue('monto'));
         var idcliente_anticipo = elementValue('idcliente_anticipo');
+        var inputImagen = objeto('imagen_documento');
+        var tieneImagenNueva = !!(inputImagen && inputImagen.files && inputImagen.files.length > 0);
 
         if (!iddespacho) {
             notify_warning('Debe seleccionar un despacho.');
@@ -313,7 +304,11 @@
             }
         };
 
-        upload_action(fields, 'despacho_pago', 'guardar', callback_guardar_despacho_pago);
+        if (tieneImagenNueva) {
+            upload_file(fields, 'imagen_documento', 'despacho_pago', 'guardar', callback_guardar_despacho_pago);
+        } else {
+            upload_action(fields, 'despacho_pago', 'guardar', callback_guardar_despacho_pago);
+        }
         return false;
     };
 
@@ -398,7 +393,42 @@
                 return;
             }
 
-            imprimirReciboDesdeContenedor('div_imprimir_recibo');
+            var contenedor = objeto('div_imprimir_recibo');
+            if (!contenedor || !contenedor.innerHTML.trim()) {
+                notify_warning('No se pudo generar la vista de impresion.');
+                limpiarContenedorImpresionRecibo();
+                return;
+            }
+
+            if (!contenedor.querySelector('#contenedor_documentos_impresion')) {
+                notify_warning('No se encontró el contenedor de documentos para imprimir.');
+                limpiarContenedorImpresionRecibo();
+                return;
+            }
+
+            var imagenes = contenedor.querySelectorAll('#contenedor_documentos_impresion img');
+            if (!imagenes || imagenes.length === 0) {
+                notify_warning('No hay imagenes disponibles para imprimir.');
+                limpiarContenedorImpresionRecibo();
+                return;
+            }
+
+            for (var i = 0; i < imagenes.length; i++) {
+                var srcOriginal = imagenes[i].getAttribute('src');
+                if (!srcOriginal) {
+                    continue;
+                }
+
+                try {
+                    var srcAbsoluto = new URL(srcOriginal, window.location.href).href;
+                    imagenes[i].setAttribute('src', srcAbsoluto);
+                } catch (e) {
+                    // Si una imagen no puede normalizarse, se deja con su ruta actual.
+                }
+            }
+
+            print_div('div_imprimir_recibo');
+            limpiarContenedorImpresionRecibo();
         };
 
         download_div_content('iddespacho_pago=' + iddespacho_pago, 'despacho_pago', 'imprimir', 'div_imprimir_recibo', callback_imprimir_despacho_pago);
@@ -406,6 +436,7 @@
 
     window.despachoPagoLimpiarFormulario = function () {
         if (objeto('iddespacho_pago') !== undefined) objeto('iddespacho_pago').value = '';
+        if (objeto('imagen_documento_actual') !== undefined) objeto('imagen_documento_actual').value = '';
         if (objeto('idtipo_pago') !== undefined) objeto('idtipo_pago').value = '';
         if (objeto('idtipo_documento') !== undefined) objeto('idtipo_documento').value = '';
         if (objeto('monto') !== undefined) objeto('monto').value = '';
@@ -413,13 +444,43 @@
         if (objeto('banco') !== undefined) objeto('banco').value = '';
         if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = '';
         if (objeto('observaciones') !== undefined) objeto('observaciones').value = '';
+        if (objeto('imagen_documento') !== undefined) objeto('imagen_documento').value = '';
         if (objeto('estado') !== undefined) objeto('estado').value = 'PROGRAMADO';
         if (objeto('fecha') !== undefined) objeto('fecha').value = (new Date()).toISOString().slice(0, 10);
         if (objeto('btn_imprimir_documento') !== undefined) hideElement('btn_imprimir_documento');
         if (objeto('idcliente_anticipo') !== undefined) objeto('idcliente_anticipo').value = '';
+        renderPreviewImagenDocumento('');
         activarFormatoMonto();
         actualizarModoFormulario();
         despachoPagoManejarCambioTipoPago();
+    };
+
+    window.despachoPagoPreviewImagenDocumento = function (input) {
+        if (!input || !input.files || input.files.length === 0) {
+            renderPreviewImagenDocumento(elementValue('imagen_documento_actual'));
+            return;
+        }
+
+        var file = input.files[0];
+        var tiposPermitidos = ['image/jpeg', 'image/png'];
+        if (tiposPermitidos.indexOf(file.type) === -1) {
+            notify_warning('Tipo de archivo no permitido. Debe cargar imagenes en formato JPEG, JPG o PNG.');
+            input.value = '';
+            renderPreviewImagenDocumento(elementValue('imagen_documento_actual'));
+            return;
+        }
+
+        var lector = new FileReader();
+        lector.onload = function (e) {
+            var contenedor = objeto('preview_imagen_documento');
+            if (!contenedor) {
+                return;
+            }
+
+            contenedor.classList.remove('text-muted');
+            contenedor.innerHTML = "<img src='" + e.target.result + "' alt='Imagen documento' style='max-width:100%; max-height:160px; object-fit:contain;'>";
+        };
+        lector.readAsDataURL(file);
     };
 
     window.despachoPagoManejarCambioTipoPago = function (idcliente_anticipo_seleccionado) {

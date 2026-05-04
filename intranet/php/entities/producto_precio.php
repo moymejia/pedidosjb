@@ -304,7 +304,7 @@ class producto_precio extends table
                     element(\"precio\").value = \"$precio\";
                     element(\"estado_precio\").value = \"$estado\";
                     showElements(\"div_form_precio_producto,btn_cambiar_estado_precio\");
-                    hideElements(\"div_form_busqueda,div_botones_precio\");
+                    showElements(\"div_form_busqueda,div_tabla_precios\");
                 '>Editar</button>";
 
             $tabla .= "<tr>

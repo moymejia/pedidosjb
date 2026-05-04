@@ -198,6 +198,10 @@
             break-inside: avoid;
         }
 
+        .firmas[data-visible="0"] {
+            display: none;
+        }
+
         tr,
         td,
         th {
@@ -304,7 +308,7 @@
         </table>
         </div>
 
-        <table class="firmas">
+        <table class="firmas" data-visible="[mostrar_footer]">
             [firmas_colgroup]
 
             <tr class="fila-totales gris cuadricula">

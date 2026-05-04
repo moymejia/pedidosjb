@@ -58,9 +58,25 @@
 
                                 <div class="col-md-9 form-group d-flex align-items-end">
                                     <button class="btn btn-success" onclick="
-                                        callback_guardar_producto = function(){
-                                            notify_success('Producto guardado correctamente.');
-                                            mostrar_opcion(10,'Producto','Mantenimientos');
+                                        callback_guardar_producto = function(idproducto_guardado){
+                                            if(idproducto_guardado != ''){
+                                                element('idproducto').value = idproducto_guardado;
+                                            }
+
+                                            element('modelo_b').value = element('modelo').value;
+                                            if(objeto('titulo_actual') != undefined){
+                                                objeto('titulo_actual').textContent = element('modelo').value;
+                                            }
+                                            clearElements('idproducto_precio,idset_talla,precio');
+                                            element('estado_precio').value = 'ACTIVO';
+
+                                            showElements('tab_producto_precio,div_form_precio_producto,div_form_busqueda,div_tabla_precios');
+                                            hideElements('btn_cambiar_estado_precio');
+
+                                            activar_tabla_productos();
+                                            activar_tabla_precios();
+                                            IrPanel('producto_precio_tab');
+                                            notify_success('Producto guardado correctamente. Puede agregar precios ahora.');
                                         }
                                         upload_action('idproducto,idmarca,idtemporada,linea,modelo,estado=,mantenimiento=SI','producto','guardar',callback_guardar_producto);
                                     ">
@@ -78,11 +94,13 @@
                                         callback_cambiar_estado = function(){
                                             notify_success('Estado cambiado correctamente.');
                                             callback_activar_tabla = function(){
-                                                activar_tabla('tabla_productos_datos');
+                                                activar_tabla_productos();
                                             }
                                             download_div_content('','producto','tabla','tabla_productos',callback_activar_tabla);
                                         }
-                                        desactivar_tabla($('#tabla_productos_datos').DataTable());
+                                            if ($.fn.dataTable.isDataTable('#tabla_productos_datos')) {
+                                                desactivar_tabla($('#tabla_productos_datos').DataTable());
+                                            }
                                         
                                         download_input_value('idproducto','producto','cambiar_estado','estado',callback_cambiar_estado);
                                     ">
@@ -113,17 +131,10 @@
                     <div class="tab-pane" id="producto_precio_tab" role="tabpanel">
                         <br>
                         <div id="div_form_busqueda">
-                            <div class="row">
-                                <div class="col-md-3 form-group">
-                                    <label for="modelo_b">Estilo</label>
-                                    <input type="text" id="modelo_b" class="form-control" readonly onchange="
-                                        
-                                    ">
-                                </div>
-                            </div>
+                            <input type="hidden" id="modelo_b">
                         </div>
 
-                        <div id="div_form_precio_producto" style="display: none;">
+                        <div id="div_form_precio_producto">
                             <div class="row mt-2">
                                 <input type="hidden" id="idproducto_precio">
                                 <input type="hidden" id="estado_precio" value="ACTIVO">
@@ -143,10 +154,11 @@
                                 <div class="col-md-3 form-group d-flex align-items-end">
                                     <button class="btn btn-success" onclick="
                                         callback_guardar_precio = function(){
-                                            
                                             notify_success('Precio guardado correctamente.');
-                                            hideElements('div_form_precio_producto,btn_cambiar_estado_precio');
-                                            showElements('div_form_busqueda,div_tabla_precios,div_botones_precio');
+                                            clearElements('idproducto_precio,idset_talla,precio');
+                                            element('estado_precio').value = 'ACTIVO';
+                                            showElements('div_form_precio_producto,div_form_busqueda,div_tabla_precios');
+                                            hideElements('btn_cambiar_estado_precio');
                                             if(element('modelo_b').value != ''){
                                                 callback_guardar_precio = function(){
                                                     tabla = activar_tabla('tabla_datos');
@@ -159,10 +171,9 @@
                                         Guardar Precio
                                     </button>
                                     <button class="btn btn-secondary ml-2" onclick="
-                                        hideElements('div_form_precio_producto,btn_cambiar_estado_precio');
-                                        showElements('div_form_busqueda,div_botones_precio,div_tabla_precios');
                                         clearElements('idproducto_precio,idset_talla,precio,estado_precio');
                                         element('estado_precio').value = 'ACTIVO';
+                                        hideElements('btn_cambiar_estado_precio');
                                     ">
                                         Cancelar
                                     </button>
@@ -183,23 +194,6 @@
                                     </button>
                                 </div>
 
-                            </div>
-                        </div>
-
-                        <div class="row" id="div_botones_precio">
-                            <div class="col-md-3">
-                                <button class="btn btn-primary" onclick="
-                                    if(element('idproducto').value == ''){
-                                        notify_error('Seleccione un producto para agregar precios.');
-                                        return;
-                                    }
-                                    clearElements('idproducto_precio,idset_talla,precio,estado_precio');
-                                    element('estado_precio').value = 'ACTIVO';
-                                    showElements('div_form_precio_producto');
-                                    hideElements('div_form_busqueda,div_botones_precio,btn_cambiar_estado_precio');
-                                ">
-                                    <i class="fas fa-plus"></i> Nuevo
-                                </button>
                             </div>
                         </div>
 

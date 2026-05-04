@@ -289,7 +289,12 @@ class despacho_pago extends table
 
     private function tabla_historial_pagos($iddespacho)
     {
-        $result = mysql::getresult("SELECT iddespacho_pago, fecha, tipo_pago, tipo_documento, estado, signo, monto, correlativo_documento, banco, referencia_pago, observaciones, usuario_creacion FROM view_despacho_pago_detalle WHERE iddespacho = '$iddespacho' ORDER BY fecha DESC, iddespacho_pago DESC");
+        $result = mysql::getresult("SELECT v.iddespacho_pago, v.fecha, v.tipo_pago, v.tipo_documento, v.estado, v.signo, v.monto,
+                v.correlativo_documento, v.banco, v.referencia_pago, v.observaciones, v.usuario_creacion, dp.imagen
+            FROM view_despacho_pago_detalle v
+            LEFT JOIN despacho_pago dp ON dp.iddespacho_pago = v.iddespacho_pago
+            WHERE v.iddespacho = '$iddespacho'
+            ORDER BY v.fecha DESC, v.iddespacho_pago DESC");
 
         if (! $result) {
             $this->last_error = 'Error al cargar historial de pagos.';
@@ -441,6 +446,11 @@ class despacho_pago extends table
         $DATOS['referencia_pago']     = trim($referencia_pago) == '' ? 'NULL' : $referencia_pago;
         $DATOS['observaciones']       = trim($observaciones) == '' ? 'NULL' : $observaciones;
 
+        $imagen_nueva = $this->guardar_imagen_documento($iddespacho, $PARAMETROS['correlativo_documento']);
+        if ($imagen_nueva === false) {
+            return false;
+        }
+
         if ($iddespacho_pago == '') {
             $security = new security($this->ACCIONES['crear_despacho_pago']);
             $idforma_pago_default = $this->obtener_idforma_pago_default();
@@ -451,6 +461,7 @@ class despacho_pago extends table
             $DATOS['idforma_pago'] = $idforma_pago_default;
             $DATOS['iddespacho_pago_recupera'] = 'NULL';
             $DATOS['usuario_creacion'] = $security->get_actual_user();
+            $DATOS['imagen'] = $imagen_nueva ? $imagen_nueva : 'NULL';
 
             if (table::insert_record($DATOS)) {
                 $iddespacho_pago_nuevo = mysql::last_id();
@@ -489,6 +500,8 @@ class despacho_pago extends table
         $DATOS['idcliente_anticipo']     = $idcliente_anticipo == '' ? 'NULL' : $idcliente_anticipo;
         $DATOS['usuario_modificacion']   = $security->get_actual_user();
         $DATOS['fecha_modificacion']     = date('Y-m-d H:i:s');
+        $imagen_actual = mysql::getvalue("SELECT imagen FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago' LIMIT 1", 'imagen');
+        $DATOS['imagen'] = $imagen_nueva ? $imagen_nueva : ($imagen_actual != '' ? $imagen_actual : 'NULL');
 
         if ($this->update_record($DATOS, ['iddespacho_pago'])) {
             // Manejar cambios en anticipo
@@ -562,7 +575,7 @@ class despacho_pago extends table
 
         $iddespacho_pago = trim($iddespacho_pago . '');
 
-        $row_despacho_pago = mysql::getrow("SELECT iddespacho_pago, iddespacho, fecha, idtipo_pago, idcliente_anticipo, idtipo_documento, estado, monto, correlativo_documento, banco, referencia_pago, observaciones FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago' LIMIT 1");
+        $row_despacho_pago = mysql::getrow("SELECT iddespacho_pago, iddespacho, fecha, idtipo_pago, idcliente_anticipo, idtipo_documento, estado, monto, correlativo_documento, banco, referencia_pago, observaciones, imagen FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago' LIMIT 1");
 
         if (! $row_despacho_pago) {
             $this->last_error = 'El documento de pago indicado no existe.';
@@ -749,29 +762,9 @@ class despacho_pago extends table
         return true;
     }
 
-    private function obtener_template_recibo($tipo_documento)
-    {
-        $tipo_documento = strtoupper(trim((string)$tipo_documento));
-        $template = 'template_recibo';
-
-        if (strpos($tipo_documento, 'RECUPER') !== false) {
-            $template = 'template_recibo_recuperacion';
-        } elseif (strpos($tipo_documento, 'PROVISION') !== false || strpos($tipo_documento, 'PROVICION') !== false) {
-            $template = 'template_recibo_provisional';
-        }
-
-        $ruta_template = '../html/' . $template . '.html';
-        if (!file_exists($ruta_template)) {
-            $template = 'template_recibo';
-        }
-
-        return $template;
-    }
-
     private function imprimir_documento($iddespacho_pago)
     {
         $security = new security($this->ACCIONES['imprimir_despacho_pago']);
-        $usuario = $security->get_actual_user();
 
         $iddespacho_pago = trim($iddespacho_pago . '');
 
@@ -789,6 +782,7 @@ class despacho_pago extends table
         $iddespacho = trim($documento_base['iddespacho'] . '');
         $idtipo_documento = trim($documento_base['idtipo_documento'] . '');
         $correlativo_documento = trim($documento_base['correlativo_documento'] . '');
+        $correlativo_documento_norm = strtoupper($correlativo_documento);
 
         $_TIPO_DOCUMENTO = new tipo_documento();
         $row_tipo_documento = $_TIPO_DOCUMENTO->obtener_por_id($idtipo_documento);
@@ -801,16 +795,14 @@ class despacho_pago extends table
         $nombre_tipo_documento = trim($row_tipo_documento['nombre'] . '');
         $serie_documento = trim($row_tipo_documento['correlativo'] . '');
 
-        $sql_documentos = mysql::getresult("SELECT iddespacho_pago, fecha, monto, correlativo_documento,
-                banco, referencia_pago, observaciones, estado, usuario_creacion,
-                IFNULL(signo, 0) AS signo,
-                tipo_pago,
-                tipo_documento
-            FROM view_despacho_pago_detalle
-            WHERE iddespacho = '$iddespacho'
-                AND tipo_documento = '" . addslashes($nombre_tipo_documento) . "'
-                AND correlativo_documento = '" . addslashes($correlativo_documento) . "'
-            ORDER BY fecha ASC, iddespacho_pago ASC");
+        $sql_documentos = mysql::getresult("SELECT dp.iddespacho_pago, dp.fecha, dp.correlativo_documento, dp.imagen,
+                td.nombre AS tipo_documento
+            FROM despacho_pago dp
+            LEFT JOIN tipo_documento td ON td.idtipo_documento = dp.idtipo_documento
+            WHERE dp.iddespacho = '$iddespacho'
+                AND dp.idtipo_documento = '" . addslashes($idtipo_documento) . "'
+                AND UPPER(TRIM(dp.correlativo_documento)) = '" . addslashes($correlativo_documento_norm) . "'
+            ORDER BY dp.fecha ASC, dp.iddespacho_pago ASC");
 
         if (!$sql_documentos) {
             $this->last_error = 'Error al obtener los documentos del recibo.';
@@ -818,64 +810,34 @@ class despacho_pago extends table
             return false;
         }
 
-        $resumen = mysql::getrow("SELECT iddespacho, idpedido, idcliente, cliente
-            FROM view_despacho_pago_resumen
-            WHERE iddespacho = '$iddespacho'
-            LIMIT 1");
-
-        $nombre_cliente = '';
-        if ($resumen && !empty($resumen['idcliente'])) {
-            $nombre_cliente = (new cliente())->obtener_nombre($resumen['idcliente']);
-        }
-        if (empty($nombre_cliente)) {
-            $nombre_cliente = $resumen ? $resumen['cliente'] : '';
-        }
-
-        $detalle_documentos = '';
-        $detalle_bancario = '';
-
-        $total_neto = 0;
-        $total_efectivo = 0;
-        $total_cheque = 0;
-        $total_deposito = 0;
+        $html_imagenes = '';
         $hay_filas = false;
+        $hay_imagenes = false;
 
         while ($row = mysql::getrowresult($sql_documentos)) {
             $hay_filas = true;
-            $monto = (float)$row['monto'];
-            $signo = (int)$row['signo'];
-            $monto_aplicado = $monto * $signo;
-            $tipo_pago = strtoupper(trim((string)$row['tipo_pago']));
-
-            $total_neto += $monto_aplicado;
-
-            if (strpos($tipo_pago, 'EFECTIVO') !== false) {
-                $total_efectivo += $monto_aplicado;
-            } elseif (strpos($tipo_pago, 'CHEQUE') !== false) {
-                $total_cheque += $monto_aplicado;
-            } elseif (strpos($tipo_pago, 'DEPOSITO') !== false || strpos($tipo_pago, 'DEPÓSITO') !== false) {
-                $total_deposito += $monto_aplicado;
+            $ruta_imagen = trim((string)$row['imagen']);
+            if ($ruta_imagen == '') {
+                continue;
             }
 
-            $documento_texto = htmlspecialchars((string)$row['correlativo_documento'], ENT_QUOTES, 'UTF-8');
+            $hay_imagenes = true;
+            $src_imagen = '../' . htmlspecialchars($ruta_imagen, ENT_QUOTES, 'UTF-8');
+            $fecha_doc = htmlspecialchars((string)$row['fecha'], ENT_QUOTES, 'UTF-8');
+            $tipo_doc = htmlspecialchars((string)$row['tipo_documento'], ENT_QUOTES, 'UTF-8');
+            $correlativo_doc = htmlspecialchars((string)$row['correlativo_documento'], ENT_QUOTES, 'UTF-8');
 
-            $detalle_documentos .= "<tr>" .
-                "<td>" . $documento_texto . "</td>" .
-                "<td class='text-right'>Q " . number_format($monto, 2, '.', ',') . "</td>" .
-                "<td class='text-right'>" . ($signo >= 0 ? ('Q ' . number_format($monto, 2, '.', ',')) : '&nbsp;') . "</td>" .
-                "<td class='text-right'>" . ($signo < 0 ? ('Q ' . number_format(abs($monto), 2, '.', ',')) : '&nbsp;') . "</td>" .
-                "<td class='text-right'>&nbsp;</td>" .
-                "<td class='text-right'>Q " . number_format($monto_aplicado, 2, '.', ',') . "</td>" .
-                "<td>" . htmlspecialchars(strtoupper((string)$row['estado']), ENT_QUOTES, 'UTF-8') . "</td>" .
-            "</tr>";
-
-            $detalle_bancario .= "<tr>" .
-                "<td>" . htmlspecialchars((string)$row['banco'], ENT_QUOTES, 'UTF-8') . "</td>" .
-                "<td>" . htmlspecialchars((string)$row['referencia_pago'], ENT_QUOTES, 'UTF-8') . "</td>" .
-                "<td>" . htmlspecialchars((string)$row['fecha'], ENT_QUOTES, 'UTF-8') . "</td>" .
-                "<td>" . htmlspecialchars((string)$row['usuario_creacion'], ENT_QUOTES, 'UTF-8') . "</td>" .
-                "<td class='text-right'>Q " . number_format($monto_aplicado, 2, '.', ',') . "</td>" .
-            "</tr>";
+            $html_imagenes .= "
+                <div class='pagina-documento'>
+                    <div class='encabezado-documento'>
+                        <h3>Documento de pago</h3>
+                        <p><strong>Tipo:</strong> $tipo_doc - <strong>Correlativo:</strong> $correlativo_doc - <strong>Fecha:</strong> $fecha_doc</p>
+                    </div>
+                    <div class='contenedor-imagen'>
+                        <img src='$src_imagen' alt='Documento de pago'>
+                    </div>
+                </div>
+            ";
         }
 
         if (!$hay_filas) {
@@ -884,31 +846,117 @@ class despacho_pago extends table
             return false;
         }
 
-        $fecha = strtotime($documento_base['fecha']);
-        $template = $this->obtener_template_recibo($nombre_tipo_documento);
+        if (!$hay_imagenes) {
+            $this->last_error = 'No hay imagenes para imprimir en este correlativo y tipo de documento.';
+            utils::report_error(validation_error, $iddespacho_pago, $this->last_error);
+            return false;
+        }
 
-        $DATA = [];
-        $DATA['logo_src']              = '../img/logo.jpg';
-        $DATA['serie']                 = !empty($serie_documento) ? $serie_documento : 'D';
-        $DATA['correlativo']           = $correlativo_documento;
-        $DATA['dia']                   = date('d', $fecha);
-        $DATA['mes']                   = date('m', $fecha);
-        $DATA['anio']                  = date('Y', $fecha);
-        $DATA['recibi_de']             = $nombre_cliente;
-        $DATA['quetzales']             = 'Q ' . number_format(abs($total_neto), 2, '.', ',');
-        $DATA['detalle_documentos']    = $detalle_documentos;
-        $DATA['chk_efectivo']          = number_format($total_efectivo, 2, '.', ',');
-        $DATA['chk_cheque']            = number_format($total_cheque, 2, '.', ',');
-        $DATA['chk_deposito']          = number_format($total_deposito, 2, '.', ',');
-        $DATA['total_documento']       = 'Q ' . number_format($total_neto, 2, '.', ',');
-        $DATA['detalle_bancario']      = $detalle_bancario;
-        $DATA['leyenda_izquierda']     = '';
-        $DATA['leyenda_derecha']       = 'Despacho #' . $iddespacho;
+        $html = "
+            <style>
+                @page {
+                    size: auto;
+                    margin: 8mm;
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    color: #111111;
+                }
+                .contenedor-documentos {
+                    width: 100%;
+                }
+                .pagina-documento {
+                    page-break-after: always;
+                    box-sizing: border-box;
+                    padding: 8mm 8mm 8mm 8mm;
+                }
+                .pagina-documento:last-child {
+                    page-break-after: auto;
+                }
+                .encabezado-documento {
+                    margin-bottom: 10px;
+                    border-bottom: 1px solid #cccccc;
+                    padding-bottom: 6px;
+                }
+                .encabezado-documento h3 {
+                    margin: 0 0 4px 0;
+                    font-size: 18px;
+                }
+                .encabezado-documento p {
+                    margin: 0;
+                    font-size: 13px;
+                }
+                .contenedor-imagen {
+                    text-align: center;
+                    margin-top: 10px;
+                    page-break-inside: avoid;
+                }
+                .contenedor-imagen img {
+                    width: auto;
+                    height: auto;
+                    max-width: 190mm;
+                    max-height: 210mm;
+                    border: 1px solid #dddddd;
+                    object-fit: contain;
+                }
+
+                @media print {
+                    .pagina-documento {
+                        padding-top: 20mm;
+                    }
+                    .contenedor-imagen img {
+                        max-width: 185mm;
+                        max-height: 190mm;
+                    }
+                }
+            </style>
+            <div id='contenedor_documentos_impresion' class='contenedor-documentos'>
+                $html_imagenes
+            </div>
+        ";
 
         $security->registrar_bitacora($this->ACCIONES['imprimir_despacho_pago'], $iddespacho_pago, $correlativo_documento, $nombre_tipo_documento);
+        return $html;
+    }
 
-        $html = new html($template, $DATA);
-        return $html->get_html();
+    private function guardar_imagen_documento($iddespacho, $correlativo_documento)
+    {
+        if (!isset($_FILES['file_uploaded']) || $_FILES['file_uploaded']['tmp_name'] == '') {
+            return '';
+        }
+
+        $tipos_permitidos = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+        ];
+
+        $tipo_archivo = isset($_FILES['file_uploaded']['type']) ? $_FILES['file_uploaded']['type'] : '';
+        if (!isset($tipos_permitidos[$tipo_archivo])) {
+            $this->last_error = 'Tipo de archivo no permitido. Debe cargar imagenes en formato JPEG, JPG o PNG';
+            utils::report_error(validation_error, $tipo_archivo, $this->last_error);
+            return false;
+        }
+
+        $extension = $tipos_permitidos[$tipo_archivo];
+        $referencia = preg_replace('/[^A-Za-z0-9_-]+/', '_', trim((string)$correlativo_documento));
+        $referencia = $referencia !== '' ? $referencia : 'documento';
+        $ruta = '../../img/documento/';
+        $nombre_temp = $_FILES['file_uploaded']['tmp_name'];
+        $nombre_archivo = uniqid('despacho_' . $iddespacho . '_' . $referencia . '_') . '.' . $extension;
+
+        if (!file_exists($ruta)) {
+            mkdir($ruta, 0777, true);
+        }
+
+        if (!move_uploaded_file($nombre_temp, $ruta . $nombre_archivo)) {
+            $this->last_error = 'Error al mover el archivo cargado';
+            utils::report_error(validation_error, $correlativo_documento, $this->last_error);
+            return false;
+        }
+
+        return 'img/documento/' . $nombre_archivo;
     }
 
 }

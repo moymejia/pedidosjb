@@ -128,7 +128,7 @@ class pedido extends table{
         $DATA['nopedido_sugerido'] = isset($nopedido_partes[1]) ? $nopedido_partes[1] : $nopedido_full;
 
         $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, cliente, temporada, marca, estado, 
-            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, transporte, monto_descuento, email
+            fecha_desde, fecha_hasta, fecha_creacion, observaciones_pedido, idtransporte, transporte, monto_descuento, email
             FROM view_pedidos 
             ORDER BY idpedido DESC");
 
@@ -143,6 +143,7 @@ class pedido extends table{
                     <th>Marca</th>
                     <th>Fecha desde</th>
                     <th>Fecha hasta</th>
+                    <th>Fecha creacion</th>
                     <th>Estado</th>
                 </tr>
             </thead>
@@ -162,6 +163,7 @@ class pedido extends table{
             $estado          = $row['estado'];
             $fecha_desde     = date('Y-m-d', strtotime($row['fecha_desde']));
             $fecha_hasta     = date('Y-m-d', strtotime($row['fecha_hasta']));
+            $fecha_creacion  = ($row['fecha_creacion'] != '' && $row['fecha_creacion'] != null) ? date('Y-m-d H:i', strtotime($row['fecha_creacion'])) : '';
             $observaciones_pedido  = date('Y-m-d', strtotime($row['observaciones_pedido']));
 
             $str_data = "";
@@ -197,6 +199,7 @@ class pedido extends table{
                     <td style='text-align: center;'>$marca</td>
                     <td>$fecha_desde</td>
                     <td>$fecha_hasta</td>
+                    <td>$fecha_creacion</td>
                     <td style='text-align: center;'>$estado</td>
                 </tr>";
         }
@@ -302,15 +305,6 @@ class pedido extends table{
     {
         $security = new security($this->ACCIONES['eliminar']);
         $usuario  = $security->get_actual_user();
-
-
-        $estado_actual = $this->estado($idpedido);
-        if($estado_actual != 'BORRADOR'){
-            $this->last_error = 'No se puede eliminar un pedido diferente a estado BORRADOR.';
-            $this->report_error(validation_error,$idpedido,$this->last_error);
-
-            return false;
-        }
 
         $DATOS = [];
         $DATOS['idpedido']     = $idpedido;
@@ -592,13 +586,14 @@ class pedido extends table{
         $filas_actuales = 0;
 
         // En vertical, el espacio util baja cuando hay mas filas de encabezado de tallas.
-        // Ajustamos el corte dinamicamente para que el footer permanezca pegado abajo.
-        $max_filas_por_hoja = max(15, 15 - $rowspan_encabezado);
+        // Las hojas intermedias no llevan footer, por eso admiten mas filas.
+        $max_filas_con_footer = max(13, 13 - $rowspan_encabezado);
+        $max_filas_sin_footer = max($max_filas_con_footer + 2, 19 - $rowspan_encabezado);
 
         foreach ($productos_agrupados as $grupo_producto) {
             $filas_grupo = count($grupo_producto['filas']);
 
-            if (!empty($chunk_actual) && ($filas_actuales + $filas_grupo) > $max_filas_por_hoja) {
+            if (!empty($chunk_actual) && ($filas_actuales + $filas_grupo) > $max_filas_sin_footer) {
                 $productos_chunks[] = $chunk_actual;
                 $chunk_actual = [];
                 $filas_actuales = 0;
@@ -610,6 +605,42 @@ class pedido extends table{
 
         if (!empty($chunk_actual)) {
             $productos_chunks[] = $chunk_actual;
+        }
+
+        // La ultima hoja debe reservar espacio para el footer. Si no cabe,
+        // partimos el ultimo bloque para crear una hoja intermedia sin footer.
+        if (!empty($productos_chunks)) {
+            $ultimo_indice = count($productos_chunks) - 1;
+            $ultimo_chunk = $productos_chunks[$ultimo_indice];
+            $filas_ultimo_chunk = 0;
+
+            foreach ($ultimo_chunk as $grupo_producto) {
+                $filas_ultimo_chunk += count($grupo_producto['filas']);
+            }
+
+            if ($filas_ultimo_chunk > $max_filas_con_footer && count($ultimo_chunk) > 1) {
+                $filas_nueva_ultima = 0;
+                $indice_inicio_nueva_ultima = count($ultimo_chunk);
+
+                for ($i = count($ultimo_chunk) - 1; $i >= 0; $i--) {
+                    $filas_grupo = count($ultimo_chunk[$i]['filas']);
+
+                    if (($filas_nueva_ultima + $filas_grupo) > $max_filas_con_footer && $indice_inicio_nueva_ultima < count($ultimo_chunk)) {
+                        break;
+                    }
+
+                    $filas_nueva_ultima += $filas_grupo;
+                    $indice_inicio_nueva_ultima = $i;
+                }
+
+                if ($indice_inicio_nueva_ultima > 0) {
+                    $chunk_intermedio = array_slice($ultimo_chunk, 0, $indice_inicio_nueva_ultima);
+                    $chunk_final = array_slice($ultimo_chunk, $indice_inicio_nueva_ultima);
+
+                    $productos_chunks[$ultimo_indice] = $chunk_intermedio;
+                    $productos_chunks[] = $chunk_final;
+                }
+            }
         }
 
         $html_final = '';
@@ -727,6 +758,7 @@ class pedido extends table{
             $DATA['observaciones']          = $PEDIDO['observaciones_pedido'];
             $DATA['numero_hoja']            = $numero_hoja;
             $DATA['total_hojas']            = $total_hojas;
+            $DATA['mostrar_footer']         = ($numero_hoja === $total_hojas) ? '1' : '0';
 
             $html = new html('template_imprimir_pedido', $DATA);
 

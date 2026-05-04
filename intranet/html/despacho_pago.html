@@ -72,6 +72,7 @@
         <div class='card-body'>
             <form onsubmit='return despachoPagoGuardar();' id='form_despacho_pago'>
                 <input type='hidden' id='iddespacho_pago' value=''>
+                <input type='hidden' id='imagen_documento_actual' value=''>
                 <div class='row'>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='idtipo_pago'>Tipo de pago <span class='text-danger'>*</span></label>
@@ -127,6 +128,19 @@
                     <div class='col-md-12 form-group m-b-5'>
                         <label for='observaciones'>Observaciones</label>
                         <input type='text' id='observaciones' class='form-control' maxlength='500' placeholder='Observaciones del documento'>
+                    </div>
+                </div>
+                <div class='row'>
+                    <div class='col-md-6 form-group m-b-5'>
+                        <label for='imagen_documento'>Imagen de documento</label>
+                        <input type='file' id='imagen_documento' class='form-control' accept='image/jpeg,image/png' onchange='despachoPagoPreviewImagenDocumento(this)'>
+                        <small class='text-muted'>Formatos permitidos: JPG y PNG.</small>
+                    </div>
+                    <div class='col-md-6 form-group m-b-5'>
+                        <label>Vista previa</label>
+                        <div id='preview_imagen_documento' class='border rounded p-2 text-center text-muted' style='min-height:120px;'>
+                            Sin imagen seleccionada
+                        </div>
                     </div>
                 </div>
                 <br>

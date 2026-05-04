@@ -15,6 +15,16 @@
             </select>
             <span class="bar"></span>
         </div>
+        <div class="form-group m-b-5 col-md-2">
+            <label for="fecha_desde">Fecha desde</label>
+            <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-2">
+            <label for="fecha_hasta">Fecha hasta</label>
+            <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+            <span class="bar"></span>
+        </div>
         <div class="form-group m-b-5 col-md-3">
             <label for="idcliente">Cliente</label>
             <select class="form-control select2" id="idcliente" name="idcliente" onchange="cargarMarcas();" value="">
@@ -22,19 +32,28 @@
             </select>
             <span class="bar"></span>
         </div>
-        <div class="form-group m-b-5 col-md-3">
+        <div class="form-group m-b-5 col-md-2">
             <label for="idmarca">Marca</label>
             <select class="form-control " id="idmarca" name="idmarca" onchange="cargarClientes();">
                 [marcas_activas]
             </select>
             <span class="bar"></span>
         </div>
-        <div class="form-group col-md-3 m-t-30">
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-12 m-t-10">
             <button type="button" id="generar_reporte" class="btn btn-success waves-effect waves-light m-r-10" onclick="
                 callback_reporte = function () {
                     showElement('lista_ventas_temporada');
+                    desactivar_tablas();
+                    tablas_activas = activar_tablas();
+                    tabla = tablas_activas.length > 0 ? tablas_activas[0] : undefined;
+                    tabla_detalle = $('#tabla_ventas_temporada_detalle').length ? $('#tabla_ventas_temporada_detalle').DataTable() : undefined;
+                    tabla_resumen = $('#tabla_ventas_temporada_resumen').length ? $('#tabla_ventas_temporada_resumen').DataTable() : undefined;
+                    tabla_resumen_marca = $('#tabla_ventas_temporada_resumen_marca').length ? $('#tabla_ventas_temporada_resumen_marca').DataTable() : undefined;
                 };
-                download_div_content('idtemporada,idcliente,idmarca', 'ventas_temporada', 'reporte_ventas_temporada', 'lista_ventas_temporada', callback_reporte);
+                download_div_content('idtemporada,fecha_desde,fecha_hasta,idcliente,idmarca', 'ventas_temporada', 'reporte_ventas_temporada', 'lista_ventas_temporada', callback_reporte);
                 ">Generar reporte</button>
             <button type="reset" class="btn btn-inverse waves-effect waves-light m-r-10"
                 onclick="
