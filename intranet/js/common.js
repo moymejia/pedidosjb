@@ -520,6 +520,104 @@ function print_div(divid) {
 
     return true;
 }
+
+function build_all_datatables_report_content() {
+    var container = document.getElementById('contenedor_principal');
+    if (!container) return null;
+
+    // Para cada tabla activa dentro del contenedor, obtener todas las filas filtradas
+    var filasTablas = {};
+    if (Array.isArray(tablas_activas)) {
+        tablas_activas.forEach(function (dtInst) {
+            if (!dtInst) return;
+            var tbl = dtInst.table().node();
+            if (!container.contains(tbl) || !tbl.id) return;
+            var filas = '';
+            dtInst.rows({ search: 'applied', page: 'all' }).every(function () {
+                var row = this.node().cloneNode(true);
+                row.querySelectorAll('input, select, textarea, button').forEach(function (elem) {
+                    elem.parentNode.removeChild(elem);
+                });
+                filas += row.outerHTML;
+            });
+            filasTablas[tbl.id] = filas;
+        });
+    }
+
+    // Clonar el contenedor para no modificar el DOM visible
+    var clone = container.cloneNode(true);
+
+    clone.querySelectorAll('form').forEach(function (form) {
+        form.parentNode.removeChild(form);
+    });
+
+    clone.querySelectorAll('.header-titulo').forEach(function (el) {
+        el.parentNode.removeChild(el);
+    });
+
+    // Reemplazar el tbody de cada tabla con todas sus filas filtradas
+    Object.keys(filasTablas).forEach(function (id) {
+        var tbl = clone.querySelector('#' + id);
+        if (!tbl) return;
+        var tbody = tbl.querySelector('tbody');
+        if (tbody) tbody.innerHTML = filasTablas[id];
+    });
+
+    clone.querySelectorAll('table.datatable th, table.datatables th, table.dataTable th').forEach(function (th) {
+        var titulo = th.querySelector('.dt-column-title');
+        var texto = titulo ? titulo.textContent : th.textContent;
+        th.textContent = texto.trim();
+    });
+
+    return clone;
+}
+
+function print_all_datatables(dt) {
+    var clone = build_all_datatables_report_content();
+    if (!clone) return;
+
+    var mywindow = window.open('', 'PRINT', 'fullscreen=yes');
+    mywindow.document.write('<html><head><title>' + document.title + '</title>');
+    mywindow.document.write('<style>' +
+        '@page { size: landscape; margin: 8mm; }' +
+        'html, body { background: #ffffff !important; color: #000000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
+        'body { font-family: Arial, sans-serif; font-size: 10px; }' +
+        'h1, h2, h3, h4, h5, h6, p, span, div { color: #000000 !important; }' +
+        'table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; margin-bottom: 16px; }' +
+        'table thead { display: table-header-group; }' +
+        'table thead th { background: #ffffff !important; color: #000000 !important; border: 1px solid #000000 !important; font-weight: bold !important; font-size: 11px !important; }' +
+        'table th, table td { border: 1px solid #000000 !important; padding: 2px 4px !important; color: #000000 !important; background: #ffffff !important; white-space: normal !important; word-break: break-word !important; }' +
+        'table tbody td { font-size: 12px !important; }' +
+        '.dt-buttons, .dt-search, .dt-length, .dt-paging, .dt-info, .dataTables_filter, .dataTables_length, .dataTables_paginate { display: none !important; }' +
+        'table.dataTable { display: table !important; }' +
+        '</style>');
+    mywindow.document.write('</head><body>');
+    mywindow.document.write(clone.innerHTML);
+    mywindow.document.write('</body></html>');
+    mywindow.document.close();
+    mywindow.focus();
+    mywindow.print();
+}
+
+function export_all_datatables(dt) {
+    var clone = build_all_datatables_report_content();
+    if (!clone) return;
+
+    var tempContainer = document.createElement('div');
+    var tempId = 'tmp_export_all_' + new Date().getTime();
+    tempContainer.id = tempId;
+    tempContainer.style.display = 'none';
+    tempContainer.appendChild(clone);
+    document.body.appendChild(tempContainer);
+
+    try {
+        export_to_xlsx(tempId, 'reporte.xlsx');
+    } finally {
+        if (tempContainer && tempContainer.parentNode) {
+            tempContainer.parentNode.removeChild(tempContainer);
+        }
+    }
+}
 /* FIN REPORTES/IMPRIMIR EXPOTRTAR */
 
 /**
@@ -641,9 +739,7 @@ function habilitar_floating_labels() {
 }
 
 function activate_select2() {
-    $(".select2").select2({
-        width: '100%'
-    });
+    $(".select2").select2();
 }
 
 //DATA TABLES
@@ -670,8 +766,8 @@ function activar_tabla(idtabla) {
         (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.FixedHeader !== "undefined");
     var fixedHeaderUser = ds.confFixedheader === "true" && fixedHeaderDisponible;
     var exportTitle = (ds.confTitulotabla) ? ds.confTitulotabla : "Listado";
-    var exportCompany = "JBR Innovaciones y Servicios";
-    var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_JBR_Innovaciones_y_Servicios" : "Listado";
+    var exportCompany = "Solo moda S.A.S.";
+    var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_Solo_moda_S.A.S." : "Listado";
 
     var nombreABuscar = ds.confRowgroup;
     var indiceReal = -1;
@@ -683,9 +779,12 @@ function activar_tabla(idtabla) {
     var rowGroupUser = (indiceReal !== -1);
 
     var resetUser = ds.confReset === "true";
+    var exportAllUser = ds.confExportall === "true";
     var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
+    var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
+    var noOrderUser = (ds.confNoorder === "true");
     var columnasAuto = [];
 
     $('#' + idtabla + ' thead th').each(function () {
@@ -709,7 +808,7 @@ function activar_tabla(idtabla) {
         botones.push({
             extend: "colvis",
             text: "Seleccionar columnas",
-            columns: ":not(:first-child)"
+            //columns: ":not(:first-child)"
         });
         botones.push(
             {
@@ -768,28 +867,14 @@ function activar_tabla(idtabla) {
                         bold: true,
                         alignment: "center"
                     };
-                    var tableNode = null;
-                    if (Array.isArray(doc.content)) {
-                        for (var i = 0; i < doc.content.length; i++) {
-                            if (doc.content[i] && doc.content[i].table) {
-                                tableNode = doc.content[i];
-                                break;
-                            }
+                    if (doc.content && doc.content[2] && doc.content[2].table) {
+                        doc.content[2].alignment = "center";
+                        if (doc.content[2].table.widths) {
+                            doc.content[2].table.widths = doc.content[2].table.widths.map(function () {
+                                return "*";
+                            });
                         }
-                    }
-
-                    if (tableNode && tableNode.table && Array.isArray(tableNode.table.body) && tableNode.table.body.length > 0) {
-                        var totalColumnas = tableNode.table.body[0].length;
-
-                        if (totalColumnas > 0) {
-                            tableNode.table.widths = new Array(totalColumnas).fill("*");
-                        }
-
-                        tableNode.alignment = "center";
-                        tableNode.margin = [0, 0, 0, 0];
-                        tableNode.table.dontBreakRows = true;
-
-                        tableNode.layout = {
+                        doc.content[2].layout = {
                             hLineColor: function () { return "#000000"; },
                             vLineColor: function () { return "#000000"; },
                             hLineWidth: function () { return 0.5; },
@@ -881,8 +966,23 @@ function activar_tabla(idtabla) {
         });
     }
 
+    if (exportAllUser) {
+        botones.push(
+            {
+                text: 'Imprimir todo',
+                className: 'btn btn-primary btn-sm',
+                action: function (e, dt) { print_all_datatables(dt); }
+            },
+            {
+                text: 'Exportar todo',
+                className: 'btn btn-success btn-sm',
+                action: function (e, dt) { export_all_datatables(dt); }
+            }
+        );
+    }
+
     var configTopStart = [];
-    if (buttonsUser) configTopStart.push('buttons');
+    if (buttonsUser || exportAllUser) configTopStart.push('buttons');
     if (pagingUser) configTopStart.push('pageLength');
     configTopStart.push('search');
 
@@ -908,13 +1008,30 @@ function activar_tabla(idtabla) {
             var exportOptionsActual = Object.assign({}, configBtn.exportOptions);
             var modifierActual = Object.assign({}, exportOptionsActual.modifier);
 
+            var haySeleccion = selectUser && tabla_nueva && tabla_nueva.rows({ selected: true }).count() > 0;
+
             exportOptionsActual.modifier = Object.assign({}, modifierActual, {
                 search: 'applied',
                 order: 'applied',
                 page: 'all',
-                selected: null
+                selected: haySeleccion ? true : null
             });
 
+            exportOptionsActual.columns = ':visible';
+            exportOptionsActual.format = {
+                body: function(data, row, column, node) {
+                    if (typeof data === 'string' && data.indexOf('<') !== -1) {
+                        var tmp = document.createElement('div');
+                        tmp.innerHTML = data;
+                        var elementos = tmp.querySelectorAll('input, select, textarea, button');
+                        for (var i = 0; i < elementos.length; i++) {
+                            elementos[i].parentNode.removeChild(elementos[i]);
+                        }
+                        return (tmp.textContent || tmp.innerText || '').trim();
+                    }
+                    return data;
+                }
+            };
             configBtn.exportOptions = exportOptionsActual;
             return configBtn;
         }),
@@ -927,10 +1044,10 @@ function activar_tabla(idtabla) {
         lengthChange: pagingUser,
         stateSave: true,
         stateDuration: 0,
-        ordering: true,
+        ordering: orderingUser,
 
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
-        order: rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']],
+        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']]),
 
         createdRow: function (row, data, dataIndex) {
             if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);

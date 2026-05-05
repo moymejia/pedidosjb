@@ -5,10 +5,35 @@ require_once 'security.php';
 class datatables extends mysql {
     private $html = "";
     private $IDS = [];
+    private $OPTIONS = [];
 
-    public function __construct($PARAMETROS = null) {
+    public function __construct($PARAMETROS = null, $OPTIONS = []) {
+        $this->OPTIONS = is_array($OPTIONS) ? $OPTIONS : [];
+        
         if (isset($PARAMETROS) && isset($PARAMETROS['operacion'])) {
             $this->seleccionar_operacion($PARAMETROS);
+        } else {
+            $this->addButtonBar();
+        }
+    }
+
+    private function addButtonBar() {
+        if (empty($this->OPTIONS)) return;
+        
+        $buttons = "<span style='float:right;'>";
+        
+        if (isset($this->OPTIONS['print']) && $this->OPTIONS['print'] == true) {
+            $buttons .= " <button type=\"button\" class=\"btn btn-secondary btn-circle btn-xl\" onclick=\"print_all_datatables();\"><i class=\"mdi mdi-printer\"></i> </button> ";
+        }
+        
+        if (isset($this->OPTIONS['export_all']) && $this->OPTIONS['export_all'] == true) {
+            $buttons .= " <button type=\"button\" class=\"btn btn-secondary btn-circle btn-xl\" onclick=\"export_all_datatables();\"><i class=\"mdi mdi-file-excel\"></i> </button> ";
+        }
+        
+        $buttons .= "</span>";
+        
+        if (!empty($buttons) && $buttons !== "<span style='float:right;'></span>") {
+            $this->html .= $buttons;
         }
     }
 
@@ -52,6 +77,7 @@ class datatables extends mysql {
         $reset         = isset($PARAMETROS['reset']) ? $PARAMETROS['reset'] : false;
         $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
         $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
+        $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
         
 
         $titulo_tabla  = isset($PARAMETROS['titulotabla']) ? $PARAMETROS['titulotabla'] : false;
@@ -74,6 +100,7 @@ class datatables extends mysql {
         $data_ .= " data-conf-ordering='" . ($ordering ? "true" : "false") . "' ";
         $data_ .= " data-conf-noorder='" . (!$order ? "true" : "false") . "' ";
         $data_ .= " data-conf-reset='" . ($reset ? "true" : "false") . "' ";
+        $data_ .= " data-conf-exportall='" . ($export_all ? "true" : "false") . "' ";
 
         $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
         if (in_array($idtabla, $this->IDS, true)) {
@@ -144,8 +171,8 @@ class datatables extends mysql {
                 //si esta en columna especial, reemplazo su contenido
                 if (isset($special_columns[$key])) {
                     $column_content = $special_columns[$key];
-                    foreach ($row as $key => $value) {
-                        $column_content = str_replace("[$key]", $value, $column_content);
+                    foreach ($row as $row_key => $row_value) {
+                        $column_content = str_replace("[$row_key]", $row_value, $column_content);
                     }
                 }else{
                     $column_content = $value;
@@ -174,7 +201,7 @@ class datatables extends mysql {
     public function cargar_estado_datatables() {
         $db = new mysql();
         $usuario = (new security())->get_actual_user();
-        $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
+        $sql = "SELECT tabla, estado FROM solomoda_seguridad.datatables WHERE usuario = '$usuario' ";
         $result = $db->getresult($sql);
         $estados = [];
         while ($row = $db->getrowresult($result)) {
@@ -188,7 +215,7 @@ class datatables extends mysql {
     public function guardar_estado_datatables($tabla, $estado) {
         $usuario = (new security())->get_actual_user();
         $estado  = urldecode($estado);
-        $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, estado)
+        $sql = "INSERT INTO solomoda_seguridad.datatables (usuario, tabla, estado)
                 VALUES ('$usuario', '$tabla', '$estado')
                 ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
         $db = new mysql();
