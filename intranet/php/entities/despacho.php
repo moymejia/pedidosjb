@@ -395,8 +395,8 @@ class despacho extends table
 			return false;
 		}
 
-		if ($monto_flete <= 0) {
-			$this->last_error = 'El monto de flete es obligatorio y debe ser mayor a cero.';
+		if ($monto_flete < 0) {
+			$this->last_error = 'El monto de flete no puede ser negativo.';
 			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 			return false;
 		}

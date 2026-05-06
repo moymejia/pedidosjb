@@ -388,8 +388,8 @@
         var observaciones = safe(elementValue('observaciones'));
         var fechaFactura = safe(elementValue('fecha_factura'));
 
-        if (montoFlete <= 0) {
-            notify_warning('El monto de flete es obligatorio y debe ser mayor a cero.');
+        if (montoFlete < 0) {
+            notify_warning('El monto de flete no puede ser negativo.');
             element('monto_flete').focus();
             return;
         }
