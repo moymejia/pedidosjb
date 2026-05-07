@@ -912,48 +912,23 @@ function activar_tabla(idtabla) {
                 customize: function (win) {
                     var doc = win.document;
                     $(doc.body).prepend(
-                        '<div style="text-align:center; margin-bottom:12px; color:#000000;">' +
-                        '<div style="font-size:40px; font-weight:bold;">' + exportTitle + '</div>' +
-                        '<div style="font-size:20px; font-weight:normal;">' + exportCompany + '</div>' +
+                        '<div class="dt-print-header">' +
+                        '<div class="dt-print-title">' + exportTitle + '</div>' +
+                        '<div class="dt-print-company">' + exportCompany + '</div>' +
                         '</div>'
                     );
-                    $(doc.head).append(
-                        '<style>' +
-                        '@page { size: landscape; margin: 8mm; }' +
-                        'html, body { background: #ffffff !important; color: #000000 !important; ' +
-                        '-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
-                        'body { font-family: Arial, sans-serif; font-size: 8px; }' +
-                        'h1, h2, h3, h4, h5, h6, div, span, p { color: #000000 !important; }' +
-                        'table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; }' +
-                        'table thead { display: table-header-group; }' +
-                        'table thead th {' +
-                        'background: #ffffff !important;' +
-                        'color: #000000 !important;' +
-                        'border: 1px solid #000000 !important;' +
-                        'font-weight: bold !important;' +
-                        'font-size: 11px !important;' +
-                        '}' +
-                        'table th, table td {' +
-                        'border: 1px solid #000000 !important;' +
-                        'padding: 2px 3px !important;' +
-                        'color: #000000 !important;' +
-                        'background: #ffffff !important;' +
-                        'white-space: normal !important;' +
-                        'word-break: break-word !important;' +
-                        'line-height: 1.1 !important;' +
-                        '}' +
-                        'table tbody td {' +
-                        'font-size: 12px !important;' +
-                        '}' +
-                        '.dtrg-group td {' +
-                        'background: #ffffff !important;' +
-                        'color: #000000 !important;' +
-                        'font-weight: bold !important;' +
-                        '}' +
-                        '.dataTables_wrapper, .dataTables_wrapper * { color: #000000 !important; }' +
-                        '.dt-print-view .dt-buttons, .dt-print-view .dataTables_filter, .dt-print-view .dataTables_length { display: none !important; }' +
-                        '</style>'
-                    );
+                    // Cargar los estilos genericos de DataTables para impresión
+                    var cssPrint = doc.createElement("link");
+                    cssPrint.rel = "stylesheet";
+                    cssPrint.type = "text/css";
+                    cssPrint.href = "../css/datatables.css?x=" + version;
+                    doc.head.appendChild(cssPrint);
+                    // Cargar estilos específicos para la tabla, si existen
+                    var cssTabla = doc.createElement("link");
+                    cssTabla.rel = "stylesheet";
+                    cssTabla.type = "text/css";
+                    cssTabla.href = "../css/print/" + idtabla + ".css?x=" + version;
+                    doc.head.appendChild(cssTabla);
                 }
             }
         );
