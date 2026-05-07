@@ -60,7 +60,7 @@ class liquidacion_de_ingresos extends table
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(estado_pago_individual, '') AS estado_pago_individual,
-            IFNULL((SELECT monto_flete FROM despacho WHERE iddespacho = view_estado_cuenta_despacho_detallado.iddespacho LIMIT 1), 0) AS monto_flete,
+                                IFNULL(monto_flete, 0) AS monto_flete,
                 IFNULL(monto_pago, 0) AS monto_pago
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
@@ -137,7 +137,7 @@ class liquidacion_de_ingresos extends table
             'total_recuperacion' => '0.00'
         ];
 
-        $totales_detalle = [
+        $TOTALES_DETALLE = [
             'flete' => 0,
             'deposito' => 0,
             'cheque_vista' => 0,
@@ -162,7 +162,7 @@ class liquidacion_de_ingresos extends table
                 $monto_flete = (float)$row['monto_flete'];
                 if ($monto_flete > 0) {
                     $valor_flete = $this->formatear_moneda($monto_flete);
-                    $totales_detalle['flete'] += $monto_flete;
+                    $TOTALES_DETALLE['flete'] += $monto_flete;
                 }
                 $DESPACHOS_FLETE[$iddespacho] = true;
             }
@@ -171,13 +171,13 @@ class liquidacion_de_ingresos extends table
 
             if ($estado_pago == 'PROGRAMADO') {
                 $valor_cheque_posfechado = $this->formatear_moneda($monto);
-                $totales_detalle['cheque_posfechado'] += $monto;
+                $TOTALES_DETALLE['cheque_posfechado'] += $monto;
             } elseif (strpos($tipo_pago, 'CHEQUE') !== false) {
                 $valor_cheque_vista = $this->formatear_moneda($monto);
-                $totales_detalle['cheque_vista'] += $monto;
+                $TOTALES_DETALLE['cheque_vista'] += $monto;
             } else {
                 $valor_deposito = $this->formatear_moneda($monto);
-                $totales_detalle['deposito'] += $monto;
+                $TOTALES_DETALLE['deposito'] += $monto;
             }
 
             $numero_documento = trim((string)$row['numero_documento']);
@@ -252,21 +252,21 @@ class liquidacion_de_ingresos extends table
         $DATOS['tabla_documentos_recuperacion_rows'] = $filas_recuperacion;
 
         $total_cobrado =
-            $totales_detalle['flete'] +
-            $totales_detalle['deposito'] +
-            $totales_detalle['cheque_vista'] +
+            $TOTALES_DETALLE['flete'] +
+            $TOTALES_DETALLE['deposito'] +
+            $TOTALES_DETALLE['cheque_vista'] +
             $total_programados;
 
-        $DATOS['detalle_total_flete'] = $this->formatear_moneda($totales_detalle['flete']);
-        $DATOS['detalle_total_deposito'] = $this->formatear_moneda($totales_detalle['deposito']);
-        $DATOS['detalle_total_cheque_vista'] = $this->formatear_moneda($totales_detalle['cheque_vista']);
-        $DATOS['detalle_total_cheque_posfechado'] = $this->formatear_moneda($totales_detalle['cheque_posfechado']);
+        $DATOS['detalle_total_flete'] = $this->formatear_moneda($TOTALES_DETALLE['flete']);
+        $DATOS['detalle_total_deposito'] = $this->formatear_moneda($TOTALES_DETALLE['deposito']);
+        $DATOS['detalle_total_cheque_vista'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_vista']);
+        $DATOS['detalle_total_cheque_posfechado'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_posfechado']);
         $DATOS['detalle_total_general'] = $this->formatear_moneda($total_cobrado);
 
-        $DATOS['total_fletes'] = $this->formatear_moneda($totales_detalle['flete']);
-        $DATOS['total_depositos'] = $this->formatear_moneda($totales_detalle['deposito']);
-        $DATOS['total_recibos_provisionales'] = $this->formatear_moneda($totales_detalle['cheque_vista']);
-        $DATOS['total_cheques_posfecha'] = $this->formatear_moneda($totales_detalle['cheque_posfechado']);
+        $DATOS['total_fletes'] = $this->formatear_moneda($TOTALES_DETALLE['flete']);
+        $DATOS['total_depositos'] = $this->formatear_moneda($TOTALES_DETALLE['deposito']);
+        $DATOS['total_recibos_provisionales'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_vista']);
+        $DATOS['total_cheques_posfecha'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_posfechado']);
         $DATOS['total_cobrado'] = $this->formatear_moneda($total_cobrado);
 
         if (count($RECIBOS_ORDENABLES) > 0) {

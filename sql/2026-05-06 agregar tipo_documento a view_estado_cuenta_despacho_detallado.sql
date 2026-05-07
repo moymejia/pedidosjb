@@ -17,6 +17,7 @@ select
     `d`.`numero_factura` AS `numero_factura`,
     `d`.`fecha_factura` AS `fecha_factura`,
     `d`.`monto_total` AS `monto_total`,
+    IFNULL(`d`.`monto_flete`, 0) AS `monto_flete`,
     `dp`.`monto` AS `monto_pago`,
     (`d`.`monto_total` - ifnull((select sum(`dp1`.`monto`) from `pedidosjb_pedidos`.`despacho_pago` `dp1` where ((`dp1`.`iddespacho` = `d`.`iddespacho`) and (`dp1`.`estado` = 'EJECUTADO'))), 0)) AS `saldo_pendiente`,
     (`d`.`fecha_factura` + interval `p`.`dias_credito` day) AS `fecha_vencimiento`,
