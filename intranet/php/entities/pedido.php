@@ -587,7 +587,7 @@ class pedido extends table{
 
         // En vertical, el espacio util baja cuando hay mas filas de encabezado de tallas.
         // Las hojas intermedias no llevan footer, por eso admiten mas filas.
-        $max_filas_con_footer = max(13, 13 - $rowspan_encabezado);
+        $max_filas_con_footer = max(13, 15 - $rowspan_encabezado);
         $max_filas_sin_footer = max($max_filas_con_footer + 2, 19 - $rowspan_encabezado);
 
         foreach ($productos_agrupados as $grupo_producto) {
@@ -619,23 +619,24 @@ class pedido extends table{
             }
 
             if ($filas_ultimo_chunk > $max_filas_con_footer && count($ultimo_chunk) > 1) {
-                $filas_nueva_ultima = 0;
-                $indice_inicio_nueva_ultima = count($ultimo_chunk);
+                $filas_chunk_intermedio = 0;
+                $indice_corte = 0;
 
-                for ($i = count($ultimo_chunk) - 1; $i >= 0; $i--) {
-                    $filas_grupo = count($ultimo_chunk[$i]['filas']);
+                // Llenar primero la hoja intermedia y dejar el remanente para la ultima hoja con footer.
+                foreach ($ultimo_chunk as $i => $grupo_producto) {
+                    $filas_grupo = count($grupo_producto['filas']);
 
-                    if (($filas_nueva_ultima + $filas_grupo) > $max_filas_con_footer && $indice_inicio_nueva_ultima < count($ultimo_chunk)) {
+                    if (($filas_chunk_intermedio + $filas_grupo) > $max_filas_con_footer) {
                         break;
                     }
 
-                    $filas_nueva_ultima += $filas_grupo;
-                    $indice_inicio_nueva_ultima = $i;
+                    $filas_chunk_intermedio += $filas_grupo;
+                    $indice_corte = $i + 1;
                 }
 
-                if ($indice_inicio_nueva_ultima > 0) {
-                    $chunk_intermedio = array_slice($ultimo_chunk, 0, $indice_inicio_nueva_ultima);
-                    $chunk_final = array_slice($ultimo_chunk, $indice_inicio_nueva_ultima);
+                if ($indice_corte > 0 && $indice_corte < count($ultimo_chunk)) {
+                    $chunk_intermedio = array_slice($ultimo_chunk, 0, $indice_corte);
+                    $chunk_final = array_slice($ultimo_chunk, $indice_corte);
 
                     $productos_chunks[$ultimo_indice] = $chunk_intermedio;
                     $productos_chunks[] = $chunk_final;
