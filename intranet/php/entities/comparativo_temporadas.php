@@ -133,8 +133,7 @@ class comparativo_temporadas extends table
             $arreglo_temporadas_nombre[$r['idtemporada']] = $r['nombre'];
         }
 
-        $sql = mysql::getresult("
-            SELECT 
+        $sql = mysql::getresult(" SELECT 
                 $filtro_cliente_o_marca AS filtro_cliente_o_marca,
                 $nombre AS nombre,
                 $columnas_sql
@@ -176,7 +175,7 @@ class comparativo_temporadas extends table
         $tabla_comparativa = "<input type='hidden' id='datatableid' name='datatableid' value='tabla_comparativo_temporadas'>";
         $tabla_comparativa .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'><thead>";
 
-        $tabla_comparativa .= "<tr><th rowspan='2'>$titulo</th>";
+        $tabla_comparativa .= "<tr><th rowspan='2' style='text-align: center;'>$titulo</th>";
         foreach ($arreglo_temporadas as $t) {
             $tabla_comparativa .= "
                 <th colspan='2'>
@@ -188,21 +187,21 @@ class comparativo_temporadas extends table
 
         $tabla_comparativa .= "<tr>";
         foreach ($arreglo_temporadas as $t) {
-            $tabla_comparativa .= "<th>Pares</th><th>Monto</th>";
+            $tabla_comparativa .= "<th style='text-align: center;'>Pares</th><th style='text-align: right;'>Monto</th>";
         }
         
         $tabla_comparativa .= "</tr></thead><tbody id='tabla_todos'>";
 
 
         while ($row = mysql::getrowresult($sql)) {
-            $tabla_comparativa .= "<tr><td>{$row['nombre']}</td>";
+            $tabla_comparativa .= "<tr><td style='text-align: center;'>{$row['nombre']}</td>";
 
             foreach ($arreglo_temporadas as $t) {
                 $pares = (isset($row["total_pares_$t"]) && $row["total_pares_$t"] !== '') ? $row["total_pares_$t"] : '0';
                 $monto = (isset($row["monto_total_$t"]) && $row["monto_total_$t"] !== '') ? $row["monto_total_$t"] : 'Q 0.00';
 
                 $tabla_comparativa .= "<td style='text-align: center;'>" . $pares . "</td>";
-                $tabla_comparativa .= "<td>" . $monto . "</td>";
+                $tabla_comparativa .= "<td style='text-align: right;'>" . $monto . "</td>";
             }
 
             $tabla_comparativa .= "</tr>";

@@ -4,6 +4,7 @@ require_once '../wisetech/security.php';
 require_once '../wisetech/html.php';
 require_once '../wisetech/objects.php';
 require_once '../wisetech/utils.php';
+require_once '../wisetech/datatables.php';
 require_once('../entities/temporada.php');
 require_once('../entities/cliente.php');
 require_once('../entities/marca.php');
@@ -197,7 +198,9 @@ class ventas_temporada extends table
         $data_detalle .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
         $data_detalle .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
 
-        $contenido = '';
+        $_DATATABLES = new datatables(null, ['print' => true, 'export_all' => true]);
+
+        $contenido = $_DATATABLES->getReport();
         $contenido .= $this->render_report_title($titulo_detalle);
         $contenido .= $this->render_datatable(
             $sql,

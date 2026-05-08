@@ -587,7 +587,7 @@ class pedido extends table{
 
         // En vertical, el espacio util baja cuando hay mas filas de encabezado de tallas.
         // Las hojas intermedias no llevan footer, por eso admiten mas filas.
-        $max_filas_con_footer = max(13, 15 - $rowspan_encabezado);
+        $max_filas_con_footer = max(15, 15 - $rowspan_encabezado);
         $max_filas_sin_footer = max($max_filas_con_footer + 2, 19 - $rowspan_encabezado);
 
         foreach ($productos_agrupados as $grupo_producto) {
