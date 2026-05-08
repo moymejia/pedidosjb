@@ -31,6 +31,11 @@ $nombre             = $_SESSION['usuario_nombre'];
     <!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet">
     <link href="../css/common.css" rel="stylesheet">
+        <link rel="stylesheet" href="../assets/plugins/datatables2/dataTables.dataTables.css">
+        <link rel="stylesheet" href="../assets/plugins/datatables2/columnControl.dataTables.min.css">
+        <link rel="stylesheet" href="../assets/plugins/datatables2/buttons.dataTables.min.css">
+        <link rel="stylesheet" href="../assets/plugins/datatables2/rowGroup.dataTables.css">
+        <link rel="stylesheet" href="../assets/plugins/datatables2/stateRestore.dataTables.min.css">
     <link href="../assets/plugins/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css" />
     <!-- You can change the theme colors from here -->
     <link href="css/pages/floating-label.css" rel="stylesheet">
@@ -38,7 +43,7 @@ $nombre             = $_SESSION['usuario_nombre'];
     <link href="css/colors/default-dark.css" id="theme" rel="stylesheet">
 
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
-    <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
+        <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/xlsx.full.min.js?x=<?php echo $version ?>"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -335,13 +340,18 @@ while ($row = $mysql->getrowresult($result)) {
     <!-- ============================================================== -->
     <script src="../assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
     <!-- This is data table -->
-    <script src="../assets/plugins/datatables/datatables.min.js"></script>
+        <script src="../assets/plugins/datatables2/datatables.min.js"></script>
+        <script src="../assets/plugins/datatables2/dataTables.columnControl.min.js"></script>
+        <script src="../assets/plugins/datatables2/dataTables.buttons.min.js"></script>
+        <script src="../assets/plugins/datatables2/buttons.html5.min.js"></script>
+        <script src="../assets/plugins/datatables2/buttons.print.min.js"></script>
+        <script src="../assets/plugins/datatables2/dataTables.rowGroup.js"></script>
+        <script src="../assets/plugins/datatables2/rowGroup.dataTables.js"></script>
+        <script src="../assets/plugins/datatables2/dataTables.stateRestore.min.js"></script>
     <!-- start - This is for export functionality only -->
-    <script src="../assets/plugins/datatables/media/js/dataTables.buttons.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.flash.min.js"></script>
     <script src="../assets/plugins/jszip.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.html5.min.js"></script>
-    <script src="../assets/plugins/datatables/media/js/buttons.print.min.js"></script>
+        <script src="../assets/plugins/pdfmake.min.js"></script>
+        <script src="../assets/plugins/vfs_fonts.js"></script>
 
     <!-- jQuery peity -->
     <script src="../assets/plugins/peity/jquery.peity.min.js"></script>

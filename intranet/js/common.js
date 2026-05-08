@@ -742,6 +742,64 @@ function activate_select2() {
     $(".select2").select2();
 }
 
+function datatables_staterestore_ajax(idtabla, data, callback) {
+    if (!data || !data.action) {
+        if (callback) callback({});
+        return;
+    }
+
+    if (data.action === 'load') {
+        upload_action('idtabla=' + encodeURIComponent(idtabla), 'datatables', 'cargar_estados_datatables_staterestore', function (respuesta) {
+            var estados = {};
+            try {
+                estados = JSON.parse(respuesta || '{}');
+            } catch (e) {
+                estados = {};
+            }
+            if (callback) callback(estados);
+        }, function () {
+            if (callback) callback({});
+        });
+        return;
+    }
+
+    var estados = data.stateRestore || {};
+    var nombres = Object.keys(estados);
+    if (nombres.length === 0) {
+        if (callback) callback();
+        return;
+    }
+
+    var pendientes = nombres.length;
+    var finalizar = function () {
+        pendientes--;
+        if (pendientes <= 0 && callback) {
+            callback();
+        }
+    };
+
+    nombres.forEach(function (nombre) {
+        var payload = '';
+        if (data.action === 'save') {
+            payload = 'idtabla=' + encodeURIComponent(idtabla)
+                + ',nombre_estado=' + encodeURIComponent(nombre)
+                + ',estadotabla=' + encodeURIComponent(JSON.stringify(estados[nombre]));
+            upload_action(payload, 'datatables', 'guardar_estado_datatables_staterestore', finalizar, finalizar);
+        } else if (data.action === 'rename') {
+            payload = 'idtabla=' + encodeURIComponent(idtabla)
+                + ',nombre_estado_actual=' + encodeURIComponent(nombre)
+                + ',nombre_estado_nuevo=' + encodeURIComponent(estados[nombre]);
+            upload_action(payload, 'datatables', 'renombrar_estado_datatables_staterestore', finalizar, finalizar);
+        } else if (data.action === 'remove') {
+            payload = 'idtabla=' + encodeURIComponent(idtabla)
+                + ',nombre_estado=' + encodeURIComponent(nombre);
+            upload_action(payload, 'datatables', 'eliminar_estado_datatables_staterestore', finalizar, finalizar);
+        } else {
+            finalizar();
+        }
+    });
+}
+
 //DATA TABLES
 function activar_tablas() {
     var tablas_encontradas = document.querySelectorAll("table.datatable, table.datatables");
@@ -780,6 +838,9 @@ function activar_tabla(idtabla) {
 
     var resetUser = ds.confReset === "true";
     var exportAllUser = ds.confExportall === "true";
+    var stateRestoreUser = ds.confStaterestore === "true";
+    var stateRestoreDisponible = typeof DataTable !== "undefined" && DataTable.ext && DataTable.ext.buttons && DataTable.ext.buttons.savedStates;
+    var stateRestoreActivo = stateRestoreUser && stateRestoreDisponible;
     var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
@@ -805,6 +866,28 @@ function activar_tabla(idtabla) {
         });
     }
     if (buttonsUser) {
+        if (stateRestoreActivo) {
+            botones.push({
+                extend: 'createState',
+                text: 'Crear estado',
+                config: {
+                    creationModal: true,
+                    ajax: function (data, callback) {
+                        datatables_staterestore_ajax(idtabla, data, callback);
+                    }
+                }
+            });
+            botones.push({
+                extend: 'savedStates',
+                text: 'Estados guardados',
+                config: {
+                    splitSecondaries: ['updateState', 'renameState', 'removeState'],
+                    ajax: function (data, callback) {
+                        datatables_staterestore_ajax(idtabla, data, callback);
+                    }
+                }
+            });
+        }
         botones.push({
             extend: "colvis",
             text: "Seleccionar columnas",
@@ -971,7 +1054,7 @@ function activar_tabla(idtabla) {
     }
 
     var configTopStart = [];
-    if (buttonsUser || exportAllUser) configTopStart.push('buttons');
+    if (buttonsUser || exportAllUser || stateRestoreActivo) configTopStart.push('buttons');
     if (pagingUser) configTopStart.push('pageLength');
     configTopStart.push('search');
 
@@ -1024,7 +1107,25 @@ function activar_tabla(idtabla) {
             configBtn.exportOptions = exportOptionsActual;
             return configBtn;
         }),
-        language: { url: "../assets/plugins/datatables/media/datatables.spanish.lang" },
+        language: { 
+    url: "../assets/plugins/datatables/media/datatables.spanish.lang",
+    buttons: {
+        savedStates: "Estados guardados"
+    },
+    stateRestore: {
+        savedStates: 'Estados guardados',
+        emptyStates: 'Sin estados guardados',
+        createTitle: 'Crear estado',
+        renameTitle: 'Renombrar estado',
+        removeTitle: 'Eliminar estado',
+        removeConfirm: '¿Seguro que desea eliminar este estado?',
+        removeSubmit: 'Eliminar',
+        renameButton: 'Renombrar',
+        renameLabel: 'Nombre:',
+        createButton: 'Crear',
+        createLabel: 'Nombre del estado:'
+    }
+},
         responsive: responsiveUser,
         colReorder: colReorderUser,
         select: selectUser ? { style: 'multi' } : false,

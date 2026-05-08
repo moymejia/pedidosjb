@@ -57,6 +57,55 @@ class datatables extends mysql {
             case 'cargar_estado_datatables':
                 echo "|correcto|" . $this->cargar_estado_datatables();
                 break;
+            case 'guardar_estado_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado']) && isset($PARAMETROS['estadotabla'])) {
+                    echo "|correcto|" . $this->guardar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado'], $PARAMETROS['estadotabla']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'listar_estados_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla'])) {
+                    echo "|correcto|" . $this->listar_estados_datatables_staterestore($PARAMETROS['idtabla']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'cargar_estados_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla'])) {
+                    echo "|correcto|" . $this->cargar_estados_datatables_staterestore($PARAMETROS['idtabla']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'cargar_estado_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado'])) {
+                    echo "|correcto|" . $this->cargar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'actualizar_estado_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado']) && isset($PARAMETROS['estadotabla'])) {
+                    echo "|correcto|" . $this->actualizar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado'], $PARAMETROS['estadotabla']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'renombrar_estado_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado_actual']) && isset($PARAMETROS['nombre_estado_nuevo'])) {
+                    echo "|correcto|" . $this->renombrar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado_actual'], $PARAMETROS['nombre_estado_nuevo']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
+            case 'eliminar_estado_datatables_staterestore':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado'])) {
+                    echo "|correcto|" . $this->eliminar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
             default:
                 echo "|error|Operacion no reconocida|";
                 break;
@@ -78,6 +127,7 @@ class datatables extends mysql {
         $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
         $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
         $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
+        $staterestore  = isset($PARAMETROS['staterestore']) ? $PARAMETROS['staterestore'] : false;
         
 
         $titulo_tabla  = isset($PARAMETROS['titulotabla']) ? $PARAMETROS['titulotabla'] : false;
@@ -101,6 +151,7 @@ class datatables extends mysql {
         $data_ .= " data-conf-noorder='" . (!$order ? "true" : "false") . "' ";
         $data_ .= " data-conf-reset='" . ($reset ? "true" : "false") . "' ";
         $data_ .= " data-conf-exportall='" . ($export_all ? "true" : "false") . "' ";
+        $data_ .= " data-conf-staterestore='" . ($staterestore ? "true" : "false") . "' ";
 
         $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
         if (in_array($idtabla, $this->IDS, true)) {
@@ -201,7 +252,12 @@ class datatables extends mysql {
     public function cargar_estado_datatables() {
         $db = new mysql();
         $usuario = (new security())->get_actual_user();
-        $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
+        $usuario = $this->escape_sql($usuario);
+        if ($this->has_state_name_column()) {
+            $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' AND nombre_estado = 'default' ";
+        } else {
+            $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
+        }
         $result = $db->getresult($sql);
         $estados = [];
         while ($row = $db->getrowresult($result)) {
@@ -214,12 +270,175 @@ class datatables extends mysql {
 
     public function guardar_estado_datatables($tabla, $estado) {
         $usuario = (new security())->get_actual_user();
+        $usuario = $this->escape_sql($usuario);
+        $tabla = $this->escape_sql($tabla);
         $estado  = urldecode($estado);
-        $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, estado)
-                VALUES ('$usuario', '$tabla', '$estado')
-                ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+        $estado = $this->escape_sql($estado);
+
+        if ($this->has_state_name_column()) {
+            $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, nombre_estado, estado)
+                    VALUES ('$usuario', '$tabla', 'default', '$estado')
+                    ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+        } else {
+            $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, estado)
+                    VALUES ('$usuario', '$tabla', '$estado')
+                    ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+        }
         $db = new mysql();
         return $db->getresult($sql);
+    }
+
+    public function guardar_estado_datatables_staterestore($tabla, $nombre_estado, $estado) {
+        if (!$this->has_state_name_column()) {
+            return false;
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
+        $estado = $this->escape_sql(urldecode($estado));
+
+        $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, nombre_estado, estado)
+                VALUES ('$usuario', '$tabla', '$nombre_estado', '$estado')
+                ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+
+        $db = new mysql();
+        return $db->getresult($sql);
+    }
+
+    public function listar_estados_datatables_staterestore($tabla) {
+        if (!$this->has_state_name_column()) {
+            return json_encode([]);
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $db = new mysql();
+
+        $sql = "SELECT nombre_estado
+                FROM pedidosjb_seguridad.datatables
+                WHERE usuario = '$usuario' AND tabla = '$tabla'
+                ORDER BY nombre_estado";
+
+        $result = $db->getresult($sql);
+        $estados = [];
+        while ($row = $db->getrowresult($result)) {
+            $estados[] = $row['nombre_estado'];
+        }
+
+        return json_encode($estados);
+    }
+
+    public function cargar_estados_datatables_staterestore($tabla) {
+        if (!$this->has_state_name_column()) {
+            return json_encode((object)[]);
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $db = new mysql();
+
+        $sql = "SELECT nombre_estado, estado
+                FROM pedidosjb_seguridad.datatables
+                WHERE usuario = '$usuario' AND tabla = '$tabla'
+                ORDER BY nombre_estado";
+
+        $result = $db->getresult($sql);
+        $estados = [];
+        while ($row = $db->getrowresult($result)) {
+            $estados[$row['nombre_estado']] = json_decode($row['estado'], true);
+        }
+
+        return json_encode($estados);
+    }
+
+    public function cargar_estado_datatables_staterestore($tabla, $nombre_estado) {
+        if (!$this->has_state_name_column()) {
+            return json_encode([]);
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
+        $db = new mysql();
+
+        $sql = "SELECT estado
+                FROM pedidosjb_seguridad.datatables
+                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'
+                LIMIT 1";
+
+        $estado = $db->getvalue($sql, 'estado');
+        return $estado ? $estado : json_encode([]);
+    }
+
+    public function actualizar_estado_datatables_staterestore($tabla, $nombre_estado, $estado) {
+        return $this->guardar_estado_datatables_staterestore($tabla, $nombre_estado, $estado);
+    }
+
+    public function renombrar_estado_datatables_staterestore($tabla, $nombre_estado_actual, $nombre_estado_nuevo) {
+        if (!$this->has_state_name_column()) {
+            return false;
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $nombre_estado_actual = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado_actual));
+        $nombre_estado_nuevo = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado_nuevo));
+
+        if ($nombre_estado_actual === $nombre_estado_nuevo) {
+            return true;
+        }
+
+        $db = new mysql();
+        $sql = "UPDATE pedidosjb_seguridad.datatables
+                SET nombre_estado = '$nombre_estado_nuevo'
+                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado_actual'";
+
+        return $db->getresult($sql);
+    }
+
+    public function eliminar_estado_datatables_staterestore($tabla, $nombre_estado) {
+        if (!$this->has_state_name_column()) {
+            return false;
+        }
+
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $tabla = $this->escape_sql($tabla);
+        $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
+
+        $db = new mysql();
+        $sql = "DELETE FROM pedidosjb_seguridad.datatables
+                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'";
+
+        return $db->getresult($sql);
+    }
+
+    private function normalizar_nombre_estado($nombre_estado) {
+        $nombre = trim((string) $nombre_estado);
+        if ($nombre === '') {
+            return 'default';
+        }
+        return substr($nombre, 0, 100);
+    }
+
+    private function escape_sql($valor) {
+        return str_replace("'", "\\'", (string) $valor);
+    }
+
+    private function has_state_name_column() {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $db = new mysql();
+        $sql = "SELECT COUNT(1) existe
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = 'pedidosjb_seguridad'
+                  AND TABLE_NAME = 'datatables'
+                  AND COLUMN_NAME = 'nombre_estado'";
+        $cache = ((int) $db->getvalue($sql, 'existe')) > 0;
+        return $cache;
     }
 
     // ========== MÉTODOS PARA CONSTRUCCIÓN DE REPORTES ==========
