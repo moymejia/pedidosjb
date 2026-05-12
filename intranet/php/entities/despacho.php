@@ -799,6 +799,7 @@ class despacho extends table
 		$data_resumen .= " data-conf-noorder='false' ";
 		$data_resumen .= " data-conf-rowgroup='false' ";
 		$data_resumen .= " data-conf-reset='true' ";
+		$data_resumen .= " data-conf-staterestore='true' ";
 
 		$html = "<br><h2>Resumen por cliente</h2>";
 		$html .= "<table id='tabla_estado_cuenta_resumen' " . $data_resumen . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
@@ -888,6 +889,7 @@ class despacho extends table
 			$order         = false;
 			$rowGroup      = false;
 			$reset         = true;
+			$stateRestore  = true;
 			$tituloTabla   = 'Estado de cuenta';
 			$fileName      = 'Estado_de_cuenta';
 
@@ -905,6 +907,7 @@ class despacho extends table
 			$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
 			$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
 			$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
+			$data_ .= " data-conf-staterestore='" . ($stateRestore ? 'true' : 'false') . "' ";
 
 			$tabla_detallada = "<br><h2>Estado de cuenta</h2>";
 			$tabla_detallada .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
@@ -1044,6 +1047,7 @@ class despacho extends table
 		$order         = true;
 		$rowGroup      = false;
 		$reset         = true;
+		$stateRestore  = true;
 		$tituloTabla   = 'Estado de cuenta';
 		$fileName      = 'Estado_de_cuenta';
 
@@ -1061,6 +1065,7 @@ class despacho extends table
 		$data_ .= " data-conf-noorder='" . (!$order ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-rowgroup='" . (!$rowGroup ? 'true' : 'false') . "' ";
 		$data_ .= " data-conf-reset='" . ($reset ? 'true' : 'false') . "' ";
+		$data_ .= " data-conf-staterestore='" . ($stateRestore ? 'true' : 'false') . "' ";
 
 		$tabla = "<br><h2>Estado de cuenta</h2>";
 		$tabla .= "<input type='hidden' id='datatableid' name='datatableid' value='tabla_estado_cuenta'>";

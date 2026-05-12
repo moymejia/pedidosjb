@@ -157,6 +157,7 @@ class comparativo_temporadas extends table
         $order         = true;
         $rowGroup      = false;
         $reset         = true;
+        $stateRestore  = true;
         $tituloTabla   = "Comparativo de temporadas por $titulo";
         $fileName      = "Comparativo_temporadas";
 
@@ -173,6 +174,7 @@ class comparativo_temporadas extends table
         $data_ .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_ .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
         $data_ .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
+        $data_ .= " data-conf-staterestore='"  . ($stateRestore  ? "true" : "false") . "' ";
 
         $tabla_comparativa = "<input type='hidden' id='datatableid' name='datatableid' value='tabla_comparativo_temporadas'>";
         $tabla_comparativa .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'><thead>";

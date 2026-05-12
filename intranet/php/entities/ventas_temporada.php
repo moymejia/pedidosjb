@@ -167,6 +167,7 @@ class ventas_temporada extends table
         $ordering      = true;
         $order         = true;
         $reset         = true;
+        $stateRestore  = true;
 
         $alineacion = [
             'cantidad de pares' => 'center',
@@ -197,6 +198,7 @@ class ventas_temporada extends table
         $data_detalle .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_detalle .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
         $data_detalle .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
+        $data_detalle .= " data-conf-staterestore='"  . ($stateRestore  ? "true" : "false") . "' ";
 
         $_DATATABLES = new datatables(null, ['print' => true, 'export_all' => true]);
 
@@ -255,6 +257,7 @@ class ventas_temporada extends table
         $data_resumen_general .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_resumen_general .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
         $data_resumen_general .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
+        $data_resumen_general .= " data-conf-staterestore='"  . ($stateRestore  ? "true" : "false") . "' ";
             
         $contenido .= $this->render_report_title($titulo_resumen_general);
         $contenido .= $this->render_datatable(
@@ -299,6 +302,7 @@ class ventas_temporada extends table
         $data_resumen_marca .= " data-conf-ordering='"      . ($ordering      ? "true" : "false") . "' ";
         $data_resumen_marca .= " data-conf-noorder='"       . (!$order        ? "true" : "false") . "' ";
         $data_resumen_marca .= " data-conf-reset='"         . ($reset         ? "true" : "false") . "' ";
+        $data_resumen_marca .= " data-conf-staterestore='"  . ($stateRestore  ? "true" : "false") . "' ";
 
         $contenido .= $this->render_report_title($titulo_resumen_marca);
         $contenido .= $this->render_datatable(

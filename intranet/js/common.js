@@ -858,10 +858,24 @@ function activar_tabla(idtabla) {
             text: 'Reiniciar',
             className: 'btn btn-warning btn-sm',
             action: function (e, dt) {
-                var tableId = dt.table().node().id;
                 localStorage.removeItem('DataTables_' + dt.settings()[0].sInstance);
-                dt.destroy();
-                tabla = activar_tabla(tableId);
+
+                // Reinicia estado sin destruir la tabla para evitar perder referencia del nodo.
+                if (dt.state && typeof dt.state.clear === 'function') {
+                    dt.state.clear();
+                }
+                if (dt.search && typeof dt.search === 'function') {
+                    dt.search('');
+                }
+                if (dt.columns && typeof dt.columns === 'function') {
+                    dt.columns().search('');
+                    dt.columns().visible(true, false);
+                }
+                if (dt.colReorder && typeof dt.colReorder.reset === 'function') {
+                    dt.colReorder.reset();
+                }
+                dt.order([]);
+                dt.draw();
             }
         });
     }
