@@ -206,6 +206,15 @@ class usuario extends table
             self::end_error("Correlativo de usuario no colocado");
         }
 
+        $correlativo_usuario               = trim($PARAMETROS['correlativo_usuario']);
+        $PARAMETROS['correlativo_usuario'] = $correlativo_usuario;
+        if (mysql::exists('usuario', " correlativo_usuario = '$correlativo_usuario' AND usuario != '{$PARAMETROS['usuario']}' ")) {
+            $this->last_error = "Ya existe un usuario con el correlativo: $correlativo_usuario";
+            self::report_error(validation_error, $PARAMETROS, $this->last_error);
+
+            return "|error|$this->last_error|";
+        }
+
         if (!mysql::exists('usuario', " usuario = '{$PARAMETROS['usuario']}' ")) { //es usuario nuevo
             $security = new security($this->ACCIONES['crear']);
 

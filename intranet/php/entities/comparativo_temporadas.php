@@ -88,6 +88,8 @@ class comparativo_temporadas extends table
 
     public function generar_comparativo($temporadas, $idcliente = 0, $idmarca = 0)
     {
+        $security = new security($this->ACCIONES['opcion_ventas_temporada']);
+
         if ($temporadas == '') { 
             $this->last_error = 'Debe seleccionar al menos una temporada.'; 
             utils::report_error(validation_error, $temporadas, $this->last_error); 
@@ -208,6 +210,13 @@ class comparativo_temporadas extends table
         }
 
         $tabla_comparativa .= "</tbody></table>";
+
+        $usuario_actual = $security->get_actual_user();
+        $security->registrar_bitacora(
+            $this->ACCIONES['opcion_ventas_temporada'],
+            'BUSQUEDA',
+            $usuario_actual
+        );
 
         return $tabla_comparativa;
     }

@@ -113,28 +113,28 @@ class liquidacion_de_ingresos extends table
         }
 
         $DATOS = [
-            'vendedor' => strtoupper($_SESSION['usuario']),
-            'fecha_desde' => $this->formatear_fecha_texto($fecha_desde),
-            'fecha_hasta' => $this->formatear_fecha_texto($fecha_hasta),
-            'hl_no' => '',
-            'recibos_serie' => 'D',
-            'recibos_del' => '',
-            'recibos_al' => '',
-            'tabla_documentos_ejecutados_rows' => '',
-            'tabla_documentos_programados_rows' => '',
-            'tabla_documentos_recuperacion_rows' => '',
-            'total_fletes' => '0.00',
-            'total_depositos' => '0.00',
-            'total_recibos_provisionales' => '0.00',
-            'total_cheques_posfecha' => '0.00',
-            'total_cobrado' => '0.00',
-            'detalle_total_flete' => '0.00',
-            'detalle_total_deposito' => '0.00',
-            'detalle_total_cheque_vista' => '0.00',
-            'detalle_total_cheque_posfechado' => '0.00',
-            'detalle_total_general' => '0.00',
-            'total_programados' => '0.00',
-            'total_recuperacion' => '0.00'
+            'vendedor'                               => strtoupper($_SESSION['usuario']),
+            'fecha_desde'                            => $this->formatear_fecha_texto($fecha_desde),
+            'fecha_hasta'                            => $this->formatear_fecha_texto($fecha_hasta),
+            'hl_no'                                  => '',
+            'recibos_serie'                          => 'D',
+            'recibos_del'                            => '',
+            'recibos_al'                             => '',
+            'tabla_documentos_ejecutados_rows'       => '',
+            'tabla_documentos_programados_rows'      => '',
+            'tabla_documentos_recuperacion_rows'     => '',
+            'total_fletes'                           => '0.00',
+            'total_depositos'                        => '0.00',
+            'total_recibos_provisionales'            => '0.00',
+            'total_cheques_posfecha'                 => '0.00',
+            'total_cobrado'                          => '0.00',
+            'detalle_total_flete'                    => '0.00',
+            'detalle_total_deposito'                 => '0.00',
+            'detalle_total_cheque_vista'             => '0.00',
+            'detalle_total_cheque_posfechado'        => '0.00',
+            'detalle_total_general'                  => '0.00',
+            'total_programados'                      => '0.00',
+            'total_recuperacion'                     => '0.00'
         ];
 
         $TOTALES_DETALLE = [
@@ -281,12 +281,8 @@ class liquidacion_de_ingresos extends table
         $_HTML = new html('template_liquidacion_documentos', $DATOS);
         $contenido = $_HTML->get_html();
 
-        $_SECURITY->registrar_bitacora(
-            $this->ACCIONES['opcion_liquidacion_de_ingresos'],
-            'GENERAR_REPORTE',
-            'fecha_desde:' . $fecha_desde,
-            'fecha_hasta:' . $fecha_hasta
-        );
+        $usuario_actual = $_SECURITY->get_actual_user();
+        $_SECURITY->registrar_bitacora($this->ACCIONES['opcion_liquidacion_de_ingresos'],'BUSQUEDA',$usuario_actual);
 
         return $contenido;
     }

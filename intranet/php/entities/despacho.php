@@ -770,8 +770,7 @@ class despacho extends table
 	}
 
 	private function generar_tabla_resumen($where_temporada, $where_cliente, $where_estado) {
-		$sql_resumen = mysql::getresult("SELECT
-				nombre_cliente,
+		$sql_resumen = mysql::getresult("SELECT nombre_cliente,
 				CONCAT('Q ', FORMAT(SUM(monto_total), 2)) AS total_facturado,
 				CONCAT('Q ', FORMAT(SUM(monto_total_pagado), 2)) AS total_pagado,
 				CONCAT('Q ', FORMAT(SUM(monto_programado), 2)) AS total_programado,
@@ -838,10 +837,7 @@ class despacho extends table
 		$where_estado    = ($estado != '') ? " AND estado = '" . $estado . "'" : '';
 
 		if ($idtipo_reporte == 'detallado') {
-			$sql_detallado = mysql::getresult("SELECT
-					iddespacho,
-					nombre_cliente,
-					numero_factura,
+			$sql_detallado = mysql::getresult("SELECT iddespacho, nombre_cliente, numero_factura,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					monto_total,
 					estado_pago,
@@ -1099,7 +1095,8 @@ class despacho extends table
 		$tabla .= "</tbody></table>";
 		$tabla .= $this->generar_tabla_resumen($where_temporada, $where_cliente, $where_estado);
 
-		$security->registrar_bitacora($this->ACCIONES['opcion_despacho'], 0, 'GENERAR_ESTADO_CUENTA');
+		$usuario_actual = $security->get_actual_user();
+		$security->registrar_bitacora($this->ACCIONES['opcion_despacho'], 'BUSQUEDA', $usuario_actual);
 
 		return $tabla;
 	}

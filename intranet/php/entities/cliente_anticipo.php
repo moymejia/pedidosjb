@@ -298,6 +298,7 @@ class cliente_anticipo extends table
 
         if ($saldo === false) {
             $this->last_error = 'Anticipo no encontrado.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 
@@ -311,6 +312,7 @@ class cliente_anticipo extends table
 
         if ($monto_aplicar <= 0) {
             $this->last_error = 'El monto a aplicar debe ser mayor a cero.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 
@@ -321,6 +323,7 @@ class cliente_anticipo extends table
 
         if ($monto_aplicar > $saldo_actual) {
             $this->last_error = 'El monto a aplicar supera el saldo disponible del anticipo.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 
@@ -346,6 +349,7 @@ class cliente_anticipo extends table
 
         if ($monto_revertir <= 0) {
             $this->last_error = 'El monto a revertir debe ser mayor a cero.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 
@@ -357,6 +361,7 @@ class cliente_anticipo extends table
         $row_anticipo = mysql::getrow("SELECT monto FROM cliente_anticipo WHERE idcliente_anticipo = '$idcliente_anticipo' LIMIT 1");
         if (!$row_anticipo) {
             $this->last_error = 'Anticipo no encontrado.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 
@@ -365,6 +370,7 @@ class cliente_anticipo extends table
 
         if ($nuevo_saldo > $monto_original) {
             $this->last_error = 'No se puede revertir más de lo que fue aplicado.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
             return false;
         }
 

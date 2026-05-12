@@ -55,10 +55,25 @@ class bitacora extends table
         $PARAMETROS['excel'] = true;
         $report              = new report("Registros de bitacora", $PARAMETROS);
 
+        if (trim($fecha_desde) == '') {
+            $this->last_error = 'Debe ingresar la fecha desde.';
+            utils::report_error(validation_error, $fecha_desde, $this->last_error);
+
+            return false;
+        }
+
+        if (trim($fecha_hasta) == '') {
+            $this->last_error = 'Debe ingresar la fecha hasta.';
+            utils::report_error(validation_error, $fecha_hasta, $this->last_error);
+
+            return false;
+        }
+
         $fecha_desde_str = ($fecha_desde != '') ? date('d-m-Y', strtotime($fecha_desde)) : "";
         $fecha_hasta_str = ($fecha_hasta != '') ? date('d-m-Y', strtotime($fecha_hasta)) : "";
-        if ($fecha_desde == '' && $usuario == '') {
+        if ($usuario == '') {
             $this->last_error = 'Parametros incorrectos, se debe indicar rol de usuario o fecha desde.';
+            utils::report_error(validation_error, $usuario, $this->last_error);
 
             return false;
         }

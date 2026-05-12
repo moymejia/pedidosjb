@@ -308,11 +308,11 @@ class ventas_temporada extends table
             $alineacion_resumen_marca
         );
 
+        $usuario_actual = $security->get_actual_user();
         $security->registrar_bitacora(
             $this->ACCIONES['opcion_ventas_temporada'],
-            'REPORTE_VENTAS_TEMPORADA',
-            'temporada:' . $idtemporada,
-            'cliente:' . $idcliente . '|marca:' . $idmarca . '|desde:' . $fecha_desde . '|hasta:' . $fecha_hasta
+            'BUSQUEDA',
+            $usuario_actual
         );
 
         return $contenido;
