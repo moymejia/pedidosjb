@@ -94,14 +94,10 @@ class despacho extends table
 			}
 
 			if ($PARAMETROS['operacion'] == 'generar_estado_de_cuenta') {
-				if ($this->validate_parameter_existence(['idtemporada'], $PARAMETROS, false)) {
-					if ($resultado = $this->generar_estado_de_cuenta($PARAMETROS['idtemporada'], $PARAMETROS['idcliente'], $PARAMETROS['estado'], $PARAMETROS['idtipo_reporte'])) {
-						self::end_success($resultado);
-					} else {
-						self::end_error($this->last_error);
-					}
+				if ($resultado = $this->generar_estado_de_cuenta($PARAMETROS)) {
+					self::end_success($resultado);
 				} else {
-					self::end_error('Debe seleccionar una temporada.');
+					self::end_error($this->last_error);
 				}
 			}
 		}
@@ -828,10 +824,26 @@ class despacho extends table
 		return $html;
 	}
 
-	public function generar_estado_de_cuenta($idtemporada, $idcliente, $estado, $idtipo_reporte = 'resumido')
+	public function generar_estado_de_cuenta($PARAMETROS)
 	{
+		$idtemporada = (isset($PARAMETROS['idtemporada'])) ? $PARAMETROS['idtemporada'] : '';
+		$idcliente = (isset($PARAMETROS['idcliente'])) ? $PARAMETROS['idcliente'] : '';
+		$estado = (isset($PARAMETROS['estado'])) ? $PARAMETROS['estado'] : '';
+		$idtipo_reporte = (isset($PARAMETROS['idtipo_reporte'])) ? $PARAMETROS['idtipo_reporte'] : 'resumido';
+
 		$security = new security($this->ACCIONES['opcion_despacho']);
 		$security->get_actual_user();
+
+		if ($idtemporada == '' && $idcliente == '' && $estado == '') {
+			$this->last_error = 'Debe seleccionar al menos un filtro para generar el reporte.';
+			utils::report_error(validation_error, [
+				'idtemporada' => $idtemporada,
+				'idcliente' => $idcliente,
+				'estado' => $estado,
+				'idtipo_reporte' => $idtipo_reporte
+			], $this->last_error);
+			return false;
+		}
 
 		$where_temporada = ($idtemporada != '') ? " AND idtemporada = '" . $idtemporada . "'" : '';
 		$where_cliente   = ($idcliente != '') ? " AND idcliente = '" . $idcliente . "'" : '';

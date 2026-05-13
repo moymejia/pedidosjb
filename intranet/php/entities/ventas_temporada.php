@@ -26,13 +26,7 @@ class ventas_temporada extends table
 
         if (isset($PARAMETROS['operacion'])) {
             if ($PARAMETROS['operacion'] == 'reporte_ventas_temporada') {
-                if ($resultado = $this->reporte_ventas_temporada(
-                    $PARAMETROS['idtemporada'],
-                    $PARAMETROS['idcliente'],
-                    $PARAMETROS['idmarca'],
-                    (isset($PARAMETROS['fecha_desde']) ? $PARAMETROS['fecha_desde'] : ''),
-                    (isset($PARAMETROS['fecha_hasta']) ? $PARAMETROS['fecha_hasta'] : '')
-                )) {
+                if ($resultado = $this->reporte_ventas_temporada($PARAMETROS)) {
                     self::end_success($resultado);
                 } else {
                     self::end_error($this->last_error);
@@ -69,32 +63,52 @@ class ventas_temporada extends table
 
     public function options_clientes_temporada_marca($idtemporada, $idmarca)
     {
+        $where_temporada = ($idtemporada > 0) ? "AND idtemporada = '$idtemporada'" : '';
         $where_marca = ($idmarca > 0) ? "AND idmarca = '$idmarca'" : '';
 
         return mysql::getoptions("SELECT DISTINCT idcliente AS id, nombre_cliente AS descripcion
             FROM view_ventas_temporada
-            WHERE idtemporada = '$idtemporada' $where_marca
+            WHERE 1 = 1 $where_temporada $where_marca
             ORDER BY nombre_cliente ASC");
     }
 
     public function options_marcas_temporada_cliente($idtemporada, $idcliente)
     {   
+        $where_temporada = ($idtemporada > 0) ? "AND idtemporada = '$idtemporada'" : '';
 
         $idcliente_condicion = ($idcliente > 0) ? "AND idcliente = '$idcliente'" : '';
 
         return mysql::getoptions("SELECT DISTINCT idmarca AS id, nombre_marca AS descripcion
             FROM view_ventas_temporada
-            WHERE idtemporada = '$idtemporada' $idcliente_condicion
+            WHERE 1 = 1 $where_temporada $idcliente_condicion
             ORDER BY nombre_marca ASC");
     }
 
-    public function reporte_ventas_temporada($idtemporada, $idcliente, $idmarca, $fecha_desde = '', $fecha_hasta = '')
+    public function reporte_ventas_temporada($PARAMETROS = [])
     {
+        $idtemporada = (isset($PARAMETROS['idtemporada'])) ? $PARAMETROS['idtemporada'] : '';
+        $idcliente = (isset($PARAMETROS['idcliente'])) ? $PARAMETROS['idcliente'] : '';
+        $idmarca = (isset($PARAMETROS['idmarca'])) ? $PARAMETROS['idmarca'] : '';
+        $fecha_desde = (isset($PARAMETROS['fecha_desde'])) ? $PARAMETROS['fecha_desde'] : '';
+        $fecha_hasta = (isset($PARAMETROS['fecha_hasta'])) ? $PARAMETROS['fecha_hasta'] : '';
+
         $security = new security($this->ACCIONES['opcion_ventas_temporada']);
 
-        if ($idtemporada == '') {
-            $this->last_error = 'Debe seleccionar una temporada';
-            utils::report_error(validation_error, $idtemporada, $this->last_error);
+        if (
+            $idtemporada == ''
+            && $idcliente == ''
+            && $idmarca == ''
+            && $fecha_desde == ''
+            && $fecha_hasta == ''
+        ) {
+            $this->last_error = 'Debe ingresar al menos un filtro para generar el reporte';
+            utils::report_error(validation_error, [
+                'idtemporada' => $idtemporada,
+                'idcliente' => $idcliente,
+                'idmarca' => $idmarca,
+                'fecha_desde' => $fecha_desde,
+                'fecha_hasta' => $fecha_hasta
+            ], $this->last_error);
             return false;
         }
 
@@ -116,6 +130,7 @@ class ventas_temporada extends table
             return false;
         }
 
+        $where_temporada = ($idtemporada > 0) ? "AND idtemporada = '$idtemporada'" : '';
         $where_marca = ($idmarca > 0) ? "AND idmarca = '$idmarca'" : '';
         $where_cliente = ($idcliente > 0) ? "AND idcliente = '$idcliente'" : '';
         $where_fechas = '';
@@ -127,7 +142,7 @@ class ventas_temporada extends table
             $where_fechas = "AND fecha_creacion <= '$fecha_hasta 23:59:59'";
         }
 
-        $condicion_sql = " idtemporada = '$idtemporada' AND estado = 'CERRADO' $where_marca $where_cliente $where_fechas";
+        $condicion_sql = " estado = 'CERRADO' $where_temporada $where_marca $where_cliente $where_fechas";
 
         $marca_seleccionada = '';
         if ($idmarca > 0) {

@@ -1,17 +1,16 @@
 function get_temporadas_parametro() {
-	return $('#idtemporada').val().join('|');
+	let temporadas = $('#idtemporada').val();
+	if (!Array.isArray(temporadas) || temporadas.length === 0) {
+		return '';
+	}
+
+	return temporadas.join('|');
 }
 
 function generar_comparativo() {
-	let temporadas = $('#idtemporada').val();
 	let temporadas_parametro = get_temporadas_parametro();
 	let idcliente = elementValue('idcliente');
 	let idmarca = elementValue('idmarca');
-
-	if (temporadas.length === 0) {
-		notify_warning('Debe seleccionar al menos una temporada.');
-		return false;
-	}
 
 	if (idcliente === '' && idmarca === '') {
 		notify_warning('Debe seleccionar un cliente o una marca.');

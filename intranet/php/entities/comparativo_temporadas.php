@@ -53,8 +53,8 @@ class comparativo_temporadas extends table
     {
         $DATA = [];
         $DATA['temporadas_activas'] = (new temporada())->option_activos();
-        $DATA['clientes_activos'] = "<option value=''>Seleccione cliente</option>";
-        $DATA['marcas_activas'] = "<option value=''>Seleccione marca</option>";
+        $DATA['clientes_activos'] = $this->options_clientes_temporadas('');
+        $DATA['marcas_activas'] = $this->options_marcas_temporadas('');
         $DATA['tabla'] = '';
         
         $html = new html('comparativo_temporadas', $DATA);
@@ -64,37 +64,35 @@ class comparativo_temporadas extends table
 
     public function options_clientes_temporadas($idtemporada)
     {
+        $idtemporada = trim($idtemporada);
         $idtemporada = str_replace("|", ",", $idtemporada);
+        $where_temporada = ($idtemporada != '') ? "AND p.idtemporada IN ($idtemporada)" : '';
 
         return "<option value=''>Seleccione cliente</option>" . mysql::getoptions("SELECT DISTINCT p.idcliente AS id, c.nombre AS descripcion
             FROM pedido p
             LEFT JOIN cliente c ON c.idcliente = p.idcliente
             WHERE p.estado = 'CERRADO'
-                AND p.idtemporada IN ($idtemporada)
+                $where_temporada
             ORDER BY c.nombre ASC");
     }
 
     public function options_marcas_temporadas($idtemporada)
     {
+        $idtemporada = trim($idtemporada);
         $idtemporada = str_replace("|", ",", $idtemporada);
+        $where_temporada = ($idtemporada != '') ? "AND p.idtemporada IN ($idtemporada)" : '';
 
         return "<option value=''>Seleccione marca</option>" . mysql::getoptions("SELECT DISTINCT p.idmarca AS id, m.nombre AS descripcion
             FROM pedido p
             LEFT JOIN marca m ON m.idmarca = p.idmarca
             WHERE p.estado = 'CERRADO'
-                AND p.idtemporada IN ($idtemporada)
+                $where_temporada
             ORDER BY m.nombre ASC");
     }
 
     public function generar_comparativo($temporadas, $idcliente = 0, $idmarca = 0)
     {
         $security = new security($this->ACCIONES['opcion_ventas_temporada']);
-
-        if ($temporadas == '') { 
-            $this->last_error = 'Debe seleccionar al menos una temporada.'; 
-            utils::report_error(validation_error, $temporadas, $this->last_error); 
-            return false; 
-        }
         
         if ($idcliente == '' && $idmarca == '') { 
             $this->last_error = 'Debe seleccionar un cliente o una marca.'; 
@@ -107,15 +105,7 @@ class comparativo_temporadas extends table
             return false; 
         }
 
-        $arreglo_temporadas = explode('|', $temporadas);
-        $temporadas_seleccionadas = str_replace("|", ",", $temporadas);
-
-        $columnas = [];
-        foreach ($arreglo_temporadas as $t) {
-            $columnas[] = "SUM(CASE WHEN v.idtemporada = $t THEN v.total_pares ELSE 0 END) AS total_pares_$t";
-            $columnas[] = "CONCAT('Q ', FORMAT(SUM(CASE WHEN v.idtemporada = $t THEN v.monto_total ELSE 0 END), 2)) AS monto_total_$t";
-        }
-        $columnas_sql = implode(",\n", $columnas);
+        $temporadas = trim($temporadas);
 
         if ($idmarca) {
             $donde = "v.idmarca = $idmarca";
@@ -128,6 +118,40 @@ class comparativo_temporadas extends table
             $nombre = "v.marca_nombre";
             $titulo = "Marca";
         }
+
+        $arreglo_temporadas = [];
+        if ($temporadas != '') {
+            $arreglo_temporadas = explode('|', $temporadas);
+        } else {
+            $res_temporadas = mysql::getresult("SELECT DISTINCT v.idtemporada
+                FROM view_pedido_comparativo v
+                WHERE v.estado = 'CERRADO'
+                    AND $donde
+                ORDER BY v.idtemporada ASC");
+
+            while ($row_temporada = mysql::getrowresult($res_temporadas)) {
+                $arreglo_temporadas[] = $row_temporada['idtemporada'];
+            }
+        }
+
+        if (count($arreglo_temporadas) == 0) {
+            $this->last_error = 'No existen temporadas con datos para los filtros seleccionados.';
+            utils::report_error(validation_error, [
+                'temporadas' => $temporadas,
+                'idcliente' => $idcliente,
+                'idmarca' => $idmarca
+            ], $this->last_error);
+            return false;
+        }
+
+        $temporadas_seleccionadas = implode(',', $arreglo_temporadas);
+
+        $columnas = [];
+        foreach ($arreglo_temporadas as $t) {
+            $columnas[] = "SUM(CASE WHEN v.idtemporada = $t THEN v.total_pares ELSE 0 END) AS total_pares_$t";
+            $columnas[] = "CONCAT('Q ', FORMAT(SUM(CASE WHEN v.idtemporada = $t THEN v.monto_total ELSE 0 END), 2)) AS monto_total_$t";
+        }
+        $columnas_sql = implode(",\n", $columnas);
 
         $arreglo_temporadas_nombre = [];
         $resarreglo_temporadas = mysql::getresult("SELECT idtemporada, nombre FROM temporada WHERE idtemporada IN ($temporadas_seleccionadas)");

@@ -12,17 +12,13 @@ function cargarMarcas() {
 
 function cambio_temporada(callback = null) {
     clearElements('idcliente,idmarca');
-    if (elementValue('idtemporada') != '') {
-        download_select_options('idtemporada,idcliente', 'ventas_temporada', 'options_marcas_temporada_cliente', 'idmarca', function () {
-            download_select_options('idtemporada,idmarca', 'ventas_temporada', 'options_clientes_temporada_marca', 'idcliente', function () {
-                if (callback != null) {
-                    callback();
-                }
-            });
+    download_select_options('idtemporada,idcliente', 'ventas_temporada', 'options_marcas_temporada_cliente', 'idmarca', function () {
+        download_select_options('idtemporada,idmarca', 'ventas_temporada', 'options_clientes_temporada_marca', 'idcliente', function () {
+            if (callback != null) {
+                callback();
+            }
         });
-    } else if (callback != null) {
-        callback();
-    }
+    });
 }
 
 function abrir_pedido(idpedido) {
@@ -37,6 +33,8 @@ function init() {
             objeto('idcliente').value = elementValue('idcliente_cargar');
             objeto('generar_reporte').click();
         });
+    } else {
+        cambio_temporada();
     }
 }
 
