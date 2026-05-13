@@ -43,7 +43,7 @@ class pedido extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte'], $PARAMETROS, false)) {
+                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte', 'dias_credito'], $PARAMETROS, false)) {
 
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -100,7 +100,7 @@ class pedido extends table{
     {
         $idpedido = (int)$idpedido;
         $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca,
-            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, monto_descuento, email, estado
+            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, monto_descuento, email, dias_credito, estado
             FROM view_pedidos
             WHERE idpedido = '$idpedido'");
 
@@ -184,7 +184,7 @@ class pedido extends table{
                         showElements('btn_imprimir');
                         hideElements('btn_cerrar_pedido');
                     }
-                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
+                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito');
                     cargarDetallePedido();
                     goTop();\">
                     <span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar
@@ -257,6 +257,7 @@ class pedido extends table{
         $DATOS['fecha_desde']           = $PARAMETROS['fecha_desde'];
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
         $DATOS['idtemporada']           = $PARAMETROS['idtemporada'];
+        $DATOS['dias_credito']          = (int)$PARAMETROS['dias_credito'];
         $DATOS['email']                 = $PARAMETROS['email'];
         $DATOS['observaciones_pedido']  = str_replace(["\r", "\n"], ' ', $PARAMETROS['observaciones_pedido']);
         $DATOS['idtransporte']          = $PARAMETROS['idtransporte'];
@@ -734,7 +735,8 @@ class pedido extends table{
             $DATA['telefono']               = $PEDIDO['telefono'];
             $DATA['direccion']              = $PEDIDO['direccion'];
             $DATA['nombre_zapateria']       = $PEDIDO['establecimiento'];
-            $DATA['dias_credito']           = $PEDIDO['dias_credito'];
+            $dias_credito_pedido = (int)$PEDIDO['dias_credito'];
+            $DATA['dias_credito']           = $dias_credito_pedido === 0 ? 'CONTADO' : ($dias_credito_pedido . ' días');
             $DATA['email']                  = $PEDIDO['email'];
             $fecha1                         = strtotime($PEDIDO['fecha_desde']);
             $fecha2                         = strtotime($PEDIDO['fecha_hasta']);

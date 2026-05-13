@@ -136,6 +136,12 @@
                                         element('email').value = respuesta;
                                     }
                                     upload_action('idcliente='+this.value,'cliente','obtener_correo', callback_obtener_correo);
+
+                                    callback_obtener_dias_credito = function(respuesta){
+                                        var dias = parseInt(respuesta, 10);
+                                        element('dias_credito').value = isNaN(dias) ? 0 : dias;
+                                    }
+                                    upload_action('idcliente='+this.value,'cliente','obtener_dias_credito', callback_obtener_dias_credito);
                                 ">
                                     [clientes]
                                 </select>
@@ -197,8 +203,6 @@
                                 <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
                             </div>
 
-                            
-                            
                         </div>
 
                         <div class="form-row">
@@ -230,6 +234,12 @@
                                 <span class="bar"></span>
                             </div>
 
+                            <div class="form-group m-b-6 col-md-2">
+                                <label>Días de crédito</label>
+                                <input type="number" min="0" class="form-control" id="dias_credito" name="dias_credito" value="0">
+                                <span class="bar"></span>
+                            </div>
+
                             <div class="form-group col-md-6">
                                 <label>Observaciones generales</label>
                                 <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
@@ -244,9 +254,9 @@
                                     showElements('detalles_del_pedido');
                                     hideElements('lista_pedidos');
                                     if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
-                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido');
+                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito');
                                 }
-                                download_input_value('idpedido,nopedido,nopedido_prefijo,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email','pedido','guardar','idpedido',callback_guardar_pedido);
+                                download_input_value('idpedido,nopedido,nopedido_prefijo,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,dias_credito','pedido','guardar','idpedido',callback_guardar_pedido);
                                 ">Guardar</button>
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="

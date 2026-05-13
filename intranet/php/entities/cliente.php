@@ -67,6 +67,18 @@ class cliente extends table
                     self::end_error($this->last_error);
                 }
             }
+
+            if ($PARAMETROS['operacion'] == 'obtener_dias_credito') {
+                if (table::validate_parameter_existence(['idcliente'], $PARAMETROS, false)) {
+                    if (($resultado = self::obtener_dias_credito($PARAMETROS['idcliente'])) !== false) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                } else {
+                    self::end_error($this->last_error);
+                }
+            }
             
         }
 
@@ -214,22 +226,6 @@ class cliente extends table
             return false;
         }
 
-        //valida que el usuario ingrese un limite de credito para el cliente.
-        if (empty($PARAMETROS['limite_credito'])) {
-            $this->last_error = 'Debe ingresar limite de credito del cliente';
-            utils::report_error(validation_error, $PARAMETROS['limite_credito'], $this->last_error);
-
-            return false;
-        }
-
-        //valida que el usuario ingrese los dias de credito del cliente.
-        if (empty($PARAMETROS['dias_credito'])) {
-            $this->last_error = 'Debe ingresar los dias de credito del cliente';
-            utils::report_error(validation_error, $PARAMETROS['dias_credito'], $this->last_error);
-
-            return false;
-        }
-
         if ($PARAMETROS['idcliente'] == '') { //es cliente nuevo
             $security                  = new security($this->ACCIONES['crear_cliente']);
             //valida que el codigo asignado no este siendo usado por otro cliente.
@@ -358,5 +354,18 @@ class cliente extends table
         $nombre = mysql::getvalue("SELECT nombre FROM cliente WHERE idcliente = '$idcliente' LIMIT 1");
 
         return $nombre;
+    }
+
+    public function obtener_dias_credito($idcliente)
+    {
+        $dias_credito = mysql::getvalue("SELECT dias_credito FROM cliente WHERE idcliente = '$idcliente' LIMIT 1");
+
+        if ($dias_credito === '' || $dias_credito === null) {
+            $this->last_error = 'No se encontró el cliente para obtener días de crédito.';
+            utils::report_error(validation_error, $idcliente, $this->last_error);
+            return false;
+        }
+
+        return (string)((int)$dias_credito);
     }
 }
