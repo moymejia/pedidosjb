@@ -1,0 +1,36 @@
+<div class="sheet">
+  <div class="encabezado-superior">
+    <div class="left">Fecha: [fecha_reporte]</div>
+    <div class="center">SOLOMODA, S.A.</div>
+  </div>
+
+  <div class="encabezado-superior linea-2">
+    <div class="center strong">CUENTAS POR COBRAR</div>
+    <div class="right"></div>
+  </div>
+
+  <div class="titulo-centro strong">SALDOS POR VENDEDOR</div>
+  <div class="titulo-centro strong">ANTIGUEDAD DE SALDOS AL [fecha_corte]</div>
+  <div class="linea-separador"></div>
+
+  <table aria-label="Cartera de clientes">
+    <thead>
+      <tr>
+        <th style="width: 10%;">Codigo</th>
+        <th style="width: 21%;">Nombre</th>
+        <th style="width: 8%;">Numero</th>
+        <th style="width: 9%;">Fecha</th>
+        <th style="width: 6%;">Dias</th>
+        <th style="width: 9%;">30</th>
+        <th style="width: 9%;">31-60</th>
+        <th style="width: 9%;">61-90</th>
+        <th style="width: 9%;">91-120+</th>
+        <th style="width: 10%;">Total</th>
+        <th style="width: 10%;">Cheques</th>
+      </tr>
+    </thead>
+    <tbody>
+      [filas_detalle]
+    </tbody>
+  </table>
+</div>
