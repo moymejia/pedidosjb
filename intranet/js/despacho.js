@@ -20,6 +20,14 @@
         return isNaN(n) || n < 0 ? 0 : n;
     }
 
+    function etiquetaDespacho(numero_factura, iddespacho) {
+        var factura = safe(numero_factura || '');
+        if (factura !== '') {
+            return factura;
+        }
+        return '#' + (Number(iddespacho || 0) || 0);
+    }
+
     function formatearMonto(val) {
         return Number(val || 0).toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -253,7 +261,7 @@
 
             element('iddespacho').value = state.iddespacho;
             element('idpedido').value = state.idpedido;
-            element('despacho_seleccionado').value = '#' + state.iddespacho;
+            element('despacho_seleccionado').value = etiquetaDespacho(resp.numero_factura, state.iddespacho);
             element('monto_flete').value = montoSeguro(resp.monto_flete || 0);
             element('monto_otros').value = montoSeguro(resp.monto_otros || 0);
             element('numero_factura').value = safe(resp.numero_factura || '');
@@ -358,7 +366,7 @@
 
         element('iddespacho').value = state.iddespacho;
         element('idpedido').value = state.idpedido;
-        element('despacho_seleccionado').value = '#' + state.iddespacho;
+        element('despacho_seleccionado').value = etiquetaDespacho('', state.iddespacho);
         element('pedido_seleccionado').value = nopedido || 'Sin selección';
 
         hideElements('div_tabla');
@@ -418,7 +426,7 @@
 
             element('iddespacho').value = state.iddespacho;
             element('idpedido').value = state.idpedido;
-            element('despacho_seleccionado').value = '#' + state.iddespacho;
+            element('despacho_seleccionado').value = etiquetaDespacho(numeroFactura, state.iddespacho);
             element('pedido_seleccionado').value = state.nopedido || 'Sin selección';
 
             notify_success('Despacho creado correctamente.');

@@ -118,7 +118,7 @@ class despacho extends table
 
 	private function tabla_despachos_proceso()
 	{
-		$sql = mysql::getresult("SELECT iddespacho, idpedido, nopedido, cliente, temporada, marca, fecha,
+		$sql = mysql::getresult("SELECT iddespacho, idpedido, nopedido, cliente, temporada, marca, fecha, numero_factura,
 				monto_total, estado, lineas_pendientes
 			FROM view_despachos_proceso
 			ORDER BY iddespacho DESC");
@@ -161,7 +161,7 @@ class despacho extends table
 			<thead>
 				<tr>
 					<th>Acciones</th>
-					<th>Despacho</th>
+					<th>No. factura</th>
 					<th>No. pedido</th>
 					<th>Cliente</th>
 					<th>Temporada</th>
@@ -182,6 +182,7 @@ class despacho extends table
 			$temporada = $row['temporada'];
 			$marca = $row['marca'];
 			$fecha = $row['fecha'];
+			$numero_factura = trim($row['numero_factura'] . '');
 			$monto_total = number_format((float)$row['monto_total'], 2);
 			$lineas_pendientes = (int)$row['lineas_pendientes'];
 			$estado = strtoupper(trim($row['estado']));
@@ -190,7 +191,7 @@ class despacho extends table
 				<td>
 					<button class='btn btn-sm btn-primary waves-effect waves-light' type='button' onclick='despachoSeleccionarExistente(" . $iddespacho . ", " . $idpedido . ", \"" . $nopedido . "\")'>Seleccionar</button>
 				</td>
-				<td>#" . $iddespacho . "</td>
+				<td>" . (($numero_factura !== '') ? $numero_factura : ('#' . $iddespacho)) . "</td>
 				<td>" . $nopedido . "</td>
 				<td>" . $cliente . "</td>
 				<td>" . $temporada . "</td>
@@ -960,7 +961,7 @@ class despacho extends table
 					<td nowrap>" . $grupo['fecha_factura'] . "</td>
 					<td style='text-align:right;'>Q. " . number_format($grupo['monto_total'], 2) . "</td>
 					<td></td>
-					<td></td>
+					<td>" . $grupo['numero_factura'] . "</td>
 					<td></td>
 					<td></td>
 					<td></td>

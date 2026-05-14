@@ -148,7 +148,7 @@ class despacho_pago extends table
 
         $idcliente = trim($idcliente . '');
 
-        $result = mysql::getresult("SELECT iddespacho, nopedido, fecha, monto_despacho, total_pagado_ejecutado, saldo_pendiente, total_programado_neto
+        $result = mysql::getresult("SELECT iddespacho, nopedido, numero_factura, fecha, monto_despacho, total_pagado_ejecutado, saldo_pendiente, total_programado_neto
             FROM view_despacho_pago_resumen
             WHERE idcliente = '$idcliente'
                 AND saldo_pendiente > 0
@@ -164,7 +164,7 @@ class despacho_pago extends table
             <thead>
                 <tr>
                     <th>Acciones</th>
-                    <th>Despacho</th>
+                    <th>No. factura</th>
                     <th>No. pedido</th>
                     <th>Fecha despacho</th>
                     <th>Monto despacho</th>
@@ -176,9 +176,10 @@ class despacho_pago extends table
             <tbody>";
 
         while ($row = mysql::getrowresult($result)) {
+            $numero_factura = trim($row['numero_factura'] . '');
             $tabla .= "<tr>
                 <td><button type='button' class='btn btn-sm btn-primary waves-effect waves-light' onclick='despachoPagoSeleccionarDespacho(" . (int)$row['iddespacho'] . ")'>Seleccionar</button></td>
-                <td>#" . (int)$row['iddespacho'] . "</td>
+                <td>" . (($numero_factura !== '') ? $numero_factura : ('#' . (int)$row['iddespacho'])) . "</td>
                 <td>" . $row['nopedido'] . "</td>
                 <td>" . $row['fecha'] . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['monto_despacho'], 2) . "</td>
@@ -199,7 +200,7 @@ class despacho_pago extends table
 
         $iddespacho = trim($iddespacho . '');
 
-        $resumen = mysql::getrow("SELECT iddespacho, nopedido, cliente, monto_despacho, total_pagado_ejecutado, total_programado_neto, saldo_pendiente
+        $resumen = mysql::getrow("SELECT iddespacho, nopedido, numero_factura, cliente, monto_despacho, total_pagado_ejecutado, total_programado_neto, saldo_pendiente
             FROM view_despacho_pago_resumen
             WHERE iddespacho = '$iddespacho'
             LIMIT 1");
@@ -210,10 +211,15 @@ class despacho_pago extends table
             return false;
         }
 
+        $numero_factura = trim($resumen['numero_factura'] . '');
+        if ($numero_factura == '') {
+            $numero_factura = '#' . (int)$resumen['iddespacho'];
+        }
+
         $html = "
             <div class='row mb-3'>
                 <div class='col-md-12'>
-                    <h5>Despacho #" . (int)$resumen['iddespacho'] . " - Pedido " . $resumen['nopedido'] . " &nbsp; Cliente: " . $resumen['cliente'] . "</h5>
+                    <h5>Factura " . $numero_factura . " - Pedido " . $resumen['nopedido'] . " &nbsp; Cliente: " . $resumen['cliente'] . "</h5>
                 </div>
             </div>
             <div class='row mb-3'>
