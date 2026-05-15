@@ -655,41 +655,19 @@
 
     var totalLineas = state.detalle.length;
     var totalPares = 0;
-    var montoSubtotal = 0;
-    var descuentoPorcentaje = Number(elementValue("monto_descuento") || 0);
-
-    if (isNaN(descuentoPorcentaje) || descuentoPorcentaje < 0) {
-      descuentoPorcentaje = 0;
-    }
-
-    if (descuentoPorcentaje > 100) {
-      descuentoPorcentaje = 100;
-    }
+    var totalMonto = 0;
   
     state.detalle.forEach(function(linea){
   
       totalPares += Number(linea.cantidad_total || 0);
-      montoSubtotal += Number(linea.subtotal || 0);
+      totalMonto += Number(linea.subtotal || 0);
   
     });
-
-    var montoDescuento = (montoSubtotal * descuentoPorcentaje) / 100;
-    var montoTotal = montoSubtotal - montoDescuento;
-
-    if (montoTotal < 0) {
-      montoTotal = 0;
-    }
   
     element("resumenLineas").textContent = totalLineas;
     element("resumenPares").textContent = totalPares;
-    element("resumenMontoSubtotal").textContent = "Q " + montoSubtotal.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-    element("resumenMontoTotal").textContent = "Q " + montoTotal.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    element("resumenMonto").textContent = "Q " + totalMonto.toLocaleString('en-US', {minimumFractionDigits: 2,maximumFractionDigits: 2
+  });
   
   }
 
@@ -708,8 +686,6 @@
     element("btnBuscarEstilo").addEventListener("click", buscarEstilo);
     element("btnAgregarLinea").addEventListener("click", agregarProducto);
     element("btnLimpiarLinea").addEventListener("click", limpiarLinea);
-    element("monto_descuento").addEventListener("input", renderResumen);
-    element("monto_descuento").addEventListener("change", renderResumen);
 
     var idpedido_cargar = elementValue('idpedido_cargar');
     if (idpedido_cargar) {
@@ -735,7 +711,6 @@
           element('monto_descuento').value = resp.monto_descuento || 0;
           element('email').value = resp.email || '';
           element('dias_credito').value = resp.dias_credito || 0;
-          renderResumen();
 
           rellenarSelect2Pedido();
 

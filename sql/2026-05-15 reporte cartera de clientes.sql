@@ -98,6 +98,7 @@ SELECT
     d.monto_total,
     IFNULL(dp_ejecutado.monto_ejecutado, 0) AS monto_ejecutado,
     IFNULL(dp_programado.monto_programado, 0) AS monto_programado,
+    IFNULL(dp_no_ejecutado.monto_no_ejecutado, 0) AS monto_no_ejecutado,
     GREATEST(
         d.monto_total - IFNULL(dp_ejecutado.monto_ejecutado, 0),
         0
@@ -128,23 +129,46 @@ JOIN pedidosjb_pedidos.pedido p ON p.idpedido = d.idpedido
 JOIN pedidosjb_pedidos.cliente c ON c.idcliente = p.idcliente
 LEFT JOIN pedidosjb_seguridad.usuario u ON u.usuario = p.usuario_creacion
 LEFT JOIN (
-    SELECT iddespacho, SUM(monto) AS monto_ejecutado
-    FROM pedidosjb_pedidos.despacho_pago
-    WHERE estado = 'EJECUTADO'
-    GROUP BY iddespacho
+    SELECT
+        dp.iddespacho,
+        SUM(dp.monto * IFNULL(tp.signo, 0)) AS monto_ejecutado
+    FROM pedidosjb_pedidos.despacho_pago dp
+    LEFT JOIN pedidosjb_pedidos.tipo_pago tp ON tp.idtipo_pago = dp.idtipo_pago
+    WHERE UPPER(TRIM(dp.estado)) = 'EJECUTADO'
+    GROUP BY dp.iddespacho
 ) dp_ejecutado ON dp_ejecutado.iddespacho = d.iddespacho
 LEFT JOIN (
-    SELECT iddespacho, SUM(monto) AS monto_programado
-    FROM pedidosjb_pedidos.despacho_pago
-    WHERE estado = 'PROGRAMADO'
-    GROUP BY iddespacho
+    SELECT
+        dp.iddespacho,
+        SUM(dp.monto * IFNULL(tp.signo, 0)) AS monto_programado
+    FROM pedidosjb_pedidos.despacho_pago dp
+    LEFT JOIN pedidosjb_pedidos.tipo_pago tp ON tp.idtipo_pago = dp.idtipo_pago
+    WHERE UPPER(TRIM(dp.estado)) = 'PROGRAMADO'
+    GROUP BY dp.iddespacho
 ) dp_programado ON dp_programado.iddespacho = d.iddespacho
+LEFT JOIN (
+    SELECT
+        dp.iddespacho,
+        SUM(dp.monto * IFNULL(tp.signo, 0)) AS monto_no_ejecutado
+    FROM pedidosjb_pedidos.despacho_pago dp
+    LEFT JOIN pedidosjb_pedidos.tipo_pago tp ON tp.idtipo_pago = dp.idtipo_pago
+    WHERE UPPER(TRIM(dp.estado)) <> 'EJECUTADO'
+    GROUP BY dp.iddespacho
+) dp_no_ejecutado ON dp_no_ejecutado.iddespacho = d.iddespacho
 WHERE d.fecha_factura IS NOT NULL
-    AND IFNULL(dp_ejecutado.monto_ejecutado, 0) > 0
+    AND GREATEST(
+                d.monto_total - IFNULL(dp_ejecutado.monto_ejecutado, 0),
+                0
+            ) > 0
   AND IFNULL(TRIM(d.numero_factura), '') <> '';
+
 
 
 UPDATE pedidosjb_pedidos.pedido
 SET idcliente=41, idtemporada=105, idmarca=4, observaciones_pedido='10% de Descuento - Algunas imágenes son solo referencia del estilo', descuento=0.00, dias_credito=0, monto_subtotal=158181.66, monto_descuento=10.00, monto_total=142363.49, estado='CERRADO', fecha_creacion='2026-04-26 12:26:46', usuario_creacion='jbran', fecha_modificacion='2026-04-26 14:56:18', usuario_modificacion='jbran', fecha_desde='2026-07-01', fecha_hasta='2026-08-31', total_pares=24, email='', idtransporte=2, nopedido='JB-1201'
 WHERE idpedido=43;
 
+
+UPDATE pedidosjb_pedidos.tipo_documento
+SET nombre='Recibo de caja', correlativo='NO', estado='ACTIVO', fecha_creacion='2026-05-04 16:36:52', usuario_creacion='admin', fecha_modificacion='2026-05-15 10:52:09', usuario_modificacion=NULL
+WHERE idtipo_documento=1;

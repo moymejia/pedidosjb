@@ -21,7 +21,7 @@ function generar_reporte_cartera_de_clientes() {
     };
 
     download_div_content(
-        'idvendedor,idcliente,fecha_desde,fecha_hasta',
+        'idvendedor,idcliente,fecha_desde,fecha_hasta,idmostrar_cheques',
         'cartera_de_clientes',
         'generar_reporte_cartera_de_clientes',
         'contenedor_cartera_de_clientes',
@@ -33,6 +33,31 @@ function generar_reporte_cartera_de_clientes() {
 function limpiar_reporte_cartera_de_clientes() {
     if (element('contenedor_cartera_de_clientes')) {
         element('contenedor_cartera_de_clientes').innerHTML = '';
+    }
+
+    setTimeout(function () {
+        limpiar_select_cartera('idvendedor');
+        limpiar_select_cartera('idcliente');
+        limpiar_select_cartera('idmostrar_cheques');
+    }, 0);
+}
+
+function limpiar_select_cartera(id_select) {
+    var select = element(id_select);
+    if (!select) {
+        return;
+    }
+
+    if (select.querySelector('option[value=""]')) {
+        select.value = '';
+    } else {
+        select.selectedIndex = 0;
+    }
+
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.select2) {
+        jQuery(select).trigger('change');
+    } else if (typeof Event === 'function') {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
     }
 }
 

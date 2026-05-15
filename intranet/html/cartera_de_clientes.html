@@ -32,19 +32,22 @@
             <span class="bar"></span>
         </div>
 
-        <div class="form-group col-md-2 m-t-10">
-            <br>
+        <div class="form-group m-b-5 col-md-2">
+            <label for="idmostrar_cheques">Mostrar cheques</label>
+            <select class="form-control" id="idmostrar_cheques" name="idmostrar_cheques">
+                <option value="NO" selected>No</option>
+                <option value="SI">Si</option>
+            </select>
+            <span class="bar"></span>
+        </div>
+
+        <div class="form-group col-md-12 m-t-10">
             <button
                 type="button"
                 id="generar_cartera_clientes"
                 class="btn btn-success waves-effect waves-light m-r-10"
                 onclick="generar_reporte_cartera_de_clientes();"
             >Generar reporte</button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="form-group col-md-12">
             <button
                 type="reset"
                 class="btn btn-inverse waves-effect waves-light m-r-10"
