@@ -3,12 +3,14 @@ require_once 'mysql.php';
 require_once 'security.php';
 
 class datatables extends mysql {
+    private $base_datos;
     private $html = "";
     private $IDS = [];
     private $OPTIONS = [];
 
     public function __construct($PARAMETROS = null, $OPTIONS = []) {
         $this->OPTIONS = is_array($OPTIONS) ? $OPTIONS : [];
+        $this->base_datos = prefijo . '_seguridad';
         
         if (isset($PARAMETROS) && isset($PARAMETROS['operacion'])) {
             $this->seleccionar_operacion($PARAMETROS);
@@ -101,7 +103,12 @@ class datatables extends mysql {
                 break;
             case 'eliminar_estado_datatables_staterestore':
                 if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado'])) {
-                    echo "|correcto|" . $this->eliminar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado']);
+                    $resultado = $this->eliminar_estado_datatables_staterestore($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado']);
+                    if ($resultado === false) {
+                        echo "|error|El estado está protegido y no puede eliminarse|";
+                    } else {
+                        echo "|correcto|" . $resultado;
+                    }
                 } else {
                     echo "|error|Datos incompletos|";
                 }
@@ -111,7 +118,23 @@ class datatables extends mysql {
                 break;
         }
     }
+    public function cargar_status_datatables(string $tabla, string $nombre_estado) {
+        if (!$this->has_state_name_column()) {
+            return '';
+        }
 
+        $usuario = $this->escape_sql((new security())->get_actual_user());
+        $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
+        $db = new mysql();
+
+        $sql = "SELECT status
+            FROM $this->base_datos.datatables
+                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'
+                LIMIT 1";
+
+        $status = $db->getvalue($sql, 'status');
+        return $status !== null ? $status : '';
+    }
     public function addTable($result, $PARAMETROS = [], $style = "", $special_columns = [], $aligments = [], $hidden_columns = [], $idtabla = "tabla_datos") {
         $PARAMETROS = is_array($PARAMETROS) ? $PARAMETROS : [];
 
@@ -128,7 +151,6 @@ class datatables extends mysql {
         $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
         $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
         $staterestore  = isset($PARAMETROS['staterestore']) ? $PARAMETROS['staterestore'] : false;
-        
 
         $titulo_tabla  = isset($PARAMETROS['titulotabla']) ? $PARAMETROS['titulotabla'] : false;
         $file_name     = isset($PARAMETROS['filename']) ? $PARAMETROS['filename'] : false;
@@ -253,13 +275,15 @@ class datatables extends mysql {
         $db = new mysql();
         $usuario = (new security())->get_actual_user();
         $usuario = $this->escape_sql($usuario);
-        if ($this->has_state_name_column()) {
-            $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' AND nombre_estado = 'default' ";
-        } else {
-            $sql = "SELECT tabla, estado FROM pedidosjb_seguridad.datatables WHERE usuario = '$usuario' ";
-        }
-        $result = $db->getresult($sql);
         $estados = [];
+
+        if ($this->has_state_name_column()) {
+            $sql = "SELECT tabla, estado FROM {$this->base_datos}.datatables WHERE usuario = '$usuario' AND nombre_estado = 'default' ";
+        } else {
+            $sql = "SELECT tabla, estado FROM {$this->base_datos}.datatables WHERE usuario = '$usuario' ";
+        }
+
+        $result = $db->getresult($sql);
         while ($row = $db->getrowresult($result)) {
             $idtabla = $row['tabla'];
             $estado  = json_decode($row['estado'], true);
@@ -271,19 +295,20 @@ class datatables extends mysql {
     public function guardar_estado_datatables($tabla, $estado) {
         $usuario = (new security())->get_actual_user();
         $usuario = $this->escape_sql($usuario);
-        $tabla = $this->escape_sql($tabla);
+        $tabla   = $this->escape_sql($tabla);
         $estado  = urldecode($estado);
-        $estado = $this->escape_sql($estado);
+        $estado  = $this->escape_sql($estado);
 
         if ($this->has_state_name_column()) {
-            $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, nombre_estado, estado)
-                    VALUES ('$usuario', '$tabla', 'default', '$estado')
-                    ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+            $sql = "INSERT INTO {$this->base_datos}.datatables (usuario, tabla, nombre_estado, estado)
+                VALUES ('$usuario', '$tabla', 'default', '$estado')
+                ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
         } else {
-            $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, estado)
-                    VALUES ('$usuario', '$tabla', '$estado')
-                    ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+            $sql = "INSERT INTO {$this->base_datos}.datatables (usuario, tabla, estado)
+                VALUES ('$usuario', '$tabla', '$estado')
+                ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
         }
+
         $db = new mysql();
         return $db->getresult($sql);
     }
@@ -298,9 +323,9 @@ class datatables extends mysql {
         $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
         $estado = $this->escape_sql(urldecode($estado));
 
-        $sql = "INSERT INTO pedidosjb_seguridad.datatables (usuario, tabla, nombre_estado, estado)
-                VALUES ('$usuario', '$tabla', '$nombre_estado', '$estado')
-                ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+        $sql = "INSERT INTO {$this->base_datos}.datatables (usuario, tabla, nombre_estado, estado)
+            VALUES ('$usuario', '$tabla', '$nombre_estado', '$estado')
+            ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
 
         $db = new mysql();
         return $db->getresult($sql);
@@ -316,9 +341,9 @@ class datatables extends mysql {
         $db = new mysql();
 
         $sql = "SELECT nombre_estado
-                FROM pedidosjb_seguridad.datatables
-                WHERE usuario = '$usuario' AND tabla = '$tabla'
-                ORDER BY nombre_estado";
+            FROM {$this->base_datos}.datatables
+            WHERE usuario = '$usuario' AND tabla = '$tabla'
+            ORDER BY nombre_estado";
 
         $result = $db->getresult($sql);
         $estados = [];
@@ -339,9 +364,9 @@ class datatables extends mysql {
         $db = new mysql();
 
         $sql = "SELECT nombre_estado, estado
-                FROM pedidosjb_seguridad.datatables
-                WHERE usuario = '$usuario' AND tabla = '$tabla'
-                ORDER BY nombre_estado";
+            FROM {$this->base_datos}.datatables
+            WHERE usuario = '$usuario' AND tabla = '$tabla'
+            ORDER BY nombre_estado";
 
         $result = $db->getresult($sql);
         $estados = [];
@@ -363,9 +388,9 @@ class datatables extends mysql {
         $db = new mysql();
 
         $sql = "SELECT estado
-                FROM pedidosjb_seguridad.datatables
-                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'
-                LIMIT 1";
+            FROM {$this->base_datos}.datatables
+            WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'
+            LIMIT 1";
 
         $estado = $db->getvalue($sql, 'estado');
         return $estado ? $estado : json_encode([]);
@@ -390,9 +415,10 @@ class datatables extends mysql {
         }
 
         $db = new mysql();
-        $sql = "UPDATE pedidosjb_seguridad.datatables
-                SET nombre_estado = '$nombre_estado_nuevo'
-                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado_actual'";
+        $sql = "UPDATE {$this->base_datos}.datatables
+            SET nombre_estado = '$nombre_estado_nuevo'
+            WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado_actual'";
+        echo $sql;
 
         return $db->getresult($sql);
     }
@@ -401,14 +427,18 @@ class datatables extends mysql {
         if (!$this->has_state_name_column()) {
             return false;
         }
+        $status = $this->cargar_status_datatables($tabla, $nombre_estado);
+        if($status == 'PROTEGIDO'){
 
+            return false;
+        }
         $usuario = $this->escape_sql((new security())->get_actual_user());
         $tabla = $this->escape_sql($tabla);
         $nombre_estado = $this->escape_sql($this->normalizar_nombre_estado($nombre_estado));
 
         $db = new mysql();
-        $sql = "DELETE FROM pedidosjb_seguridad.datatables
-                WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'";
+        $sql = "DELETE FROM {$this->base_datos}.datatables
+            WHERE usuario = '$usuario' AND tabla = '$tabla' AND nombre_estado = '$nombre_estado'";
 
         return $db->getresult($sql);
     }
@@ -433,10 +463,10 @@ class datatables extends mysql {
 
         $db = new mysql();
         $sql = "SELECT COUNT(1) existe
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = 'pedidosjb_seguridad'
-                  AND TABLE_NAME = 'datatables'
-                  AND COLUMN_NAME = 'nombre_estado'";
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = '{$this->base_datos}'
+              AND TABLE_NAME = 'datatables'
+              AND COLUMN_NAME = 'nombre_estado'";
         $cache = ((int) $db->getvalue($sql, 'existe')) > 0;
         return $cache;
     }

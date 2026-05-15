@@ -307,8 +307,14 @@ function upload_action(fields, table, operation, callback = null, callback_error
             }
         } else if (datos[1] == "error") {
             notify_error(datos[2]);
+            if (callback_error != null) {
+                callback_error(datos[2]);
+            }
         } else {
             notify_error(respuesta.responseText);
+            if (callback_error != null) {
+                callback_error(respuesta.responseText);
+            }
         }
         delete callback_upload;
     };
@@ -771,7 +777,31 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
     }
 
     var pendientes = nombres.length;
-    var finalizar = function () {
+    var cerrar_modal_confirmacion = function () {
+        var fondo = document.querySelector('div.dtsr-background');
+        if (fondo) {
+            fondo.click();
+            return;
+        }
+
+        var confirmacion = document.querySelector('div.dtsr-confirmation');
+        if (confirmacion && confirmacion.parentNode) {
+            confirmacion.parentNode.removeChild(confirmacion);
+        }
+    };
+
+    var finalizar = function (exito, respuesta) {
+        if (!exito) {
+            console.log(respuesta);
+            // Para remove con error (ej. estado protegido), cerramos modal sin
+            // ejecutar callback de StateRestore para que no desaparezca del listado.
+            if (data.action === 'remove') {
+                cerrar_modal_confirmacion();
+                return;
+            }
+        }
+
+        console.log(respuesta);
         pendientes--;
         if (pendientes <= 0 && callback) {
             callback();
@@ -784,18 +814,36 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
             payload = 'idtabla=' + encodeURIComponent(idtabla)
                 + ',nombre_estado=' + encodeURIComponent(nombre)
                 + ',estadotabla=' + encodeURIComponent(JSON.stringify(estados[nombre]));
-            upload_action(payload, 'datatables', 'guardar_estado_datatables_staterestore', finalizar, finalizar);
+            upload_action(
+                payload,
+                'datatables',
+                'guardar_estado_datatables_staterestore',
+                function (respuesta) { finalizar(true, respuesta); },
+                function (respuesta) { finalizar(false, respuesta); }
+            );
         } else if (data.action === 'rename') {
             payload = 'idtabla=' + encodeURIComponent(idtabla)
                 + ',nombre_estado_actual=' + encodeURIComponent(nombre)
                 + ',nombre_estado_nuevo=' + encodeURIComponent(estados[nombre]);
-            upload_action(payload, 'datatables', 'renombrar_estado_datatables_staterestore', finalizar, finalizar);
+            upload_action(
+                payload,
+                'datatables',
+                'renombrar_estado_datatables_staterestore',
+                function (respuesta) { finalizar(true, respuesta); },
+                function (respuesta) { finalizar(false, respuesta); }
+            );
         } else if (data.action === 'remove') {
             payload = 'idtabla=' + encodeURIComponent(idtabla)
                 + ',nombre_estado=' + encodeURIComponent(nombre);
-            upload_action(payload, 'datatables', 'eliminar_estado_datatables_staterestore', finalizar, finalizar);
+            upload_action(
+                payload,
+                'datatables',
+                'eliminar_estado_datatables_staterestore',
+                function (respuesta) { finalizar(true, respuesta); },
+                function (respuesta) { finalizar(false, respuesta); }
+            );
         } else {
-            finalizar();
+            finalizar(true, null);
         }
     });
 }
@@ -964,28 +1012,14 @@ function activar_tabla(idtabla) {
                         bold: true,
                         alignment: "center"
                     };
-                    var tableNode = null;
-                    if (Array.isArray(doc.content)) {
-                        for (var i = 0; i < doc.content.length; i++) {
-                            if (doc.content[i] && doc.content[i].table) {
-                                tableNode = doc.content[i];
-                                break;
-                            }
+                    if (doc.content && doc.content[2] && doc.content[2].table) {
+                        doc.content[2].alignment = "center";
+                        if (doc.content[2].table.widths) {
+                            doc.content[2].table.widths = doc.content[2].table.widths.map(function () {
+                                return "*";
+                            });
                         }
-                    }
-
-                    if (tableNode && tableNode.table && Array.isArray(tableNode.table.body) && tableNode.table.body.length > 0) {
-                        var totalColumnas = tableNode.table.body[0].length;
-
-                        if (totalColumnas > 0) {
-                            tableNode.table.widths = new Array(totalColumnas).fill("*");
-                        }
-
-                        tableNode.alignment = "center";
-                        tableNode.margin = [0, 0, 0, 0];
-                        tableNode.table.dontBreakRows = true;
-
-                        tableNode.layout = {
+                        doc.content[2].layout = {
                             hLineColor: function () { return "#000000"; },
                             vLineColor: function () { return "#000000"; },
                             hLineWidth: function () { return 0.5; },
@@ -1140,6 +1174,7 @@ function activar_tabla(idtabla) {
         createLabel: 'Nombre del estado:'
     }
 },
+        
         responsive: responsiveUser,
         colReorder: colReorderUser,
         select: selectUser ? { style: 'multi' } : false,
@@ -1149,7 +1184,6 @@ function activar_tabla(idtabla) {
         stateSave: true,
         stateDuration: 0,
         ordering: orderingUser,
-
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
         order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']]),
 
