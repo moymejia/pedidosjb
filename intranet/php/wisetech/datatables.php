@@ -245,7 +245,9 @@ class datatables extends mysql {
                 if (isset($special_columns[$key])) {
                     $column_content = $special_columns[$key];
                     foreach ($row as $row_key => $row_value) {
-                        $column_content = str_replace("[$row_key]", $row_value, $column_content);
+                        //$column_content = str_replace("[$row_key]", $row_value, $column_content);
+                        $column_content = str_replace("[$row_key]", ($row_value === null ? '' : (string)$row_value), $column_content);
+
                     }
                 }else{
                     $column_content = $value;
@@ -287,18 +289,25 @@ class datatables extends mysql {
         while ($row = $db->getrowresult($result)) {
             $idtabla = $row['tabla'];
             $estado  = json_decode($row['estado'], true);
+            if ($idtabla === 'tabla_datos' && isset($estado['search']['search'])) {
+                $estado['search']['search'] = '';
+            }
             $estados[$idtabla] = $estado;
         }
         return json_encode($estados);
     }
 
+
     public function guardar_estado_datatables($tabla, $estado) {
+        
         $usuario = (new security())->get_actual_user();
         $usuario = $this->escape_sql($usuario);
         $tabla   = $this->escape_sql($tabla);
+        if ($tabla === 'tabla_datos') {
+            return true;
+        }
         $estado  = urldecode($estado);
         $estado  = $this->escape_sql($estado);
-
         if ($this->has_state_name_column()) {
             $sql = "INSERT INTO {$this->base_datos}.datatables (usuario, tabla, nombre_estado, estado)
                 VALUES ('$usuario', '$tabla', 'default', '$estado')

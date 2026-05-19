@@ -1200,6 +1200,9 @@ function activar_tabla(idtabla) {
         } : false,
 
         stateSaveCallback: function (settings, data) {
+            if (settings.sTableId === 'tabla_datos') {
+                return;
+            }
             if (rowGroupUser) {
                 data.rowGroup = tabla_nueva.rowGroup().dataSrc();
                 data.rowGroupEnabled = tabla_nueva.rowGroup().enabled();
@@ -1213,6 +1216,9 @@ function activar_tabla(idtabla) {
             }
         },
         stateLoadCallback: function (settings) {
+            if (settings.sTableId === 'tabla_datos') {
+                return null;
+            }
             var data = JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance));
             if (data) {
                 setTimeout(function () {

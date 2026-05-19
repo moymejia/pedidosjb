@@ -150,6 +150,10 @@ $idubicacion = $row['idubicacion'];
         Object.keys(estados).forEach(function(idtabla){
             let estado = estados[idtabla];
             if (!estado) return;
+            if (idtabla === 'tabla_datos') {
+                localStorage.removeItem('DataTables_' + idtabla);
+                return;
+            }
             if (Array.isArray(estado.columnControl)) {
                 let obj = {};
                 estado.columnControl.forEach((v, i) => obj[i] = v);
