@@ -3,7 +3,7 @@
   var IDS_CAMPOS_LINEA_EDITABLES = 'idset_talla,modelo,color,material';
   var IDS_CAMPOS_LINEA_BLOQUEADOS_EDICION = 'idset_talla,modelo';
   var IDS_CAMPOS_LINEA_LIMPIAR = 'idset_talla,modelo,descripcionEstilo,color,material';
-  var IDS_DATOS_GENERALES_SOLO_LECTURA = 'idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito';
+  var IDS_DATOS_GENERALES_SOLO_LECTURA = 'idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito,fecha_pedido';
 
   // =========================
   // ESTADO

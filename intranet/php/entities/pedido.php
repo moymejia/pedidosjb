@@ -43,7 +43,7 @@ class pedido extends table{
             }
 
             if ($PARAMETROS['operacion'] == 'guardar') {
-                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte', 'dias_credito'], $PARAMETROS, false)) {
+                if (table::validate_parameter_existence([ 'idcliente', 'idmarca', 'fecha_desde', 'fecha_hasta', 'idtemporada','idtransporte', 'dias_credito', 'fecha_pedido'], $PARAMETROS, false)) {
 
                     if ($resultado = $this->guardar($PARAMETROS)) {
                         self::end_success($resultado);
@@ -100,9 +100,9 @@ class pedido extends table{
     {
         $idpedido = (int)$idpedido;
         $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca,
-            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, monto_descuento, email, dias_credito, estado
+            fecha_desde, fecha_hasta, observaciones_pedido, idtransporte, monto_descuento, email, dias_credito, estado, fecha_pedido
             FROM view_pedidos
-            WHERE idpedido = '$idpedido'");
+            WHERE idpedido = '$idpedido' ORDER BY idpedido DESC");
 
         if (!$PEDIDO) {
             $this->last_error = 'No se encontró el encabezado del pedido.';
@@ -126,9 +126,10 @@ class pedido extends table{
         $nopedido_partes  = explode('-', $nopedido_full, 2);
         $DATA['nopedido_prefijo']  = isset($nopedido_partes[1]) ? $nopedido_partes[0] . '-' : '';
         $DATA['nopedido_sugerido'] = isset($nopedido_partes[1]) ? $nopedido_partes[1] : $nopedido_full;
+        $DATA['fecha_pedido_hoy']  = date('Y-m-d');
 
         $result = mysql::getresult("SELECT idpedido, nopedido, idcliente, idtemporada, idmarca, cliente, temporada, marca, estado, 
-            fecha_desde, fecha_hasta, fecha_creacion, observaciones_pedido, idtransporte, transporte, monto_descuento, email
+            fecha_desde, fecha_hasta, fecha_creacion, observaciones_pedido, idtransporte, transporte, monto_descuento, email, fecha_pedido
             FROM view_pedidos 
             ORDER BY idpedido DESC");
 
@@ -143,7 +144,7 @@ class pedido extends table{
                     <th>Marca</th>
                     <th>Fecha desde</th>
                     <th>Fecha hasta</th>
-                    <th>Fecha creacion</th>
+                    <th>Fecha pedido</th>
                     <th>Estado</th>
                 </tr>
             </thead>
@@ -161,9 +162,9 @@ class pedido extends table{
             $transporte      = $row['transporte'];
             $monto_descuento = $row['monto_descuento'];
             $estado          = $row['estado'];
-            $fecha_desde     = date('Y-m-d', strtotime($row['fecha_desde']));
-            $fecha_hasta     = date('Y-m-d', strtotime($row['fecha_hasta']));
-            $fecha_creacion  = ($row['fecha_creacion'] != '' && $row['fecha_creacion'] != null) ? date('Y-m-d H:i', strtotime($row['fecha_creacion'])) : '';
+            $fecha_desde     = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d-m-Y', strtotime($row['fecha_desde'])) : '';
+            $fecha_hasta     = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d-m-Y', strtotime($row['fecha_hasta'])) : '';
+            $fecha_pedido    = ($row['fecha_pedido'] != '' && $row['fecha_pedido'] != null) ? date('d-m-Y', strtotime($row['fecha_pedido'])) : '';
             $observaciones_pedido  = date('Y-m-d', strtotime($row['observaciones_pedido']));
 
             $str_data = "";
@@ -184,7 +185,7 @@ class pedido extends table{
                         showElements('btn_imprimir');
                         hideElements('btn_cerrar_pedido');
                     }
-                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito');
+                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito,fecha_pedido');
                     cargarDetallePedido();
                     goTop();\">
                     <span class=\"btn-label\"><i class=\"far fa-edit\"></i></span>Editar
@@ -199,7 +200,7 @@ class pedido extends table{
                     <td style='text-align: center;'>$marca</td>
                     <td>$fecha_desde</td>
                     <td>$fecha_hasta</td>
-                    <td>$fecha_creacion</td>
+                    <td>$fecha_pedido</td>
                     <td style='text-align: center;'>$estado</td>
                 </tr>";
         }
@@ -250,12 +251,24 @@ class pedido extends table{
             return false;
         }
 
+        $fecha_pedido = isset($PARAMETROS['fecha_pedido']) ? trim($PARAMETROS['fecha_pedido']) : '';
+        if ($fecha_pedido == '') {
+            $fecha_pedido = date('Y-m-d');
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_pedido)) {
+            $this->last_error = "La fecha del pedido no tiene un formato válido.";
+            utils::report_error(validation_error, $fecha_pedido, $this->last_error);
+            return false;
+        }
+
         $DATOS = [];
         $DATOS['idcliente']             = $PARAMETROS['idcliente'];
         $DATOS['nopedido']              = 'TMP-' . uniqid();
         $DATOS['idmarca']               = $PARAMETROS['idmarca'];
         $DATOS['fecha_desde']           = $PARAMETROS['fecha_desde'];
         $DATOS['fecha_hasta']           = $PARAMETROS['fecha_hasta'];
+        $DATOS['fecha_pedido']          = $fecha_pedido;
         $DATOS['idtemporada']           = $PARAMETROS['idtemporada'];
         $DATOS['dias_credito']          = (int)$PARAMETROS['dias_credito'];
         $DATOS['email']                 = $PARAMETROS['email'];
@@ -397,7 +410,8 @@ class pedido extends table{
         $nombre_usuario = $usuarioObj->get_nombre($usuario);
 
 
-        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, temporada, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, dias_credito, descripcion_marca
+        $PEDIDO = mysql::getrow("SELECT idpedido, nopedido, idcliente, idtemporada, temporada, cliente, telefono, direccion, nit, establecimiento, marca, transporte, email, fecha_desde, fecha_hasta, observaciones_pedido, fecha_creacion, fecha_pedido,
+            dias_credito, descripcion_marca
             FROM view_pedidos
             WHERE idpedido = '$idpedido'");
 
@@ -726,7 +740,11 @@ class pedido extends table{
             $DATA = [];
             $codigo_cliente                  = (new cliente())->obtener_codigo($PEDIDO['idcliente']);
             $DATA['codigo_cliente']         = $codigo_cliente ? $codigo_cliente : $PEDIDO['idcliente'];
-            $fecha                          = strtotime($PEDIDO['fecha_creacion']);
+            $fecha_base                     = !empty($PEDIDO['fecha_pedido']) ? $PEDIDO['fecha_pedido'] : $PEDIDO['fecha_creacion'];
+            $fecha                          = strtotime($fecha_base);
+            if (!$fecha) {
+                $fecha = time();
+            }
             $DATA['fecha']                  = date('d', $fecha).' '.$meses[date('m', $fecha)].' '.date('Y', $fecha);
             $DATA['vendedor']               = $nombre_usuario;
             $nombre_cliente                 = (new cliente())->obtener_nombre($PEDIDO['idcliente']);

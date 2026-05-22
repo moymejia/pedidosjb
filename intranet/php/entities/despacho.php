@@ -269,8 +269,8 @@ class despacho extends table
 			$cliente     = $row['cliente'];
 			$temporada   = $row['temporada'];
 			$marca       = $row['marca'];
-			$fecha_desde = $row['fecha_desde'];
-			$fecha_hasta = $row['fecha_hasta'];
+			$fecha_desde = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d-m-Y', strtotime($row['fecha_desde'])) : '';
+			$fecha_hasta = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d-m-Y', strtotime($row['fecha_hasta'])) : '';
 			$estado      = $row['estado'];
 
 			$tabla .= "<tr>

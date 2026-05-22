@@ -240,6 +240,12 @@
                                 <span class="bar"></span>
                             </div>
 
+                            <div class="form-group m-b-6 col-md-2">
+                                <label>Fecha pedido</label>
+                                <input type="date" class="form-control" id="fecha_pedido" name="fecha_pedido" value="[fecha_pedido_hoy]">
+                                <span class="bar"></span>
+                            </div>
+
                             <div class="form-group col-md-6">
                                 <label>Observaciones generales</label>
                                 <textarea  class="form-control" id="observaciones_pedido" name="observaciones_pedido" rows="2" placeholder="Observaciones del pedido..."
@@ -254,13 +260,13 @@
                                     showElements('detalles_del_pedido');
                                     hideElements('lista_pedidos');
                                     if(element('idmarca') && typeof element('idmarca').onchange === 'function'){ element('idmarca').onchange(); }
-                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito');
+                                    disableElements('idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,btn_limpiar_pedido,btn_guardar_pedido,idtransporte,monto_descuento,email,nopedido,dias_credito,fecha_pedido');
                                 }
-                                download_input_value('idpedido,nopedido,nopedido_prefijo,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,dias_credito','pedido','guardar','idpedido',callback_guardar_pedido);
+                                download_input_value('idpedido,nopedido,nopedido_prefijo,idcliente,idmarca,fecha_desde,fecha_hasta,idtemporada,observaciones_pedido,idtransporte,monto_descuento,email,dias_credito,fecha_pedido','pedido','guardar','idpedido',callback_guardar_pedido);
                                 ">Guardar</button>
                                 <button type="reset" id="btn_limpiar_pedido" class="btn btn-inverse waves-effect waves-light m-r-10"
                                     onclick="
-                                        clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento,email');
+                                        clearElements('idpedido,idcliente,idmarca,fechaDesde,fechaHasta,idtemporada,observaciones,idtransporte,monto_descuento,email,fecha_pedido');
                                     "><i class="mdi mdi-eraser"></i></button>
 
                                     <button type="button" class="btn btn-warning" id="btn_imprimir" style="display: none;" onclick="
