@@ -988,7 +988,7 @@ function activar_tabla(idtabla) {
                 orientation: "landscape",
                 pageSize: "LEGAL",
                 customize: function (doc) {
-                    doc.pageMargins = [18, 40, 18, 24];
+                    doc.pageMargins = [12, 34, 12, 18];
                     doc.defaultStyle = {
                         color: "#000000",
                         fontSize: 7,
@@ -1012,23 +1012,46 @@ function activar_tabla(idtabla) {
                         bold: true,
                         alignment: "center"
                     };
-                    if (doc.content && doc.content[2] && doc.content[2].table) {
-                        doc.content[2].alignment = "center";
-                        if (doc.content[2].table.widths) {
-                            doc.content[2].table.widths = doc.content[2].table.widths.map(function () {
-                                return "*";
-                            });
+
+                    var tableNode = null;
+                    if (Array.isArray(doc.content)) {
+                        for (var i = 0; i < doc.content.length; i++) {
+                            if (doc.content[i] && doc.content[i].table) {
+                                tableNode = doc.content[i];
+                                break;
+                            }
                         }
-                        doc.content[2].layout = {
+                    }
+
+                    if (tableNode && tableNode.table && Array.isArray(tableNode.table.body) && tableNode.table.body.length > 0) {
+                        var colCount = Array.isArray(tableNode.table.body[0]) ? tableNode.table.body[0].length : 0;
+                        if (colCount > 0) {
+                            tableNode.table.widths = Array(colCount).fill('*');
+                        }
+
+                        tableNode.margin = [0, 0, 0, 0];
+                        tableNode.alignment = 'center';
+                        tableNode.layout = {
                             hLineColor: function () { return "#000000"; },
                             vLineColor: function () { return "#000000"; },
                             hLineWidth: function () { return 0.5; },
                             vLineWidth: function () { return 0.5; },
-                            paddingLeft: function () { return 4; },
-                            paddingRight: function () { return 4; },
-                            paddingTop: function () { return 3; },
-                            paddingBottom: function () { return 3; }
+                            paddingLeft: function () { return 2; },
+                            paddingRight: function () { return 2; },
+                            paddingTop: function () { return 2; },
+                            paddingBottom: function () { return 2; }
                         };
+
+                        for (var r = 0; r < tableNode.table.body.length; r++) {
+                            for (var c = 0; c < tableNode.table.body[r].length; c++) {
+                                var cell = tableNode.table.body[r][c];
+                                if (typeof cell === 'string') {
+                                    tableNode.table.body[r][c] = { text: cell, alignment: 'center' };
+                                } else if (cell && typeof cell === 'object') {
+                                    cell.alignment = 'center';
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -1060,6 +1083,7 @@ function activar_tabla(idtabla) {
                     cssTabla.type = "text/css";
                     cssTabla.href = "../css/print/" + idtabla + ".css?x=" + version;
                     doc.head.appendChild(cssTabla);
+                    
                 }
             }
         );
@@ -1127,6 +1151,7 @@ function activar_tabla(idtabla) {
             var configBtn = (typeof btn === "string") ? { extend: btn } : Object.assign({}, btn);
             var exportOptionsActual = Object.assign({}, configBtn.exportOptions);
             var modifierActual = Object.assign({}, exportOptionsActual.modifier);
+            var esBotonImprimir = configBtn.extend === 'print';
 
             var haySeleccion = selectUser && tabla_nueva && tabla_nueva.rows({ selected: true }).count() > 0;
 
@@ -1138,6 +1163,9 @@ function activar_tabla(idtabla) {
             });
 
             exportOptionsActual.columns = ':visible';
+            if (esBotonImprimir) {
+                exportOptionsActual.stripHtml = false;
+            }
             exportOptionsActual.format = {
                 body: function(data, row, column, node) {
                     if (typeof data === 'string' && data.indexOf('<') !== -1) {
@@ -1146,6 +1174,9 @@ function activar_tabla(idtabla) {
                         var elementos = tmp.querySelectorAll('input, select, textarea, button');
                         for (var i = 0; i < elementos.length; i++) {
                             elementos[i].parentNode.removeChild(elementos[i]);
+                        }
+                        if (esBotonImprimir) {
+                            return tmp.innerHTML.trim();
                         }
                         return (tmp.textContent || tmp.innerText || '').trim();
                     }
