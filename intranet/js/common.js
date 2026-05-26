@@ -1218,7 +1218,7 @@ function activar_tabla(idtabla) {
         stateDuration: 0,
         ordering: orderingUser,
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
-        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : [[3, 'asc']]),
+        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : false  ),
 
         createdRow: function (row, data, dataIndex) {
             if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);
