@@ -624,6 +624,71 @@ function export_all_datatables(dt) {
         }
     }
 }
+
+function resolve_print_asset_url(relativePath) {
+    return new URL(relativePath, window.location.href).href;
+}
+
+function inject_print_fallback_styles(doc) {
+    var style = doc.createElement('style');
+    style.type = 'text/css';
+    style.textContent =
+        '@page { margin: 10mm; }' +
+        'body.dt-print-view, body { background: #ffffff !important; color: #000000 !important; }' +
+        '.dt-print-header { margin-bottom: 16px; text-align: center; }' +
+        '.dt-print-title { font-size: 18px; font-weight: 700; color: #000000 !important; }' +
+        '.dt-print-company { font-size: 12px; color: #000000 !important; }' +
+        'table, table.dataTable { width: 100% !important; border-collapse: collapse !important; }' +
+        'table thead th, table.dataTable thead th { background: #1e3a5f !important; color: #ffffff !important; border: 1px solid #000000 !important; padding: 0.5em !important; text-align: left !important; }' +
+        'table tbody td, table.dataTable tbody td { background: #f2f2f2 !important; color: #000000 !important; border: 1px solid #000000 !important; padding: 0.5em !important; }' +
+        'table tbody tr:nth-child(even) td, table.dataTable tbody tr:nth-child(even) td { background: #dfe6ee !important; }';
+    doc.head.appendChild(style);
+}
+
+function append_print_stylesheet(doc, href, optional, onComplete) {
+    var link = doc.createElement('link');
+    var finished = false;
+    var finalize = function () {
+        if (finished) {
+            return;
+        }
+        finished = true;
+        onComplete();
+    };
+
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.onload = finalize;
+    link.onerror = function () {
+        if (!optional) {
+            console.error('No se pudo cargar el CSS de impresión:', href);
+        }
+        finalize();
+    };
+    link.href = href;
+    doc.head.appendChild(link);
+
+    setTimeout(finalize, 400);
+}
+
+function prepare_print_window_styles(win, idtabla, callback) {
+    var doc = win.document;
+    var pending = 0;
+    var finalize = function () {
+        pending--;
+        if (pending <= 0) {
+            callback();
+        }
+    };
+
+    inject_print_fallback_styles(doc);
+
+    pending++;
+    append_print_stylesheet(doc, resolve_print_asset_url('../css/datatables.css?x=' + version), false, finalize);
+
+    pending++;
+    append_print_stylesheet(doc, resolve_print_asset_url('../css/print/' + idtabla + '.css?x=' + version), true, finalize);
+}
 /* FIN REPORTES/IMPRIMIR EXPOTRTAR */
 
 /**
@@ -745,9 +810,7 @@ function habilitar_floating_labels() {
 }
 
 function activate_select2() {
-    $(".select2").select2({
-        width: '100%'
-    });
+    $(".select2").select2();
 }
 
 function datatables_staterestore_ajax(idtabla, data, callback) {
@@ -869,7 +932,24 @@ function activar_tabla(idtabla) {
     var ds = tabla.dataset;
     var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");
     var selectUser = ds.confSelect === "true";
-    var buttonsUser = ds.confButtons === "true";
+    var buttonsConfigRaw = (ds.confButtons === undefined || ds.confButtons === null) ? "false" : String(ds.confButtons).trim();
+    var buttonsConfigNormalized = buttonsConfigRaw.toLowerCase();
+    var buttonsUser = !(buttonsConfigNormalized === "" || buttonsConfigNormalized === "false" || buttonsConfigNormalized === "0");
+    var exportButtonsRequested = { copy: false, csv: false, excel: false, pdf: false, print: false };
+    if (buttonsConfigNormalized === "todos" || buttonsConfigNormalized === "true") {
+        exportButtonsRequested.copy = true;
+        exportButtonsRequested.csv = true;
+        exportButtonsRequested.excel = true;
+        exportButtonsRequested.pdf = true;
+        exportButtonsRequested.print = true;
+    } else if (buttonsUser) {
+        buttonsConfigNormalized.split(',').forEach(function (buttonName) {
+            var nombre = buttonName.trim();
+            if (Object.prototype.hasOwnProperty.call(exportButtonsRequested, nombre)) {
+                exportButtonsRequested[nombre] = true;
+            }
+        });
+    }
     var fixedHeaderDisponible = (typeof DataTable !== "undefined" && typeof DataTable.FixedHeader !== "undefined") ||
         (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.FixedHeader !== "undefined");
     var fixedHeaderUser = ds.confFixedheader === "true" && fixedHeaderDisponible;
@@ -877,14 +957,100 @@ function activar_tabla(idtabla) {
     var exportCompany = "Solo moda S.A.S.";
     var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_Solo_moda_S.A.S." : "Listado";
 
-    var nombreABuscar = ds.confRowgroup;
+    var normalizarNombreColumna = function (texto) {
+        if (texto === undefined || texto === null) {
+            return '';
+        }
+        return String(texto).replace(/_/g, ' ').trim().toUpperCase();
+    };
+
+    var normalizarDireccionOrden = function (direccion) {
+        var valor = String(direccion || '').trim().toLowerCase();
+        if (valor === 'd' || valor === 'desc') {
+            return 'desc';
+        }
+        return 'asc';
+    };
+
+    var parsearOrdercolumn = function (valorCrudo) {
+        var configuracion = [];
+        if (valorCrudo === undefined || valorCrudo === null) {
+            return configuracion;
+        }
+
+        var texto = String(valorCrudo).trim();
+        if (texto === '' || texto.toLowerCase() === 'false') {
+            return configuracion;
+        }
+
+        // Formato nuevo: JSON emitido por backend
+        if (texto.charAt(0) === '[') {
+            try {
+                var data = JSON.parse(texto);
+                if (Array.isArray(data)) {
+                    data.forEach(function (item) {
+                        var nombre = normalizarNombreColumna(item && item.column);
+                        if (nombre === '') {
+                            return;
+                        }
+                        configuracion.push({
+                            column: nombre,
+                            direction: normalizarDireccionOrden(item && item.direction)
+                        });
+                    });
+                    return configuracion;
+                }
+            } catch (e) {
+                // Si falla JSON se intenta formato legacy.
+            }
+        }
+
+        // Formato legacy: NOMBRE:a,ESTADO:d o NOMBRE
+        texto.split(',').forEach(function (clausula) {
+            var parte = String(clausula || '').trim();
+            if (parte === '') {
+                return;
+            }
+            var nombre = parte;
+            var direccion = 'asc';
+            if (parte.indexOf(':') !== -1) {
+                var secciones = parte.split(':');
+                nombre = String(secciones.shift() || '').trim();
+                direccion = normalizarDireccionOrden(secciones.join(':'));
+            }
+            nombre = normalizarNombreColumna(nombre);
+            if (nombre !== '') {
+                configuracion.push({ column: nombre, direction: direccion });
+            }
+        });
+
+        return configuracion;
+    };
+
+    var nombreABuscar = normalizarNombreColumna(ds.confRowgroup);
     var indiceReal = -1;
     $('#' + idtabla + ' thead th').each(function (i) {
-        if ($(this).text().trim() === nombreABuscar) {
+        if (normalizarNombreColumna($(this).text()) === nombreABuscar) {
             indiceReal = i;
         }
     });
     var rowGroupUser = (indiceReal !== -1);
+
+    var ordercolumnConfig = parsearOrdercolumn(ds.confOrdercolumn);
+    var ordercolumnIndices = [];
+    ordercolumnConfig.forEach(function (item) {
+        var indiceEncontrado = -1;
+        $('#' + idtabla + ' thead th').each(function (i) {
+            if (normalizarNombreColumna($(this).text()) === item.column) {
+                indiceEncontrado = i;
+                return false;
+            }
+        });
+
+        if (indiceEncontrado !== -1) {
+            ordercolumnIndices.push([indiceEncontrado, item.direction]);
+        }
+    });
 
     var resetUser = ds.confReset === "true";
     var exportAllUser = ds.confExportall === "true";
@@ -897,6 +1063,18 @@ function activar_tabla(idtabla) {
     var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
     var noOrderUser = (ds.confNoorder === "true");
     var columnasAuto = [];
+
+    var orderInicial = [];
+    if (!noOrderUser) {
+        if (rowGroupUser) {
+            orderInicial.push([indiceReal, 'asc']);
+        }
+        ordercolumnIndices.forEach(function (item) {
+            if (!rowGroupUser || item[0] !== indiceReal) {
+                orderInicial.push(item);
+            }
+        });
+    }
 
     $('#' + idtabla + ' thead th').each(function () {
         columnasAuto.push({ name: $(this).text().trim() });
@@ -957,30 +1135,36 @@ function activar_tabla(idtabla) {
             text: "Seleccionar columnas",
             //columns: ":not(:first-child)"
         });
-        botones.push(
-            {
+        if (exportButtonsRequested.copy) {
+            botones.push({
                 extend: "copy",
                 text: "Copiar",
                 className: "btn btn-secondary btn-sm",
                 title: exportTitle,
                 messageTop: exportCompany
-            },
-            {
+            });
+        }
+        if (exportButtonsRequested.csv) {
+            botones.push({
                 extend: "csv",
                 text: "CSV",
                 className: "btn btn-secondary btn-sm",
                 title: exportTitle,
                 filename: exportFileName
-            },
-            {
+            });
+        }
+        if (exportButtonsRequested.excel) {
+            botones.push({
                 extend: "excel",
                 text: "Excel",
                 className: "btn btn-success btn-sm",
                 title: exportTitle,
                 filename: exportFileName,
                 messageTop: exportCompany
-            },
-            {
+            });
+        }
+        if (exportButtonsRequested.pdf) {
+            botones.push({
                 extend: "pdf",
                 text: "PDF",
                 className: "btn btn-danger btn-sm",
@@ -1056,15 +1240,17 @@ function activar_tabla(idtabla) {
                         }
                     }
                 }
-            },
-            {
+            });
+        }
+        if (exportButtonsRequested.print) {
+            botones.push({
                 extend: "print",
                 text: "Imprimir",
                 className: "btn btn-primary btn-sm",
                 title: "",
                 messageTop: "",
                 filename: exportFileName,
-                autoPrint: true,
+                autoPrint: false,
                 customize: function (win) {
                     var doc = win.document;
                     $(doc.body).prepend(
@@ -1073,22 +1259,13 @@ function activar_tabla(idtabla) {
                         '<div class="dt-print-company">' + exportCompany + '</div>' +
                         '</div>'
                     );
-                    // Cargar los estilos genericos de DataTables para impresión
-                    var cssPrint = doc.createElement("link");
-                    cssPrint.rel = "stylesheet";
-                    cssPrint.type = "text/css";
-                    cssPrint.href = "../css/datatables.css?x=" + version;
-                    doc.head.appendChild(cssPrint);
-                    // Cargar estilos específicos para la tabla, si existen
-                    var cssTabla = doc.createElement("link");
-                    cssTabla.rel = "stylesheet";
-                    cssTabla.type = "text/css";
-                    cssTabla.href = "../css/print/" + idtabla + ".css?x=" + version;
-                    doc.head.appendChild(cssTabla);
-                    
+
+                    prepare_print_window_styles(win, idtabla, function () {
+                        win.print();
+                    });
                 }
-            }
-        );
+            });
+        }
     }
     if (rowGroupUser) {
         botones.push({
@@ -1154,6 +1331,8 @@ function activar_tabla(idtabla) {
             var exportOptionsActual = Object.assign({}, configBtn.exportOptions);
             var modifierActual = Object.assign({}, exportOptionsActual.modifier);
             var esBotonImprimir = configBtn.extend === 'print';
+            var esBotonPdf = configBtn.extend === 'pdf' || configBtn.extend === 'pdfHtml5';
+            var esBotonExcel = configBtn.extend === 'excel' || configBtn.extend === 'excelHtml5';
 
             var haySeleccion = selectUser && tabla_nueva && tabla_nueva.rows({ selected: true }).count() > 0;
 
@@ -1165,7 +1344,7 @@ function activar_tabla(idtabla) {
             });
 
             exportOptionsActual.columns = ':visible';
-            if (esBotonImprimir) {
+            if (esBotonImprimir || esBotonPdf || esBotonExcel) {
                 exportOptionsActual.stripHtml = false;
             }
             exportOptionsActual.format = {
@@ -1180,6 +1359,48 @@ function activar_tabla(idtabla) {
                         if (esBotonImprimir) {
                             return tmp.innerHTML.trim();
                         }
+                        if (esBotonPdf) {
+                            var tablaInterna = tmp.querySelector('table');
+                            if (tablaInterna) {
+                                var lineas = [];
+                                var filas = tablaInterna.querySelectorAll('tr');
+                                for (var f = 0; f < filas.length; f++) {
+                                    var columnas = filas[f].querySelectorAll('th, td');
+                                    var valores = [];
+                                    for (var k = 0; k < columnas.length; k++) {
+                                        var valor = (columnas[k].textContent || columnas[k].innerText || '').trim();
+                                        if (valor !== '') {
+                                            valores.push(valor);
+                                        }
+                                    }
+                                    if (valores.length > 0) {
+                                        lineas.push(valores.join(' | '));
+                                    }
+                                }
+                                return lineas.join('\n');
+                            }
+                        }
+                        if (esBotonExcel) {
+                            var tablaInternaExcel = tmp.querySelector('table');
+                            if (tablaInternaExcel) {
+                                var lineasExcel = [];
+                                var filasExcel = tablaInternaExcel.querySelectorAll('tr');
+                                for (var fx = 0; fx < filasExcel.length; fx++) {
+                                    var columnasExcel = filasExcel[fx].querySelectorAll('th, td');
+                                    var valoresExcel = [];
+                                    for (var kx = 0; kx < columnasExcel.length; kx++) {
+                                        var valorExcel = (columnasExcel[kx].textContent || columnasExcel[kx].innerText || '').trim();
+                                        if (valorExcel !== '') {
+                                            valoresExcel.push(valorExcel);
+                                        }
+                                    }
+                                    if (valoresExcel.length > 0) {
+                                        lineasExcel.push(valoresExcel.join(' | '));
+                                    }
+                                }
+                                return lineasExcel.join('\n');
+                            }
+                        }
                         return (tmp.textContent || tmp.innerText || '').trim();
                     }
                     return data;
@@ -1189,24 +1410,24 @@ function activar_tabla(idtabla) {
             return configBtn;
         }),
         language: { 
-    url: "../assets/plugins/datatables/media/datatables.spanish.lang",
-    buttons: {
-        savedStates: "Estados guardados"
-    },
-    stateRestore: {
-        savedStates: 'Estados guardados',
-        emptyStates: 'Sin estados guardados',
-        createTitle: 'Crear estado',
-        renameTitle: 'Renombrar estado',
-        removeTitle: 'Eliminar estado',
-        removeConfirm: '¿Seguro que desea eliminar este estado?',
-        removeSubmit: 'Eliminar',
-        renameButton: 'Renombrar',
-        renameLabel: 'Nombre:',
-        createButton: 'Crear',
-        createLabel: 'Nombre del estado:'
-    }
-},
+            url: "../assets/plugins/datatables/media/datatables.spanish.json",
+            buttons: {
+                savedStates: "Estados guardados"
+            },
+            stateRestore: {
+                savedStates: 'Estados guardados',
+                emptyStates: 'Sin estados guardados',
+                createTitle: 'Crear estado',
+                renameTitle: 'Renombrar estado',
+                removeTitle: 'Eliminar estado',
+                removeConfirm: '¿Seguro que desea eliminar este estado?',
+                removeSubmit: 'Eliminar',
+                renameButton: 'Renombrar',
+                renameLabel: 'Nombre:',
+                createButton: 'Crear',
+                createLabel: 'Nombre del estado:'
+            }
+        },
         
         responsive: responsiveUser,
         colReorder: colReorderUser,
@@ -1218,7 +1439,7 @@ function activar_tabla(idtabla) {
         stateDuration: 0,
         ordering: orderingUser,
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
-        order: noOrderUser ? [] : (rowGroupUser ? [[indiceReal, 'asc']] : false  ),
+        order: orderInicial,
 
         createdRow: function (row, data, dataIndex) {
             if (typeof fila_agregada === "function") fila_agregada(row, data, dataIndex);

@@ -148,6 +148,7 @@ class datatables extends mysql {
         $order         = isset($PARAMETROS['order']) ? $PARAMETROS['order'] : true;
         $reset         = isset($PARAMETROS['reset']) ? $PARAMETROS['reset'] : false;
         $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
+        $ordercolumn   = isset($PARAMETROS['ordercolumn']) ? $PARAMETROS['ordercolumn'] : false;
         $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
         $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
         $staterestore  = isset($PARAMETROS['staterestore']) ? $PARAMETROS['staterestore'] : false;
@@ -157,17 +158,75 @@ class datatables extends mysql {
 
         $titulo_tabla = ($titulo_tabla === false || $titulo_tabla === '') ? 'Listado' : $titulo_tabla;
         $file_name    = ($file_name === false || $file_name === '') ? 'Listado' : $file_name;
-        $row_group    = ($rowgroup === false || $rowgroup === '') ? 'false' : $rowgroup;
+        $row_group    = ($rowgroup === false || $rowgroup === '') ? 'false' : strtoupper(str_replace('_', ' ', (string)$rowgroup));
+
+        $order_column_array = [];
+        if (!($ordercolumn === false || $ordercolumn === '' || $ordercolumn === null)) {
+            $clauses = explode(',', (string)$ordercolumn);
+            foreach ($clauses as $clause) {
+                $clause = trim($clause);
+                if ($clause === '') {
+                    continue;
+                }
+
+                $column_name = $clause;
+                $direction = 'a';
+                if (strpos($clause, ':') !== false) {
+                    $parts = explode(':', $clause, 2);
+                    $column_name = trim($parts[0]);
+                    $direction = trim($parts[1]);
+                }
+
+                $column_name = strtoupper(str_replace('_', ' ', (string)$column_name));
+                if ($column_name === '') {
+                    continue;
+                }
+
+                $direction = strtolower((string)$direction);
+                if ($direction === 'a' || $direction === 'asc') {
+                    $direction = 'asc';
+                } elseif ($direction === 'd' || $direction === 'desc') {
+                    $direction = 'desc';
+                } else {
+                    $direction = 'asc';
+                }
+
+                $order_column_array[] = [
+                    'column' => $column_name,
+                    'direction' => $direction,
+                ];
+            }
+        }
+        $order_column = empty($order_column_array) ? 'false' : json_encode($order_column_array);
+
+        $row_group = htmlspecialchars($row_group, ENT_QUOTES, 'UTF-8');
+        $order_column = htmlspecialchars($order_column, ENT_QUOTES, 'UTF-8');
+
+        $buttons_value = 'false';
+        if ($buttons === true || $buttons === 1 || $buttons === '1') {
+            $buttons_value = 'todos';
+        } elseif ($buttons === false || $buttons === 0 || $buttons === '0' || $buttons === null) {
+            $buttons_value = 'false';
+        } else {
+            $buttons_value = trim((string)$buttons);
+            if ($buttons_value === '' || strtolower($buttons_value) === 'false') {
+                $buttons_value = 'false';
+            } elseif (strtolower($buttons_value) === 'true') {
+                $buttons_value = 'todos';
+            }
+        }
+        $buttons_value = htmlspecialchars($buttons_value, ENT_QUOTES, 'UTF-8');
 
         $data_ = "";
         $data_ .= " data-conf-columncontrol='" . ($columncontrol ? "true" : "false") . "' ";
         $data_ .= " data-conf-rowgroup='" . $row_group . "' ";
+        $data_ .= " data-conf-ordercolumn='" . $order_column . "' ";
         $data_ .= " data-conf-titulotabla='" . $titulo_tabla . "' ";
         $data_ .= " data-conf-filename='" . $file_name . "' ";
         $data_ .= " data-conf-responsive='" . ($responsive ? "true" : "false") . "' ";
         $data_ .= " data-conf-colreorder='" . ($colreorder ? "true" : "false") . "' ";
         $data_ .= " data-conf-select='" . ($select ? "true" : "false") . "' ";
-        $data_ .= " data-conf-buttons='" . ($buttons ? "true" : "false") . "' ";
+        $data_ .= " data-conf-buttons='" . $buttons_value . "' ";
         $data_ .= " data-conf-paging='" . ($paging ? "true" : "false") . "' ";
         $data_ .= " data-conf-ordering='" . ($ordering ? "true" : "false") . "' ";
         $data_ .= " data-conf-noorder='" . (!$order ? "true" : "false") . "' ";
