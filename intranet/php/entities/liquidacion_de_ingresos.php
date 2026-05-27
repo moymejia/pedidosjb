@@ -56,7 +56,7 @@ class liquidacion_de_ingresos extends table
         $sql_ejecutados = mysql::getresult("SELECT
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
-                IFNULL(numero_factura, '') AS numero_documento,
+                IFNULL(correlativo_documento, '') AS numero_documento,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(estado_pago_individual, '') AS estado_pago_individual,
@@ -76,7 +76,7 @@ class liquidacion_de_ingresos extends table
         $sql_programados = mysql::getresult("SELECT
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
-                IFNULL(numero_factura, '') AS numero_documento,
+                IFNULL(correlativo_documento, '') AS numero_documento,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(monto_pago, 0) AS monto_pago
@@ -95,7 +95,7 @@ class liquidacion_de_ingresos extends table
         $sql_recuperacion = mysql::getresult("SELECT
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
-                IFNULL(numero_factura, '') AS numero_documento,
+                IFNULL(correlativo_documento, '') AS numero_documento,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(monto_pago, 0) AS monto_pago,

@@ -1410,7 +1410,7 @@ function activar_tabla(idtabla) {
             return configBtn;
         }),
         language: { 
-            url: "../assets/plugins/datatables/media/datatables.spanish.json",
+            url: "../assets/plugins/datatables/media/datatables.spanish.lang",
             buttons: {
                 savedStates: "Estados guardados"
             },
