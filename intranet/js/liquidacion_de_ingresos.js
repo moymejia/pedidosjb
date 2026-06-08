@@ -79,10 +79,6 @@ function imprimir_liquidacion_de_ingresos() {
 
     setTimeout(function () {
         ventana.focus();
-        ventana.onafterprint = function () {
-            ventana.close();
-            ventana_impresion_liquidacion = null;
-        };
         ventana.print();
     }, 250);
 }

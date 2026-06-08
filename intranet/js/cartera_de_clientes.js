@@ -103,10 +103,6 @@ function imprimir_cartera_de_clientes() {
 
     setTimeout(function () {
         ventana.focus();
-        ventana.onafterprint = function () {
-            ventana.close();
-            ventana_impresion_cartera = null;
-        };
         ventana.print();
     }, 250);
 }

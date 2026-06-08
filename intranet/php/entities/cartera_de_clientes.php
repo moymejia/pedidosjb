@@ -99,7 +99,7 @@ class cartera_de_clientes extends table
                 $where_cliente
                 $where_fechas
                 AND saldo_cartera > 0
-            ORDER BY vendedor ASC, fecha_factura_orden ASC, numero_factura ASC");
+            ORDER BY vendedor ASC, codigo_cliente ASC, fecha_factura_orden ASC, numero_factura ASC");
 
         if (!$sql) {
             $this->last_error = 'No fue posible obtener datos de cartera de clientes.';

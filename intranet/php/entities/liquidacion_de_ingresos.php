@@ -52,6 +52,8 @@ class liquidacion_de_ingresos extends table
         }
 
         $where_fechas = "DATE(fecha_pago) >= '$fecha_desde' AND DATE(fecha_pago) <= '$fecha_hasta'";
+        $where_excluir_tipo_documento = "UPPER(TRIM(IFNULL(tipo_documento, ''))) <> 'DESCUENTO'";
+        $where_excluir_tipos_pago = "UPPER(TRIM(IFNULL(tipo_pago, ''))) <> 'DESCUENTO'";
 
         $sql_ejecutados = mysql::getresult("SELECT
                 iddespacho,
@@ -65,6 +67,8 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
               AND $where_fechas
+                            AND $where_excluir_tipo_documento
+                            AND $where_excluir_tipos_pago
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
         if (!$sql_ejecutados) {
@@ -83,6 +87,8 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
                 AND $where_fechas
+                AND $where_excluir_tipo_documento
+                AND $where_excluir_tipos_pago
                 AND UPPER(TRIM(estado_pago_individual)) = 'PROGRAMADO'
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
@@ -103,7 +109,9 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
                 AND $where_fechas
-                            AND UPPER(TRIM(IFNULL(tipo_documento, ''))) = 'RECUPERACION'
+                AND $where_excluir_tipo_documento
+                AND $where_excluir_tipos_pago
+                AND UPPER(TRIM(IFNULL(tipo_documento, ''))) = 'RECUPERACION'
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
         if (!$sql_recuperacion) {
