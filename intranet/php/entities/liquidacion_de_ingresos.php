@@ -53,7 +53,7 @@ class liquidacion_de_ingresos extends table
 
         $where_fechas = "DATE(fecha_pago) >= '$fecha_desde' AND DATE(fecha_pago) <= '$fecha_hasta'";
         $where_excluir_tipo_documento = "UPPER(TRIM(IFNULL(tipo_documento, ''))) <> 'DESCUENTO'";
-        $where_excluir_tipos_pago = "UPPER(TRIM(IFNULL(tipo_pago, ''))) <> 'DESCUENTO'";
+        $where_excluir_tipos_pago = "UPPER(TRIM(IFNULL(tipo_pago, ''))) NOT IN ('DESCUENTO', 'DEVOLUCION')";
 
         $sql_ejecutados = mysql::getresult("SELECT
                 iddespacho,

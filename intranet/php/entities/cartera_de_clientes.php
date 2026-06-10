@@ -170,8 +170,8 @@ class cartera_de_clientes extends table
             $filas .= '<tr class="fila-detalle">';
             $filas .= '<td class="text-center">' . htmlspecialchars($row['codigo_cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas .= '<td>' . htmlspecialchars($row['nombre_cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
-            $filas .= '<td class="text-center">' . htmlspecialchars($row['numero_factura'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas .= '<td class="text-center">' . htmlspecialchars($row['fecha_factura'], ENT_QUOTES, 'UTF-8') . '</td>';
+            $filas .= '<td class="text-center">' . htmlspecialchars($row['numero_factura'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas .= '<td class="text-center">' . (int)$row['dias_transcurridos'] . '</td>';
             $filas .= '<td class="text-right">' . $this->monto_columna($saldo_0_30) . '</td>';
             $filas .= '<td class="text-right">' . $this->monto_columna($saldo_31_60) . '</td>';
