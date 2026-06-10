@@ -39,28 +39,51 @@
     }
 
     function activarFormatoMonto() {
-        if (objeto('monto') === undefined) {
-            return;
-        }
-
-        var inputMonto = objeto('monto');
-        if (inputMonto.dataset.formatMiles === '1') {
-            return;
-        }
-
-        inputMonto.dataset.formatMiles = '1';
-        inputMonto.addEventListener('focus', function () {
-            if (inputMonto.value !== '') {
-                inputMonto.value = String(inputMonto.value).replace(/,/g, '');
+        var idsMonto = ['monto', 'descuento', 'devolucion'];
+        for (var i = 0; i < idsMonto.length; i++) {
+            var id = idsMonto[i];
+            if (objeto(id) === undefined) {
+                continue;
             }
-        });
 
-        inputMonto.addEventListener('blur', function () {
-            if (String(inputMonto.value).trim() === '') {
-                return;
+            var inputMonto = objeto(id);
+            if (inputMonto.dataset.formatMiles === '1') {
+                continue;
             }
-            inputMonto.value = formatearMontoMiles(inputMonto.value);
-        });
+
+            inputMonto.dataset.formatMiles = '1';
+            inputMonto.addEventListener('focus', function () {
+                if (this.value !== '') {
+                    this.value = String(this.value).replace(/,/g, '');
+                }
+            });
+
+            inputMonto.addEventListener('blur', function () {
+                if (String(this.value).trim() === '') {
+                    return;
+                }
+                this.value = formatearMontoMiles(this.value);
+            });
+        }
+    }
+
+    function aplicarReglasEstadoDocumento() {
+        var estado = elementValue('estado');
+        var esAnulado = estado === 'ANULADO';
+        var campos = ['monto', 'descuento', 'devolucion'];
+
+        for (var i = 0; i < campos.length; i++) {
+            if (objeto(campos[i]) === undefined) {
+                continue;
+            }
+
+            if (esAnulado) {
+                objeto(campos[i]).value = formatearMontoMiles(0);
+                objeto(campos[i]).setAttribute('readonly', 'readonly');
+            } else {
+                objeto(campos[i]).removeAttribute('readonly');
+            }
+        }
     }
 
     function limpiarPanelPagos() {
@@ -78,6 +101,7 @@
 
         objeto('div_formulario_pago').innerHTML = objeto('tpl_despacho_pago_formulario').innerHTML;
         renderPreviewImagenDocumento('');
+        aplicarReglasEstadoDocumento();
         despachoPagoManejarCambioTipoPago();
     }
 
@@ -92,6 +116,8 @@
             'estado',
             'fecha',
             'monto',
+            'descuento',
+            'devolucion',
             'correlativo_documento',
             'banco',
             'referencia_pago',
@@ -123,8 +149,15 @@
         if (objeto('monto') !== undefined && String(objeto('monto').value).trim() !== '') {
             objeto('monto').value = formatearMontoMiles(objeto('monto').value);
         }
+        if (objeto('descuento') !== undefined && String(objeto('descuento').value).trim() !== '') {
+            objeto('descuento').value = formatearMontoMiles(objeto('descuento').value);
+        }
+        if (objeto('devolucion') !== undefined && String(objeto('devolucion').value).trim() !== '') {
+            objeto('devolucion').value = formatearMontoMiles(objeto('devolucion').value);
+        }
 
         activarFormatoMonto();
+        aplicarReglasEstadoDocumento();
         despachoPagoManejarCambioTipoPago();
         actualizarModoFormulario();
     }
@@ -169,6 +202,8 @@
             if (objeto('estado') !== undefined) objeto('estado').value = row.estado || 'PROGRAMADO';
             if (objeto('fecha') !== undefined) objeto('fecha').value = row.fecha || '';
             if (objeto('monto') !== undefined) objeto('monto').value = formatearMontoMiles(row.monto || 0);
+            if (objeto('descuento') !== undefined) objeto('descuento').value = formatearMontoMiles(0);
+            if (objeto('devolucion') !== undefined) objeto('devolucion').value = formatearMontoMiles(0);
             if (objeto('correlativo_documento') !== undefined) objeto('correlativo_documento').value = row.correlativo_documento || '';
             if (objeto('banco') !== undefined) objeto('banco').value = row.banco || '';
             if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = row.referencia_pago || '';
@@ -177,6 +212,7 @@
             renderPreviewImagenDocumento(row.imagen || '');
 
             activarFormatoMonto();
+            aplicarReglasEstadoDocumento();
             despachoPagoManejarCambioTipoPago(idclienteAnticipoSeleccionado);
             actualizarModoFormulario();
             notify_info('Documento cargado para edicion.');
@@ -259,6 +295,8 @@
         var fecha = elementValue('fecha');
         var correlativo_documento = elementValue('correlativo_documento');
         var monto = normalizarMonto(elementValue('monto'));
+        var descuento = normalizarMonto(elementValue('descuento'));
+        var devolucion = normalizarMonto(elementValue('devolucion'));
         var idcliente_anticipo = elementValue('idcliente_anticipo');
         var inputImagen = objeto('imagen_documento');
         var tieneImagenNueva = !!(inputImagen && inputImagen.files && inputImagen.files.length > 0);
@@ -278,7 +316,18 @@
             return false;
         }
 
-        if (isNaN(monto) || monto <= 0) {
+        if (isNaN(descuento) || descuento < 0 || isNaN(devolucion) || devolucion < 0) {
+            notify_warning('Descuento y devolucion deben ser valores mayores o iguales a cero.');
+            return false;
+        }
+
+        if (estado === 'ANULADO') {
+            monto = 0;
+            descuento = 0;
+            devolucion = 0;
+        }
+
+        if (estado !== 'ANULADO' && (isNaN(monto) || monto <= 0)) {
             notify_warning('El monto debe ser mayor a cero.');
             return false;
         }
@@ -286,8 +335,14 @@
         if (objeto('monto') !== undefined) {
             objeto('monto').value = monto.toFixed(2);
         }
+        if (objeto('descuento') !== undefined) {
+            objeto('descuento').value = descuento.toFixed(2);
+        }
+        if (objeto('devolucion') !== undefined) {
+            objeto('devolucion').value = devolucion.toFixed(2);
+        }
 
-        var fields = 'iddespacho,iddespacho_pago,idtipo_pago,idcliente_anticipo,idtipo_documento,estado,fecha,monto,correlativo_documento,banco,referencia_pago,observaciones';
+        var fields = 'iddespacho,iddespacho_pago,idtipo_pago,idcliente_anticipo,idtipo_documento,estado,fecha,monto,descuento,devolucion,correlativo_documento,banco,referencia_pago,observaciones';
 
         callback_guardar_despacho_pago = function (respuesta) {
             if ((respuesta + '') === 'editado') {
@@ -440,6 +495,8 @@
         if (objeto('idtipo_pago') !== undefined) objeto('idtipo_pago').value = '';
         if (objeto('idtipo_documento') !== undefined) objeto('idtipo_documento').value = '';
         if (objeto('monto') !== undefined) objeto('monto').value = '';
+        if (objeto('descuento') !== undefined) objeto('descuento').value = '';
+        if (objeto('devolucion') !== undefined) objeto('devolucion').value = '';
         if (objeto('correlativo_documento') !== undefined) objeto('correlativo_documento').value = '';
         if (objeto('banco') !== undefined) objeto('banco').value = '';
         if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = '';
@@ -451,8 +508,13 @@
         if (objeto('idcliente_anticipo') !== undefined) objeto('idcliente_anticipo').value = '';
         renderPreviewImagenDocumento('');
         activarFormatoMonto();
+        aplicarReglasEstadoDocumento();
         actualizarModoFormulario();
         despachoPagoManejarCambioTipoPago();
+    };
+
+    window.despachoPagoManejarCambioEstado = function () {
+        aplicarReglasEstadoDocumento();
     };
 
     window.despachoPagoPreviewImagenDocumento = function (input) {

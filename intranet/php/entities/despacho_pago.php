@@ -385,17 +385,35 @@ class despacho_pago extends table
         }
 
         $estado = strtoupper(trim($PARAMETROS['estado']));
-        if ($estado != 'PROGRAMADO' && $estado != 'EJECUTADO') {
-            $this->last_error = 'El estado debe ser PROGRAMADO o EJECUTADO.';
+        if ($estado != 'PROGRAMADO' && $estado != 'EJECUTADO' && $estado != 'ANULADO') {
+            $this->last_error = 'El estado debe ser PROGRAMADO, EJECUTADO o ANULADO.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
         }
 
         $monto = (float)$PARAMETROS['monto'];
-        if ($monto <= 0) {
+        if ($estado === 'ANULADO') {
+            $monto = 0;
+        }
+
+        if ($estado !== 'ANULADO' && $monto <= 0) {
             $this->last_error = 'El monto debe ser mayor a cero.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
+        }
+
+        $descuento = isset($PARAMETROS['descuento']) ? (float)$PARAMETROS['descuento'] : 0;
+        $devolucion = isset($PARAMETROS['devolucion']) ? (float)$PARAMETROS['devolucion'] : 0;
+
+        if ($descuento < 0 || $devolucion < 0) {
+            $this->last_error = 'Descuento y devolucion deben ser mayores o iguales a cero.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+            return false;
+        }
+
+        if ($estado === 'ANULADO') {
+            $descuento = 0;
+            $devolucion = 0;
         }
 
         if (trim($PARAMETROS['correlativo_documento']) == '') {
@@ -404,9 +422,14 @@ class despacho_pago extends table
             return false;
         }
 
+        $iddespacho_pago = isset($PARAMETROS['iddespacho_pago']) ? trim($PARAMETROS['iddespacho_pago']) : '';
+        if (! $this->validar_correlativo_anulado_reutilizable($PARAMETROS['correlativo_documento'], $iddespacho_pago)) {
+            return false;
+        }
+
         $idtipo_pago = trim($PARAMETROS['idtipo_pago'] . '');
         // Si es tipo de pago ANTICIPO (10), validar que se proporcione idcliente_anticipo
-        if ($idtipo_pago === '10') {
+        if ($idtipo_pago === '10' && $estado !== 'ANULADO') {
             if (!isset($PARAMETROS['idcliente_anticipo']) || trim($PARAMETROS['idcliente_anticipo']) == '') {
                 $this->last_error = 'Debe seleccionar un anticipo del cliente.';
                 utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -431,8 +454,6 @@ class despacho_pago extends table
         }
 
         $iddespacho = trim($PARAMETROS['iddespacho'] . '');
-
-        $iddespacho_pago = isset($PARAMETROS['iddespacho_pago']) ? trim($PARAMETROS['iddespacho_pago']) : '';
         $DATOS = [];
         $DATOS['iddespacho']        = $iddespacho;
         $DATOS['fecha']             = $PARAMETROS['fecha'];
@@ -473,12 +494,29 @@ class despacho_pago extends table
                 $iddespacho_pago_nuevo = mysql::last_id();
 
                 // Si es ANTICIPO, aplicar el anticipo
-                if ($idtipo_pago === '10') {
+                if ($idtipo_pago === '10' && $estado !== 'ANULADO' && $monto > 0) {
                     if (!$this->aplicar_y_registrar_anticipo($iddespacho_pago_nuevo, $idcliente_anticipo, $iddespacho, $monto, $PARAMETROS)) {
                         // Si falla la aplicación del anticipo, revertir el insert
                         mysql::put("DELETE FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago_nuevo'");
                         return false;
                     }
+                }
+
+                if (! $this->registrar_movimientos_ajuste($DATOS, $descuento, $devolucion, $idforma_pago_default, $security->get_actual_user())) {
+                    if ($idtipo_pago === '10' && $estado !== 'ANULADO' && $monto > 0) {
+                        $_CLIENTE_ANTICIPO = new cliente_anticipo();
+                        $_CLIENTE_ANTICIPO_APLICACION = new cliente_anticipo_aplicacion();
+
+                        $_CLIENTE_ANTICIPO->revertir_anticipo($idcliente_anticipo, $monto);
+
+                        $row_aplicacion = $_CLIENTE_ANTICIPO_APLICACION->obtener_aplicacion_por_despacho($iddespacho, $idcliente_anticipo);
+                        if ($row_aplicacion) {
+                            $_CLIENTE_ANTICIPO_APLICACION->cancelar_aplicacion($row_aplicacion['idcliente_anticipo_aplicacion']);
+                        }
+                    }
+
+                    mysql::put("DELETE FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago_nuevo'");
+                    return false;
                 }
 
                 $security->registrar_bitacora($this->ACCIONES['crear_despacho_pago'], $iddespacho_pago_nuevo, $iddespacho, $DATOS['monto']);
@@ -514,9 +552,13 @@ class despacho_pago extends table
             $idtipo_pago_anterior = trim($row_actual['idtipo_pago'] . '');
             $idcliente_anticipo_anterior = trim($row_actual['idcliente_anticipo'] . '');
             $monto_anterior = (float)$row_actual['monto'];
+            $estado_anterior = strtoupper(trim($row_actual['estado'] . ''));
+
+            $era_anticipo_aplicable = ($idtipo_pago_anterior === '10' && $estado_anterior !== 'ANULADO' && $monto_anterior > 0);
+            $es_anticipo_aplicable = ($idtipo_pago === '10' && $estado !== 'ANULADO' && $monto > 0);
 
             // Si era ANTICIPO antes y sigue siendo ANTICIPO
-            if ($idtipo_pago_anterior === '10' && $idtipo_pago === '10') {
+            if ($era_anticipo_aplicable && $es_anticipo_aplicable) {
                 $monto_actual = $monto;
                 
                 // Si el monto cambió, actualizar la aplicación
@@ -547,11 +589,11 @@ class despacho_pago extends table
                 }
             }
             // Si NO era ANTICIPO y ahora SÍ es ANTICIPO
-            elseif ($idtipo_pago_anterior !== '10' && $idtipo_pago === '10') {
+            elseif (!$era_anticipo_aplicable && $es_anticipo_aplicable) {
                 $this->aplicar_y_registrar_anticipo($iddespacho_pago, $idcliente_anticipo, $iddespacho, $monto, $PARAMETROS);
             }
             // Si ERA ANTICIPO y ahora NO es ANTICIPO
-            elseif ($idtipo_pago_anterior === '10' && $idtipo_pago !== '10') {
+            elseif ($era_anticipo_aplicable && !$es_anticipo_aplicable) {
                 $_CLIENTE_ANTICIPO = new cliente_anticipo();
                 $_CLIENTE_ANTICIPO_APLICACION = new cliente_anticipo_aplicacion();
                 
@@ -572,6 +614,154 @@ class despacho_pago extends table
         $this->last_error = 'Error al modificar el documento de pago.';
         utils::report_error(bd_error, $PARAMETROS, $this->last_error);
         return false;
+    }
+
+    private function registrar_movimientos_ajuste($DATOS_BASE, $descuento, $devolucion, $idforma_pago_default, $usuario_creacion)
+    {
+        $descuento = (float)$descuento;
+        $devolucion = (float)$devolucion;
+        $IDS_AJUSTE = [];
+
+        if ($descuento <= 0 && $devolucion <= 0) {
+            return true;
+        }
+
+        if ($descuento > 0) {
+            $idtipo_pago_descuento = $this->obtener_idtipo_pago_por_aliases(['DESCUENTO']);
+            if (! $idtipo_pago_descuento) {
+                $this->last_error = 'No existe un tipo de pago activo para DESCUENTO.';
+                utils::report_error(validation_error, 'DESCUENTO', $this->last_error);
+                return false;
+            }
+
+            $id_ajuste_descuento = $this->crear_movimiento_ajuste($DATOS_BASE, $idtipo_pago_descuento, $descuento, $idforma_pago_default, $usuario_creacion, 'DESCUENTO');
+            if (! $id_ajuste_descuento) {
+                return false;
+            }
+
+            $IDS_AJUSTE[] = $id_ajuste_descuento;
+        }
+
+        if ($devolucion > 0) {
+            $idtipo_pago_devolucion = $this->obtener_idtipo_pago_por_aliases(['DEVOLUCION', 'DEVOLUCIÓN']);
+            if (! $idtipo_pago_devolucion) {
+                $this->last_error = 'No existe un tipo de pago activo para DEVOLUCION.';
+                utils::report_error(validation_error, 'DEVOLUCION', $this->last_error);
+                return false;
+            }
+
+            $id_ajuste_devolucion = $this->crear_movimiento_ajuste($DATOS_BASE, $idtipo_pago_devolucion, $devolucion, $idforma_pago_default, $usuario_creacion, 'DEVOLUCION');
+            if (! $id_ajuste_devolucion) {
+                foreach ($IDS_AJUSTE as $id_ajuste) {
+                    mysql::put("DELETE FROM despacho_pago WHERE iddespacho_pago = '" . (int)$id_ajuste . "'");
+                }
+                return false;
+            }
+
+            $IDS_AJUSTE[] = $id_ajuste_devolucion;
+        }
+
+        return true;
+    }
+
+    private function crear_movimiento_ajuste($DATOS_BASE, $idtipo_pago, $monto, $idforma_pago_default, $usuario_creacion, $etiqueta)
+    {
+        $security = new security($this->ACCIONES['crear_despacho_pago']);
+        $DATOS_AJUSTE = [];
+        $DATOS_AJUSTE['iddespacho'] = $DATOS_BASE['iddespacho'];
+        $DATOS_AJUSTE['fecha'] = $DATOS_BASE['fecha'];
+        $DATOS_AJUSTE['idtipo_pago'] = $idtipo_pago;
+        $DATOS_AJUSTE['idtipo_documento'] = $DATOS_BASE['idtipo_documento'];
+        $DATOS_AJUSTE['monto'] = number_format((float)$monto, 2, '.', '');
+        $DATOS_AJUSTE['estado'] = $DATOS_BASE['estado'];
+        $DATOS_AJUSTE['correlativo_documento'] = $DATOS_BASE['correlativo_documento'];
+        $DATOS_AJUSTE['idcliente_anticipo'] = 'NULL';
+        $DATOS_AJUSTE['banco'] = 'NULL';
+        $DATOS_AJUSTE['referencia_pago'] = 'NULL';
+        $observaciones_base = trim((string)$DATOS_BASE['observaciones']);
+        if ($observaciones_base === '' || strtoupper($observaciones_base) === 'NULL') {
+            $DATOS_AJUSTE['observaciones'] = $etiqueta;
+        } else {
+            $DATOS_AJUSTE['observaciones'] = $observaciones_base . ' - ' . $etiqueta;
+        }
+        $DATOS_AJUSTE['idforma_pago'] = $idforma_pago_default;
+        $DATOS_AJUSTE['iddespacho_pago_recupera'] = 'NULL';
+        $DATOS_AJUSTE['usuario_creacion'] = $usuario_creacion;
+        $DATOS_AJUSTE['imagen'] = 'NULL';
+
+        if (! table::insert_record($DATOS_AJUSTE)) {
+            $this->last_error = 'No se pudo registrar el movimiento adicional de ' . $etiqueta . '.';
+            utils::report_error(bd_error, $DATOS_AJUSTE, $this->last_error);
+            return false;
+        }
+
+        $id_ajuste = mysql::last_id();
+        $security->registrar_bitacora($this->ACCIONES['crear_despacho_pago'], $id_ajuste, $DATOS_BASE['iddespacho'], $etiqueta . ': ' . $DATOS_AJUSTE['monto']);
+
+        return $id_ajuste;
+    }
+
+    private function obtener_idtipo_pago_por_aliases($ALIAS)
+    {
+        if (!is_array($ALIAS) || count($ALIAS) === 0) {
+            return false;
+        }
+
+        $where_alias = [];
+        foreach ($ALIAS as $alias) {
+            $alias = trim((string)$alias);
+            if ($alias === '') {
+                continue;
+            }
+
+            $where_alias[] = "UPPER(TRIM(descripcion)) = '" . addslashes($alias) . "'";
+        }
+
+        if (count($where_alias) === 0) {
+            return false;
+        }
+
+        $idtipo_pago = mysql::getvalue("SELECT idtipo_pago
+            FROM tipo_pago
+            WHERE estado != 'INACTIVO'
+                AND (" . implode(' OR ', $where_alias) . ")
+            ORDER BY idtipo_pago ASC
+            LIMIT 1", 'idtipo_pago');
+
+        if (! $idtipo_pago) {
+            return false;
+        }
+
+        return trim($idtipo_pago . '');
+    }
+
+    private function validar_correlativo_anulado_reutilizable($correlativo_documento, $iddespacho_pago_actual = '')
+    {
+        $correlativo_norm = strtoupper(trim((string)$correlativo_documento));
+        if ($correlativo_norm === '') {
+            return true;
+        }
+
+        $where_excluir = '';
+        $iddespacho_pago_actual = trim((string)$iddespacho_pago_actual);
+        if ($iddespacho_pago_actual !== '') {
+            $where_excluir = " AND iddespacho_pago != '" . addslashes($iddespacho_pago_actual) . "'";
+        }
+
+        $id_anulado = mysql::getvalue("SELECT iddespacho_pago
+            FROM despacho_pago
+            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($correlativo_norm) . "'
+                AND UPPER(TRIM(estado)) = 'ANULADO'" . $where_excluir . "
+            ORDER BY iddespacho_pago DESC
+            LIMIT 1", 'iddespacho_pago');
+
+        if ($id_anulado) {
+            $this->last_error = 'El numero de documento ' . $correlativo_documento . ' ya fue registrado como ANULADO y no puede reutilizarse.';
+            utils::report_error(validation_error, ['correlativo_documento' => $correlativo_documento, 'iddespacho_pago_anulado' => $id_anulado], $this->last_error);
+            return false;
+        }
+
+        return true;
     }
 
     private function obtener_despacho_pago($iddespacho_pago)

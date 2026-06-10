@@ -63,7 +63,10 @@ class liquidacion_de_ingresos extends table
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(estado_pago_individual, '') AS estado_pago_individual,
                                 IFNULL(monto_flete, 0) AS monto_flete,
-                IFNULL(monto_pago, 0) AS monto_pago
+                CASE
+                    WHEN UPPER(TRIM(IFNULL(estado_pago_individual, ''))) = 'ANULADO' THEN 0
+                    ELSE IFNULL(monto_pago, 0)
+                END AS monto_pago
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
               AND $where_fechas
@@ -83,7 +86,10 @@ class liquidacion_de_ingresos extends table
                 IFNULL(correlativo_documento, '') AS numero_documento,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
-                IFNULL(monto_pago, 0) AS monto_pago
+                CASE
+                    WHEN UPPER(TRIM(IFNULL(estado_pago_individual, ''))) = 'ANULADO' THEN 0
+                    ELSE IFNULL(monto_pago, 0)
+                END AS monto_pago
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
                 AND $where_fechas
@@ -104,7 +110,10 @@ class liquidacion_de_ingresos extends table
                 IFNULL(correlativo_documento, '') AS numero_documento,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
-                IFNULL(monto_pago, 0) AS monto_pago,
+                CASE
+                    WHEN UPPER(TRIM(IFNULL(estado_pago_individual, ''))) = 'ANULADO' THEN 0
+                    ELSE IFNULL(monto_pago, 0)
+                END AS monto_pago,
                 IFNULL(estado_pago_individual, '') AS estado_pago_individual
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
@@ -159,14 +168,24 @@ class liquidacion_de_ingresos extends table
             $monto = (float)$row['monto_pago'];
             $tipo_pago = strtoupper(trim($row['tipo_pago']));
             $iddespacho = (int)$row['iddespacho'];
+            $estado_pago = strtoupper(trim($row['estado_pago_individual']));
+            $cliente = ($estado_pago === 'ANULADO') ? 'ANULADO' : $row['cliente'];
 
             $valor_flete = '';
             $valor_deposito = '';
             $valor_cheque_vista = '';
             $valor_cheque_posfechado = '';
 
+            if ($estado_pago === 'ANULADO') {
+                $monto = 0;
+                $valor_flete = '0.00';
+                $valor_deposito = '0.00';
+                $valor_cheque_vista = '0.00';
+                $valor_cheque_posfechado = '0.00';
+            }
+
             // El flete se toma del despacho y se aplica una sola vez por iddespacho.
-            if (!isset($DESPACHOS_FLETE[$iddespacho])) {
+            if ($estado_pago !== 'ANULADO' && !isset($DESPACHOS_FLETE[$iddespacho])) {
                 $monto_flete = (float)$row['monto_flete'];
                 if ($monto_flete > 0) {
                     $valor_flete = $this->formatear_moneda($monto_flete);
@@ -175,9 +194,9 @@ class liquidacion_de_ingresos extends table
                 $DESPACHOS_FLETE[$iddespacho] = true;
             }
 
-            $estado_pago = strtoupper(trim($row['estado_pago_individual']));
-
-            if ($estado_pago == 'PROGRAMADO') {
+            if ($estado_pago === 'ANULADO') {
+                // Para anulados no se acumula monto en ningun rubro.
+            } elseif ($estado_pago == 'PROGRAMADO') {
                 $valor_cheque_posfechado = $this->formatear_moneda($monto);
                 $TOTALES_DETALLE['cheque_posfechado'] += $monto;
             } elseif (strpos($tipo_pago, 'CHEQUE') !== false) {
@@ -196,7 +215,7 @@ class liquidacion_de_ingresos extends table
             $filas_ejecutados .= '<tr>';
             $filas_ejecutados .= '<td class="text-center">' . htmlspecialchars($row['fecha_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_ejecutados .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
-            $filas_ejecutados .= '<td>' . htmlspecialchars($row['cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
+            $filas_ejecutados .= '<td>' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_ejecutados .= '<td class="text-right">' . (($valor_flete != '') ? ('Q ' . $valor_flete) : '') . '</td>';
             $filas_ejecutados .= '<td class="text-right">' . (($valor_deposito != '') ? ('Q ' . $valor_deposito) : '') . '</td>';
             $filas_ejecutados .= '<td class="text-right">' . (($valor_cheque_vista != '') ? ('Q ' . $valor_cheque_vista) : '') . '</td>';
@@ -214,10 +233,12 @@ class liquidacion_de_ingresos extends table
         while ($row = mysql::getrowresult($sql_programados)) {
             $monto = (float)$row['monto_pago'];
             $total_programados += $monto;
+            $estado_pago = isset($row['estado_pago_individual']) ? strtoupper(trim($row['estado_pago_individual'])) : '';
+            $cliente = ($estado_pago === 'ANULADO') ? 'ANULADO' : $row['cliente'];
 
             $filas_programados .= '<tr>';
             $filas_programados .= '<td class="text-center">' . (int)$row['iddespacho'] . '</td>';
-            $filas_programados .= '<td>' . htmlspecialchars($row['cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
+            $filas_programados .= '<td>' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_programados .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_programados .= '<td class="text-center">' . htmlspecialchars($row['tipo_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_programados .= '<td class="text-center">' . htmlspecialchars($row['fecha_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
@@ -236,13 +257,14 @@ class liquidacion_de_ingresos extends table
             $total_recuperacion += $monto;
 
             $estado = strtoupper(trim($row['estado_pago_individual']));
+            $cliente = ($estado === 'ANULADO') ? 'ANULADO' : $row['cliente'];
             $valor_deposito = ($estado == 'EJECUTADO') ? ('Q ' . $this->formatear_moneda($monto)) : '';
             $valor_cheque = ($estado == 'PROGRAMADO') ? ('Q ' . $this->formatear_moneda($monto)) : '';
 
             $filas_recuperacion .= '<tr>';
             $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['fecha_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
-            $filas_recuperacion .= '<td>' . htmlspecialchars($row['cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
+            $filas_recuperacion .= '<td>' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_recuperacion .= '<td class="text-right">' . $valor_deposito . '</td>';
             $filas_recuperacion .= '<td class="text-right">' . $valor_cheque . '</td>';

@@ -103,9 +103,10 @@
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='estado'>Estado <span class='text-danger'>*</span></label>
-                        <select id='estado' class='form-control' required>
+                        <select id='estado' class='form-control' onchange='despachoPagoManejarCambioEstado();' required>
                             <option value='PROGRAMADO'>PROGRAMADO</option>
                             <option value='EJECUTADO'>EJECUTADO</option>
+                            <option value='ANULADO'>ANULADO</option>
                         </select>
                     </div>
                 </div>
@@ -121,6 +122,16 @@
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='referencia_pago'>Referencia</label>
                         <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.'>
+                    </div>
+                </div>
+                <div class='row'>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='descuento'>Descuento</label>
+                        <input type='text' id='descuento' class='form-control' inputmode='decimal' placeholder='0.00'>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='devolucion'>Devolucion</label>
+                        <input type='text' id='devolucion' class='form-control' inputmode='decimal' placeholder='0.00'>
                     </div>
                 </div>
                 <div class='row'>
