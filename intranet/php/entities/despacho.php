@@ -852,10 +852,12 @@ class despacho extends table
 
 		if ($idtipo_reporte == 'detallado') {
 			$sql_detallado = mysql::getresult("SELECT iddespacho, nombre_cliente, numero_factura,
+					fecha_factura AS fecha_factura_raw,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					monto_total,
 					estado_pago,
 					monto_pago,
+					fecha_pago AS fecha_pago_raw,
 					DATE_FORMAT(fecha_pago, '%d-%m-%Y') AS fecha_pago,
 					tipo_pago,
 					estado_pago_individual
@@ -864,7 +866,7 @@ class despacho extends table
 					$where_temporada
 					$where_cliente
 					$where_estado
-				ORDER BY nombre_cliente ASC, fecha_factura ASC, iddespacho ASC, fecha_pago ASC");
+				ORDER BY fecha_factura_raw ASC, nombre_cliente ASC, iddespacho ASC, fecha_pago_raw ASC");
 
 			$GRUPOS = [];
 			while ($row_detalle = mysql::getrowresult($sql_detallado)) {
@@ -1020,6 +1022,7 @@ class despacho extends table
 
 		if ($idcliente == '' && $estado == '') {
 			$sql = mysql::getresult("SELECT
+					fecha_factura AS fecha_factura_raw,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					nombre_cliente,
 					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
@@ -1031,9 +1034,10 @@ class despacho extends table
 				FROM view_estado_cuenta_despacho
 				WHERE 1 = 1
 					$where_temporada
-				ORDER BY fecha_factura ASC, nombre_cliente ASC");
+				ORDER BY fecha_factura_raw ASC, nombre_cliente ASC");
 		} else {
 			$sql = mysql::getresult("SELECT
+					fecha_factura AS fecha_factura_raw,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					nombre_cliente,
 					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
@@ -1047,7 +1051,7 @@ class despacho extends table
 					$where_temporada
 					$where_cliente
 					$where_estado
-				ORDER BY fecha_factura ASC, nombre_cliente ASC");
+				ORDER BY fecha_factura_raw ASC, nombre_cliente ASC");
 		}
 
 		$columnControl = true;
