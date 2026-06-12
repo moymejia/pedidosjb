@@ -1022,6 +1022,8 @@ class despacho extends table
 
 		if ($idcliente == '' && $estado == '') {
 			$sql = mysql::getresult("SELECT
+					iddespacho,
+					numero_factura,
 					fecha_factura AS fecha_factura_raw,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					nombre_cliente,
@@ -1037,6 +1039,8 @@ class despacho extends table
 				ORDER BY fecha_factura_raw ASC, nombre_cliente ASC");
 		} else {
 			$sql = mysql::getresult("SELECT
+					iddespacho,
+					numero_factura,
 					fecha_factura AS fecha_factura_raw,
 					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
 					nombre_cliente,
@@ -1090,6 +1094,7 @@ class despacho extends table
 			<thead>
 				<tr>
 					<th>Facturado</th>
+					<th>No. despacho/factura</th>
 					<th>Cliente</th>
 					<th>Total facturado</th>
 					<th>Total pagado</th>
@@ -1102,8 +1107,14 @@ class despacho extends table
 			<tbody>";
 
 		while ($row = mysql::getrowresult($sql)) {
+			$numero_factura = trim($row['numero_factura'] . '');
+			if ($numero_factura == '') {
+				$numero_factura = '#' . (int)$row['iddespacho'];
+			}
+
 			$tabla .= "<tr>
 				<td style='text-align:left;'>" . $row['fecha_factura'] . "</td>
+				<td style='text-align:left;'>" . $numero_factura . "</td>
 				<td style='text-align:left;'>" . $row['nombre_cliente'] . "</td>
 				<td style='text-align:right;'>" . $row['monto_total_facturado'] . "</td>
 				<td style='text-align:right;'>" . $row['monto_total_pagado'] . "</td>
