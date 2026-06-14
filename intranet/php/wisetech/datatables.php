@@ -145,11 +145,10 @@ class datatables extends mysql {
         $buttons       = isset($PARAMETROS['buttons']) ? $PARAMETROS['buttons'] : false;
         $paging        = isset($PARAMETROS['paging']) ? $PARAMETROS['paging'] : false;
         $ordering      = isset($PARAMETROS['ordering']) ? $PARAMETROS['ordering'] : false;
-        $order         = isset($PARAMETROS['order']) ? $PARAMETROS['order'] : true;
         $reset         = isset($PARAMETROS['reset']) ? $PARAMETROS['reset'] : false;
         $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
-        $ordercolumn   = isset($PARAMETROS['ordercolumn']) ? $PARAMETROS['ordercolumn'] : false;
-        $acciones      = isset($PARAMETROS['acciones']) ? $PARAMETROS['acciones'] : false;
+        $columncontrol_exclude = isset($PARAMETROS['columncontrolexclude']) ? $PARAMETROS['columncontrolexclude'] : false;
+        $edit_button      = isset($PARAMETROS['edit_button']) ? $PARAMETROS['edit_button'] : false;
         $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
         $staterestore  = isset($PARAMETROS['staterestore']) ? $PARAMETROS['staterestore'] : false;
 
@@ -160,51 +159,28 @@ class datatables extends mysql {
         $file_name    = ($file_name === false || $file_name === '') ? 'Listado' : $file_name;
         $row_group    = ($rowgroup === false || $rowgroup === '') ? 'false' : strtoupper(str_replace('_', ' ', (string)$rowgroup));
 
-        $order_column_array = [];
-        if (!($ordercolumn === false || $ordercolumn === '' || $ordercolumn === null)) {
-            $clauses = explode(',', (string)$ordercolumn);
-            foreach ($clauses as $clause) {
-                $clause = trim($clause);
-                if ($clause === '') {
-                    continue;
+        $columncontrol_exclude_value = 'false';
+        if (!($columncontrol_exclude === false || $columncontrol_exclude === '' || $columncontrol_exclude === null)) {
+            $columncontrol_exclude_value = trim((string)$columncontrol_exclude);
+            if ($columncontrol_exclude_value !== '') {
+                $normalized_parts = [];
+                foreach (explode(',', $columncontrol_exclude_value) as $part) {
+                    $part = strtoupper(str_replace('_', ' ', trim((string)$part)));
+                    if ($part !== '') {
+                        $normalized_parts[] = $part;
+                    }
                 }
-
-                $column_name = $clause;
-                $direction = 'a';
-                if (strpos($clause, ':') !== false) {
-                    $parts = explode(':', $clause, 2);
-                    $column_name = trim($parts[0]);
-                    $direction = trim($parts[1]);
-                }
-
-                $column_name = strtoupper(str_replace('_', ' ', (string)$column_name));
-                if ($column_name === '') {
-                    continue;
-                }
-
-                $direction = strtolower((string)$direction);
-                if ($direction === 'a' || $direction === 'asc') {
-                    $direction = 'asc';
-                } elseif ($direction === 'd' || $direction === 'desc') {
-                    $direction = 'desc';
-                } else {
-                    $direction = 'asc';
-                }
-
-                $order_column_array[] = [
-                    'column' => $column_name,
-                    'direction' => $direction,
-                ];
+                $columncontrol_exclude_value = empty($normalized_parts) ? 'false' : implode(',', $normalized_parts);
+            } else {
+                $columncontrol_exclude_value = 'false';
             }
         }
-        $order_column = empty($order_column_array) ? 'false' : json_encode($order_column_array);
 
         $row_group = htmlspecialchars($row_group, ENT_QUOTES, 'UTF-8');
-        $order_column = htmlspecialchars($order_column, ENT_QUOTES, 'UTF-8');
 
         $buttons_value = 'false';
         if ($buttons === true || $buttons === 1 || $buttons === '1') {
-            $buttons_value = 'todos';
+            $buttons_value = 'all';
         } elseif ($buttons === false || $buttons === 0 || $buttons === '0' || $buttons === null) {
             $buttons_value = 'false';
         } else {
@@ -212,15 +188,15 @@ class datatables extends mysql {
             if ($buttons_value === '' || strtolower($buttons_value) === 'false') {
                 $buttons_value = 'false';
             } elseif (strtolower($buttons_value) === 'true') {
-                $buttons_value = 'todos';
+                $buttons_value = 'all';
             }
         }
         $buttons_value = htmlspecialchars($buttons_value, ENT_QUOTES, 'UTF-8');
 
         $data_ = "";
         $data_ .= " data-conf-columncontrol='" . ($columncontrol ? "true" : "false") . "' ";
+        $data_ .= " data-conf-columncontrolexclude='" . htmlspecialchars($columncontrol_exclude_value, ENT_QUOTES, 'UTF-8') . "' ";
         $data_ .= " data-conf-rowgroup='" . $row_group . "' ";
-        $data_ .= " data-conf-ordercolumn='" . $order_column . "' ";
         $data_ .= " data-conf-titulotabla='" . $titulo_tabla . "' ";
         $data_ .= " data-conf-filename='" . $file_name . "' ";
         $data_ .= " data-conf-responsive='" . ($responsive ? "true" : "false") . "' ";
@@ -229,7 +205,6 @@ class datatables extends mysql {
         $data_ .= " data-conf-buttons='" . $buttons_value . "' ";
         $data_ .= " data-conf-paging='" . ($paging ? "true" : "false") . "' ";
         $data_ .= " data-conf-ordering='" . ($ordering ? "true" : "false") . "' ";
-        $data_ .= " data-conf-noorder='" . (!$order ? "true" : "false") . "' ";
         $data_ .= " data-conf-reset='" . ($reset ? "true" : "false") . "' ";
         $data_ .= " data-conf-exportall='" . ($export_all ? "true" : "false") . "' ";
         $data_ .= " data-conf-staterestore='" . ($staterestore ? "true" : "false") . "' ";
@@ -246,7 +221,7 @@ class datatables extends mysql {
             <tr>
                 ';
 
-        if ($acciones) {
+        if ($edit_button) {
             $tabla_marca .= '<th>Acciones</th>';
         }
 
@@ -278,7 +253,7 @@ class datatables extends mysql {
 
             $tabla_marca .= "<tr>";
 
-            if ($acciones) {
+            if ($edit_button) {
                 $boton_editar = "
                     <button
                         class=\"btn btn-sm btn-primary waves-effect waves-light\"

@@ -932,13 +932,19 @@ function activar_tablas() {
 function activar_tabla(idtabla) {
     var tabla = document.getElementById(idtabla);
     var ds = tabla.dataset;
+    var normalizarNombreColumna = function (texto) {
+        if (texto === undefined || texto === null) {
+            return '';
+        }
+        return String(texto).replace(/_/g, ' ').trim().toUpperCase();
+    };
     var pagingUser = (ds.confPaging === undefined) ? true : (ds.confPaging === "true");
     var selectUser = ds.confSelect === "true";
     var buttonsConfigRaw = (ds.confButtons === undefined || ds.confButtons === null) ? "false" : String(ds.confButtons).trim();
     var buttonsConfigNormalized = buttonsConfigRaw.toLowerCase();
     var buttonsUser = !(buttonsConfigNormalized === "" || buttonsConfigNormalized === "false" || buttonsConfigNormalized === "0");
     var exportButtonsRequested = { copy: false, csv: false, excel: false, pdf: false, print: false };
-    if (buttonsConfigNormalized === "todos" || buttonsConfigNormalized === "true") {
+    if (buttonsConfigNormalized === "all" || buttonsConfigNormalized === "true") {
         exportButtonsRequested.copy = true;
         exportButtonsRequested.csv = true;
         exportButtonsRequested.excel = true;
@@ -959,76 +965,6 @@ function activar_tabla(idtabla) {
     var exportCompany = "Solo moda S.A.S.";
     var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_Solo_moda_S.A.S." : "Listado";
 
-    var normalizarNombreColumna = function (texto) {
-        if (texto === undefined || texto === null) {
-            return '';
-        }
-        return String(texto).replace(/_/g, ' ').trim().toUpperCase();
-    };
-
-    var normalizarDireccionOrden = function (direccion) {
-        var valor = String(direccion || '').trim().toLowerCase();
-        if (valor === 'd' || valor === 'desc') {
-            return 'desc';
-        }
-        return 'asc';
-    };
-
-    var parsearOrdercolumn = function (valorCrudo) {
-        var configuracion = [];
-        if (valorCrudo === undefined || valorCrudo === null) {
-            return configuracion;
-        }
-
-        var texto = String(valorCrudo).trim();
-        if (texto === '' || texto.toLowerCase() === 'false') {
-            return configuracion;
-        }
-
-        // Formato nuevo: JSON emitido por backend
-        if (texto.charAt(0) === '[') {
-            try {
-                var data = JSON.parse(texto);
-                if (Array.isArray(data)) {
-                    data.forEach(function (item) {
-                        var nombre = normalizarNombreColumna(item && item.column);
-                        if (nombre === '') {
-                            return;
-                        }
-                        configuracion.push({
-                            column: nombre,
-                            direction: normalizarDireccionOrden(item && item.direction)
-                        });
-                    });
-                    return configuracion;
-                }
-            } catch (e) {
-                // Si falla JSON se intenta formato legacy.
-            }
-        }
-
-        // Formato legacy: NOMBRE:a,ESTADO:d o NOMBRE
-        texto.split(',').forEach(function (clausula) {
-            var parte = String(clausula || '').trim();
-            if (parte === '') {
-                return;
-            }
-            var nombre = parte;
-            var direccion = 'asc';
-            if (parte.indexOf(':') !== -1) {
-                var secciones = parte.split(':');
-                nombre = String(secciones.shift() || '').trim();
-                direccion = normalizarDireccionOrden(secciones.join(':'));
-            }
-            nombre = normalizarNombreColumna(nombre);
-            if (nombre !== '') {
-                configuracion.push({ column: nombre, direction: direccion });
-            }
-        });
-
-        return configuracion;
-    };
-
     var nombreABuscar = normalizarNombreColumna(ds.confRowgroup);
     var indiceReal = -1;
     $('#' + idtabla + ' thead th').each(function (i) {
@@ -1038,21 +974,28 @@ function activar_tabla(idtabla) {
     });
     var rowGroupUser = (indiceReal !== -1);
 
-    var ordercolumnConfig = parsearOrdercolumn(ds.confOrdercolumn);
-    var ordercolumnIndices = [];
-    ordercolumnConfig.forEach(function (item) {
-        var indiceEncontrado = -1;
-        $('#' + idtabla + ' thead th').each(function (i) {
-            if (normalizarNombreColumna($(this).text()) === item.column) {
-                indiceEncontrado = i;
-                return false;
+    var columnControlExcludeConfig = (ds.confColumncontrolexclude === undefined || ds.confColumncontrolexclude === null) ? "false" : String(ds.confColumncontrolexclude).trim();
+    var columnControlExcludeIndices = [];
+    if (columnControlExcludeConfig !== "" && columnControlExcludeConfig.toLowerCase() !== "false") {
+        columnControlExcludeConfig.split(',').forEach(function (nombreColumna) {
+            var nombreBuscado = normalizarNombreColumna(nombreColumna);
+            if (nombreBuscado === '') {
+                return;
+            }
+
+            var indiceEncontrado = -1;
+            $('#' + idtabla + ' thead th').each(function (i) {
+                if (normalizarNombreColumna($(this).text()) === nombreBuscado) {
+                    indiceEncontrado = i;
+                    return false;
+                }
+            });
+
+            if (indiceEncontrado !== -1 && columnControlExcludeIndices.indexOf(indiceEncontrado) === -1) {
+                columnControlExcludeIndices.push(indiceEncontrado);
             }
         });
-
-        if (indiceEncontrado !== -1) {
-            ordercolumnIndices.push([indiceEncontrado, item.direction]);
-        }
-    });
+    }
 
     var resetUser = ds.confReset === "true";
     var exportAllUser = ds.confExportall === "true";
@@ -1063,19 +1006,11 @@ function activar_tabla(idtabla) {
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
     var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
-    var noOrderUser = (ds.confNoorder === "true");
     var columnasAuto = [];
 
     var orderInicial = [];
-    if (!noOrderUser) {
-        if (rowGroupUser) {
-            orderInicial.push([indiceReal, 'asc']);
-        }
-        ordercolumnIndices.forEach(function (item) {
-            if (!rowGroupUser || item[0] !== indiceReal) {
-                orderInicial.push(item);
-            }
-        });
+    if (rowGroupUser) {
+        orderInicial.push([indiceReal, 'asc']);
     }
 
     $('#' + idtabla + ' thead th').each(function () {
@@ -1326,8 +1261,14 @@ function activar_tabla(idtabla) {
         fixedHeader: fixedHeaderUser,
         columnControl: columnControlUser ? {
             target: 0,
-            content: ['order', ['orderAsc', 'orderDesc', 'search']]
+            content: [
+                { extend: 'order', iconNone: ''  },
+                ['orderAsc', 'orderDesc', 'search']
+            ]
         } : false,
+        columnDefs: columnControlExcludeIndices.length > 0 ? columnControlExcludeIndices.map(function (indice) {
+            return { target: indice, columnControl: [] };
+        }) : [],
         buttons: botones.map(function (btn) {
             var configBtn = (typeof btn === "string") ? { extend: btn } : Object.assign({}, btn);
             var exportOptionsActual = Object.assign({}, configBtn.exportOptions);
@@ -1411,23 +1352,113 @@ function activar_tabla(idtabla) {
             configBtn.exportOptions = exportOptionsActual;
             return configBtn;
         }),
-        language: { 
+        language: {
             url: "../assets/plugins/datatables/media/datatables.spanish.lang",
+
+            // ── BUTTONS (una sola clave, todo junto) ──────────────────────────
             buttons: {
-                savedStates: "Estados guardados"
+                // StateRestore
+                savedStates:  'Estados guardados',
+                createState:  'Crear estado',
+                updateState:  'Actualizar',       // ← "UPDATE" en inglés
+                stateRestore: 'Estado %d',        // ← "STATE 1" en inglés (%d = número)
+                removeState:  'Eliminar',         // ← "REMOVE" en inglés
+                renameState:  'Renombrar',        // ← "RENAME" en inglés
+
+                // ColumnControl
+                searchClear: 'Limpiar búsqueda'
             },
+
+            // ── STATE RESTORE (modales y confirmaciones) ───────────────────────
             stateRestore: {
-                savedStates: 'Estados guardados',
-                emptyStates: 'Sin estados guardados',
-                createTitle: 'Crear estado',
-                renameTitle: 'Renombrar estado',
-                removeTitle: 'Eliminar estado',
-                removeConfirm: '¿Seguro que desea eliminar este estado?',
-                removeSubmit: 'Eliminar',
-                renameButton: 'Renombrar',
-                renameLabel: 'Nombre:',
-                createButton: 'Crear',
-                createLabel: 'Nombre del estado:'
+                emptyStates:   'Sin estados guardados',
+                removeConfirm: '¿Seguro que desea eliminar "%s"?',
+                removeSubmit:  'Eliminar',
+                renameButton:  'Renombrar',
+                renameLabel:   'Nuevo nombre:',
+                creationModal: {
+                    button:  'Crear',
+                    title:   'Crear nuevo estado',
+                    name:    'Nombre:',           // ← "Name:" en inglés
+                    order:   'Ordenación:',
+                    search:  'Búsqueda:',
+                    paging:  'Paginación:',
+                    length:  'Registros por página:',
+                    columns: {
+                        search:  'Búsqueda por columna:',
+                        visible: 'Visibilidad de columnas:'
+                    }
+                }
+            },
+
+            // ── COLUMN CONTROL ─────────────────────────────────────────────────
+            columnControl: {
+                colVis:         'Visibilidad de columnas',
+                colVisDropdown: 'Visibilidad de columnas',
+                dropdown:       'Más...',
+                orderAddAsc:    'Añadir orden ascendente',
+                orderAddDesc:   'Añadir orden descendente',
+                orderAsc:       'Ascendente',
+                orderClear:     'Quitar orden',
+                orderDesc:      'Descendente',
+                orderRemove:    'Quitar de la ordenación',
+                reorder:        'Reordenar columnas',
+                reorderLeft:    'Mover columna a la izquierda',
+                reorderRight:   'Mover columna a la derecha',
+                searchClear:    'Limpiar búsqueda',
+                searchDropdown: 'Buscar',
+                list: {
+                    all:    'Seleccionar todo',
+                    empty:  'Vacío',
+                    none:   'Deseleccionar',
+                    search: 'Buscar...'
+                },
+                search: {
+                    text: {
+                        contains:    'Contiene',
+                        notContains: 'No contiene',
+                        equal:       'Igual a',
+                        notEqual:    'Distinto de',
+                        starts:      'Inicia con',
+                        ends:        'Termina con',
+                        empty:       'Vacío',
+                        notEmpty:    'No vacío'
+                    },
+                    number: {
+                        equal:          'Igual a',
+                        notEqual:       'Distinto de',
+                        greater:        'Mayor que',
+                        greaterOrEqual: 'Mayor o igual que',
+                        less:           'Menor que',
+                        lessOrEqual:    'Menor o igual que',
+                        empty:          'Vacío',
+                        notEmpty:       'No vacío'
+                    },
+                    datetime: {
+                        equal:    'Igual a',
+                        notEqual: 'Distinto de',
+                        greater:  'Posterior a',
+                        less:     'Anterior a',
+                        empty:    'Vacío',
+                        notEmpty: 'No vacío'
+                    }
+                }
+            },
+
+            // ── SEARCH BUILDER ─────────────────────────────────────────────────
+            searchBuilder: {
+                conditions: {
+                    string: {
+                        contains:    'Contiene',
+                        '!contains': 'No contiene',
+                        equals:      'Igual a',
+                        '!equals':   'Distinto de',
+                        starts:      'Inicia con',
+                        ends:        'Termina con',
+                        empty:       'Vacío',
+                        '!empty':    'No vacío'
+                    }
+                }
             }
         },
         
@@ -1439,7 +1470,10 @@ function activar_tabla(idtabla) {
         lengthChange: pagingUser,
         stateSave: true,
         stateDuration: 0,
-        ordering: orderingUser,
+        ordering: {
+            handler: orderingUser,
+            indicators: false
+        },
         // --- CAMBIO 3: Usar el índice numérico para el orden inicial ---
         order: orderInicial,
 
