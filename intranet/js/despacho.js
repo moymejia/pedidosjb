@@ -50,12 +50,12 @@
         return safe(state.estado_despacho).toUpperCase() === 'ACTIVO';
     }
 
-    function setCamposEncabezadoEditable(esEditable) {
-        element('monto_flete').disabled = !esEditable;
-        element('monto_otros').disabled = !esEditable;
-        element('numero_factura').disabled = !esEditable;
-        element('observaciones').disabled = !esEditable;
-        element('fecha_factura').disabled = !esEditable;
+    function setCamposEncabezadoEditable(editable) {
+        element('monto_flete').disabled = !editable;
+        element('monto_otros').disabled = !editable;
+        element('numero_factura').disabled = !editable;
+        element('observaciones').disabled = !editable;
+        element('fecha_factura').disabled = !editable;
     }
 
     function agruparDetalle(data) {
@@ -152,13 +152,14 @@
         element('despacho_resumen_subtotal').textContent = 'Q ' + subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         if (state.iddespacho > 0) {
+            showElements('btn_guardar_encabezado_despacho');
             if (despachoEsEditable()) {
                 showElements('btn_cerrar_despacho,btn_despachar,btn_todos');
             } else {
                 hideElements('btn_cerrar_despacho,btn_despachar,btn_todos');
             }
         } else {
-            hideElements('btn_cerrar_despacho');
+            hideElements('btn_cerrar_despacho,btn_guardar_encabezado_despacho');
             showElements('btn_despachar,btn_todos');
         }
     }
@@ -244,7 +245,7 @@
         element('fecha_factura').value = '';
         setCamposEncabezadoEditable(true);
 
-        hideElements('detalle_despacho,btn_cerrar_despacho,btn_despachar,btn_todos');
+        hideElements('detalle_despacho,btn_cerrar_despacho,btn_guardar_encabezado_despacho,btn_despachar,btn_todos');
         showElements('panel_seleccion_pedido');
     }
 
@@ -271,7 +272,7 @@
                 state.nopedido = safe(resp.nopedido);
             }
             element('pedido_seleccionado').value = state.nopedido || 'Sin selección';
-            setCamposEncabezadoEditable(despachoEsEditable());
+            setCamposEncabezadoEditable(true);
 
             hideElements('panel_seleccion_pedido');
             showElements('detalle_despacho');
@@ -439,6 +440,53 @@
         if (fechaFactura) parametros += ',fecha_factura=' + fechaFactura;
 
         upload_action(parametros, 'despacho', 'crear_despacho', callback_crear_despacho);
+    };
+
+    window.despachoGuardarEncabezado = function () {
+        if (!state.iddespacho) {
+            notify_warning('Debe seleccionar un despacho.');
+            return;
+        }
+
+        var montoFlete = Number(elementValue('monto_flete') || 0);
+        var montoOtros = Number(elementValue('monto_otros') || 0);
+        var numeroFactura = safe(elementValue('numero_factura'));
+        var fechaFactura = safe(elementValue('fecha_factura'));
+
+        if (isNaN(montoFlete) || montoFlete < 0) {
+            notify_warning('El monto de flete no puede ser negativo.');
+            element('monto_flete').focus();
+            return;
+        }
+
+        if (isNaN(montoOtros) || montoOtros < 0) {
+            notify_warning('El monto otros no puede ser negativo.');
+            element('monto_otros').focus();
+            return;
+        }
+
+        if (!numeroFactura) {
+            notify_warning('El número de factura es obligatorio.');
+            element('numero_factura').focus();
+            return;
+        }
+
+        if (!fechaFactura) {
+            notify_warning('La fecha de factura es obligatoria.');
+            element('fecha_factura').focus();
+            return;
+        }
+
+        if (!confirm('¿Confirma guardar los cambios del despacho?')) {
+            return;
+        }
+
+        callback_guardar_despacho = function () {
+            notify_success('Despacho modificado correctamente.');
+            cargarDetalleDespacho(state.iddespacho);
+        };
+
+        upload_action('iddespacho,idpedido,monto_flete,monto_otros,fecha_factura,numero_factura,observaciones', 'despacho', 'crear_despacho', callback_guardar_despacho);
     };
 
     window.despachoDespacharSeleccionadas = function () {

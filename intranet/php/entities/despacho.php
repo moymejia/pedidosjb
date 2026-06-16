@@ -21,6 +21,7 @@ class despacho extends table
 		$this->ACCIONES['opcion_despacho']            = "opcion_despacho";
 		$this->ACCIONES['opcion_estado_de_cuenta']    = "opcion_estado_de_cuenta";
 		$this->ACCIONES['Crear_despacho']    		  = "Crear_despacho";
+		$this->ACCIONES['Modificar_despacho']          = "Modificar_despacho";
 		$this->ACCIONES['Despachar_lineas']           = "Despachar_lineas";
 		$this->ACCIONES['Cerrar_despacho']            = "Cerrar_despacho";
 
@@ -46,14 +47,10 @@ class despacho extends table
 			}
 
 			if ($PARAMETROS['operacion'] == 'crear_despacho') {
-				if ($this->validate_parameter_existence(['idpedido'], $PARAMETROS, false)) {
-					if ($resultado = $this->crear_despacho($PARAMETROS)) {
-						self::end_success($resultado);
-					} else {
-						self::end_error($this->last_error);
-					}
+				if ($resultado = $this->crear_despacho($PARAMETROS)) {
+					self::end_success($resultado);
 				} else {
-					self::end_error('Faltan parámetros');
+					self::end_error($this->last_error);
 				}
 			}
 
@@ -377,12 +374,24 @@ class despacho extends table
 
 	public function crear_despacho($PARAMETROS)
 	{
-		$security = new security($this->ACCIONES['Crear_despacho']);
+		$iddespacho = isset($PARAMETROS['iddespacho']) ? trim($PARAMETROS['iddespacho'] . '') : '';
+		$security = new security($iddespacho == '' ? $this->ACCIONES['Crear_despacho'] : $this->ACCIONES['Modificar_despacho']);
 		$usuario  = $security->get_actual_user();
+
+		$parametros_necesarios = ['idpedido', 'monto_flete', 'monto_otros', 'numero_factura', 'fecha_factura'];
+		if (!table::validate_parameter_existence($parametros_necesarios, $PARAMETROS, false)) {
+			$this->last_error = 'Datos incompletos.';
+			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+			return false;
+		}
 
 		$idpedido = addslashes($PARAMETROS['idpedido']);
 		$monto_flete = isset($PARAMETROS['monto_flete']) ? (float)$PARAMETROS['monto_flete'] : 0;
 		$monto_otros = isset($PARAMETROS['monto_otros']) ? (float)$PARAMETROS['monto_otros'] : 0;
+		$numero_factura = isset($PARAMETROS['numero_factura']) ? trim($PARAMETROS['numero_factura']) : '';
+		$observaciones  = isset($PARAMETROS['observaciones']) ? trim($PARAMETROS['observaciones']) : '';
+		$fecha_factura  = isset($PARAMETROS['fecha_factura']) ? trim($PARAMETROS['fecha_factura']) : '';
+
 		$_PEDIDO = new pedido();
 		$estado_pedido = $_PEDIDO->estado($idpedido);
 
@@ -404,21 +413,6 @@ class despacho extends table
 			return false;
 		}
 
-		$pendientes = mysql::getvalue("SELECT COUNT(*)
-			FROM pedido_detalle
-			WHERE idpedido = '" . addslashes($idpedido) . "'
-			AND IFNULL(cantidad_pendiente, 0) > 0");
-
-		if ((int)$pendientes <= 0) {
-			$this->last_error = 'El pedido ya no tiene detalles pendientes para un nuevo despacho.';
-			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
-			return false;
-		}
-
-		$numero_factura = isset($PARAMETROS['numero_factura']) ? trim($PARAMETROS['numero_factura']) : '';
-		$observaciones  = isset($PARAMETROS['observaciones']) ? trim($PARAMETROS['observaciones']) : '';
-		$fecha_factura  = isset($PARAMETROS['fecha_factura']) ? trim($PARAMETROS['fecha_factura']) : '';
-
 		if (empty($numero_factura)) {
 			$this->last_error = 'El número de factura es obligatorio.';
 			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -427,6 +421,12 @@ class despacho extends table
 
 		if (empty($fecha_factura)) {
 			$this->last_error = 'La fecha de factura es obligatoria.';
+			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+			return false;
+		}
+
+		if (strtotime($fecha_factura) === false) {
+			$this->last_error = 'La fecha de factura no es válida.';
 			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 			return false;
 		}
@@ -443,12 +443,92 @@ class despacho extends table
 			return false;
 		}
 
+		if ($iddespacho != '') {
+			$iddespacho = addslashes($iddespacho);
+			$row_despacho = mysql::getrow("SELECT iddespacho, idpedido, estado, monto_subtotal, monto_total, saldo_pendiente
+				FROM despacho
+				WHERE iddespacho = '" . $iddespacho . "'
+				LIMIT 1");
+
+			if (!$row_despacho) {
+				$this->last_error = 'Despacho no encontrado.';
+				utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+				return false;
+			}
+
+			if (($row_despacho['idpedido'] . '') !== ($idpedido . '')) {
+				$this->last_error = 'El pedido no coincide con el despacho seleccionado.';
+				utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+				return false;
+			}
+
+			if (($row_despacho['estado'] . '') !== 'ACTIVO' && ($row_despacho['estado'] . '') !== 'CERRADO') {
+				$this->last_error = 'El despacho no se encuentra en un estado editable.';
+				utils::report_error(validation_error, $row_despacho, $this->last_error);
+				return false;
+			}
+
+			$factura_existente = mysql::getvalue("SELECT iddespacho
+				FROM despacho
+				WHERE numero_factura = '" . addslashes($numero_factura) . "'
+				AND iddespacho <> '" . $iddespacho . "'
+				LIMIT 1");
+
+			if (!empty($factura_existente)) {
+				$this->last_error = 'El número de factura ya está asignado a otro despacho.';
+				utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+				return false;
+			}
+
+			$monto_total = round((float)$row_despacho['monto_subtotal'] + $monto_flete + $monto_otros, 2);
+			$diferencia_total = round($monto_total - (float)$row_despacho['monto_total'], 2);
+			$saldo_pendiente = round((float)$row_despacho['saldo_pendiente'] + $diferencia_total, 2);
+
+			if ($saldo_pendiente < 0) {
+				$this->last_error = 'El nuevo total del despacho no puede ser menor al monto ya aplicado en pagos.';
+				utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+				return false;
+			}
+
+			$DATOS = [];
+			$DATOS['iddespacho'] = $iddespacho;
+			$DATOS['monto_flete'] = $monto_flete;
+			$DATOS['monto_otros'] = $monto_otros;
+			$DATOS['fecha_factura'] = date('Y-m-d', strtotime($fecha_factura));
+			$DATOS['numero_factura'] = $numero_factura;
+			$DATOS['observaciones'] = empty($observaciones) ? 'NULL' : $observaciones;
+			$DATOS['monto_total'] = $monto_total;
+			$DATOS['saldo_pendiente'] = $saldo_pendiente;
+			$DATOS['fecha_modificacion'] = date('Y-m-d H:i:s');
+			$DATOS['usuario_modificacion'] = $usuario;
+
+			if (!$this->update_record($DATOS, ['iddespacho'])) {
+				$this->last_error = 'Error al modificar el despacho.';
+				utils::report_error(bd_error, $DATOS, $this->last_error);
+				return false;
+			}
+
+			$security->registrar_bitacora($this->ACCIONES['Modificar_despacho'], $iddespacho, 'MODIFICAR_DESPACHO_MANUAL', $usuario);
+			return json_encode(['iddespacho' => (int)$iddespacho]);
+		}
+
+		$pendientes = mysql::getvalue("SELECT COUNT(*)
+			FROM pedido_detalle
+			WHERE idpedido = '" . addslashes($idpedido) . "'
+			AND IFNULL(cantidad_pendiente, 0) > 0");
+
+		if ((int)$pendientes <= 0) {
+			$this->last_error = 'El pedido ya no tiene detalles pendientes para un nuevo despacho.';
+			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+			return false;
+		}
+
 		$DATOS = [];
 		$DATOS['idpedido']       = $idpedido;
 		$DATOS['fecha']          = date('Y-m-d');
-		if (!empty($numero_factura)) $DATOS['numero_factura'] = $numero_factura;
-		if (!empty($observaciones))  $DATOS['observaciones']  = $observaciones;
-		if (!empty($fecha_factura))  $DATOS['fecha_factura']  = $fecha_factura;
+		$DATOS['numero_factura'] = $numero_factura;
+		$DATOS['observaciones']  = empty($observaciones) ? 'NULL' : $observaciones;
+		$DATOS['fecha_factura']  = date('Y-m-d', strtotime($fecha_factura));
 		$DATOS['monto_flete']    = $monto_flete;
 		$DATOS['monto_otros']    = $monto_otros;
 		$DATOS['monto_subtotal'] = 0;
