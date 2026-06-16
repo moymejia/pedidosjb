@@ -1,6 +1,7 @@
 (function () {
     var isRefreshingPanel = false;
     var isRefreshingPendientes = false;
+    var mostrarSinSaldo = false;
 
     function normalizarMonto(valor) {
         var monto = String(valor === null || valor === undefined ? '' : valor).replace(/,/g, '').trim();
@@ -247,7 +248,12 @@
         }
 
         isRefreshingPendientes = true;
-        download_div_content('idcliente=' + idcliente, 'despacho_pago', 'tabla_despachos_pendientes_cliente', 'div_despachos_pendientes', function () {
+        download_div_content('idcliente=' + idcliente + ',mostrar_sin_saldo=' + (mostrarSinSaldo ? '1' : '0'), 'despacho_pago', 'tabla_despachos_pendientes_cliente', 'div_despachos_pendientes', function () {
+            if (mostrarSinSaldo) {
+                hideElement('btn_ver_sin_saldo');
+            } else {
+                showElement('btn_ver_sin_saldo');
+            }
             isRefreshingPendientes = false;
         }, true, function () {
             isRefreshingPendientes = false;
@@ -256,13 +262,27 @@
 
     window.despachoPagoCargarPendientes = function () {
         var idcliente = elementValue('idcliente');
+        mostrarSinSaldo = false;
         limpiarPanelPagos();
 
         if (!idcliente) {
+            hideElement('btn_ver_sin_saldo');
             objeto('div_despachos_pendientes').innerHTML = '<div class="text-muted">Seleccione un cliente para cargar la informacion.</div>';
             return;
         }
 
+        refrescarPendientesCliente(idcliente);
+    };
+
+    window.despachoPagoVerSinSaldo = function () {
+        var idcliente = elementValue('idcliente');
+
+        if (!idcliente) {
+            notify_warning('Debe seleccionar un cliente.');
+            return;
+        }
+
+        mostrarSinSaldo = true;
         refrescarPendientesCliente(idcliente);
     };
 
@@ -585,4 +605,3 @@
     };
 
 })();
-

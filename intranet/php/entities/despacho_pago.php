@@ -75,7 +75,8 @@ class despacho_pago extends table
 
             if ($PARAMETROS['operacion'] == 'tabla_despachos_pendientes_cliente') {
                 if (table::validate_parameter_existence(['idcliente'], $PARAMETROS, false)) {
-                    if ($resultado = $this->tabla_despachos_pendientes_cliente($PARAMETROS['idcliente'])) {
+                    $mostrar_sin_saldo = isset($PARAMETROS['mostrar_sin_saldo']) ? $PARAMETROS['mostrar_sin_saldo'] : '';
+                    if ($resultado = $this->tabla_despachos_pendientes_cliente($PARAMETROS['idcliente'], $mostrar_sin_saldo)) {
                         self::end_success($resultado);
                     } else {
                         self::end_error($this->last_error);
@@ -141,17 +142,20 @@ class despacho_pago extends table
         return $html->get_html();
     }
 
-    public function tabla_despachos_pendientes_cliente($idcliente)
+    public function tabla_despachos_pendientes_cliente($idcliente, $mostrar_sin_saldo = '')
     {
         $security = new security($this->ACCIONES['consultar_despacho_pago']);
-        $security->registrar_bitacora($this->ACCIONES['consultar_despacho_pago'], $idcliente);
 
         $idcliente = trim($idcliente . '');
+        $mostrar_sin_saldo = trim($mostrar_sin_saldo . '') === '1';
+        $filtro_saldo = $mostrar_sin_saldo ? '' : ' AND saldo_pendiente > 0';
+
+        $security->registrar_bitacora($this->ACCIONES['consultar_despacho_pago'], $idcliente, $mostrar_sin_saldo ? 'TODOS' : 'CON SALDO');
 
         $result = mysql::getresult("SELECT iddespacho, nopedido, numero_factura, fecha, monto_despacho, total_pagado_ejecutado, saldo_pendiente, total_programado_neto
             FROM view_despacho_pago_resumen
             WHERE idcliente = '$idcliente'
-                AND saldo_pendiente > 0
+                $filtro_saldo
             ORDER BY iddespacho DESC");
 
         if (! $result) {
