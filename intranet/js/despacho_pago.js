@@ -32,6 +32,44 @@
         });
     }
 
+    function normalizarTexto(valor) {
+        return String(valor === null || valor === undefined ? '' : valor)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toUpperCase();
+    }
+
+    function tipoDocumentoEsRecuperacion() {
+        var select = objeto('idtipo_documento');
+        if (!select || select.selectedIndex < 0) {
+            return false;
+        }
+
+        return normalizarTexto(select.options[select.selectedIndex].text) === 'RECUPERACION';
+    }
+
+    function aplicarReglasTipoDocumento() {
+        var mostrar = tipoDocumentoEsRecuperacion();
+
+        if (objeto('div_numero_recuperado') !== undefined) {
+            if (mostrar) {
+                showElement('div_numero_recuperado');
+            } else {
+                hideElement('div_numero_recuperado');
+            }
+        }
+
+        if (objeto('numero_recuperado') !== undefined) {
+            if (mostrar) {
+                objeto('numero_recuperado').setAttribute('required', 'required');
+            } else {
+                objeto('numero_recuperado').removeAttribute('required');
+                objeto('numero_recuperado').value = '';
+            }
+        }
+    }
+
     function limpiarContenedorImpresionRecibo() {
         var contenedor = element('div_imprimir_recibo');
         if (contenedor) {
@@ -104,6 +142,7 @@
         renderPreviewImagenDocumento('');
         aplicarReglasEstadoDocumento();
         despachoPagoManejarCambioTipoPago();
+        aplicarReglasTipoDocumento();
     }
 
     function capturarFormularioPago() {
@@ -120,6 +159,7 @@
             'descuento',
             'devolucion',
             'correlativo_documento',
+            'numero_recuperado',
             'banco',
             'referencia_pago',
             'observaciones'
@@ -160,6 +200,7 @@
         activarFormatoMonto();
         aplicarReglasEstadoDocumento();
         despachoPagoManejarCambioTipoPago();
+        aplicarReglasTipoDocumento();
         actualizarModoFormulario();
     }
 
@@ -206,6 +247,7 @@
             if (objeto('descuento') !== undefined) objeto('descuento').value = formatearMontoMiles(0);
             if (objeto('devolucion') !== undefined) objeto('devolucion').value = formatearMontoMiles(0);
             if (objeto('correlativo_documento') !== undefined) objeto('correlativo_documento').value = row.correlativo_documento || '';
+            if (objeto('numero_recuperado') !== undefined) objeto('numero_recuperado').value = row.numero_recuperado || '';
             if (objeto('banco') !== undefined) objeto('banco').value = row.banco || '';
             if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = row.referencia_pago || '';
             if (objeto('observaciones') !== undefined) objeto('observaciones').value = row.observaciones || '';
@@ -215,6 +257,7 @@
             activarFormatoMonto();
             aplicarReglasEstadoDocumento();
             despachoPagoManejarCambioTipoPago(idclienteAnticipoSeleccionado);
+            aplicarReglasTipoDocumento();
             actualizarModoFormulario();
             notify_info('Documento cargado para edicion.');
         };
@@ -314,6 +357,7 @@
         var estado = elementValue('estado');
         var fecha = elementValue('fecha');
         var correlativo_documento = elementValue('correlativo_documento');
+        var numero_recuperado = elementValue('numero_recuperado');
         var monto = normalizarMonto(elementValue('monto'));
         var descuento = normalizarMonto(elementValue('descuento'));
         var devolucion = normalizarMonto(elementValue('devolucion'));
@@ -328,6 +372,12 @@
 
         if (!idtipo_pago || !idtipo_documento || !estado || !fecha || !correlativo_documento) {
             notify_warning('Complete todos los campos obligatorios.');
+            return false;
+        }
+
+        if (tipoDocumentoEsRecuperacion() && !numero_recuperado) {
+            notify_warning('Ingrese el No. Recuperado.');
+            element('numero_recuperado').focus();
             return false;
         }
 
@@ -362,7 +412,7 @@
             objeto('devolucion').value = devolucion.toFixed(2);
         }
 
-        var fields = 'iddespacho,iddespacho_pago,idtipo_pago,idcliente_anticipo,idtipo_documento,estado,fecha,monto,descuento,devolucion,correlativo_documento,banco,referencia_pago,observaciones';
+        var fields = 'iddespacho,iddespacho_pago,idtipo_pago,idcliente_anticipo,idtipo_documento,estado,fecha,monto,descuento,devolucion,correlativo_documento,numero_recuperado,banco,referencia_pago,observaciones';
 
         callback_guardar_despacho_pago = function (respuesta) {
             if ((respuesta + '') === 'editado') {
@@ -385,6 +435,10 @@
             upload_action(fields, 'despacho_pago', 'guardar', callback_guardar_despacho_pago);
         }
         return false;
+    };
+
+    window.despachoPagoManejarCambioTipoDocumento = function () {
+        aplicarReglasTipoDocumento();
     };
 
     window.despachoPagoEjecutarRegistro = function (iddespacho_pago) {
@@ -518,6 +572,7 @@
         if (objeto('descuento') !== undefined) objeto('descuento').value = '';
         if (objeto('devolucion') !== undefined) objeto('devolucion').value = '';
         if (objeto('correlativo_documento') !== undefined) objeto('correlativo_documento').value = '';
+        if (objeto('numero_recuperado') !== undefined) objeto('numero_recuperado').value = '';
         if (objeto('banco') !== undefined) objeto('banco').value = '';
         if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = '';
         if (objeto('observaciones') !== undefined) objeto('observaciones').value = '';
@@ -531,6 +586,7 @@
         aplicarReglasEstadoDocumento();
         actualizarModoFormulario();
         despachoPagoManejarCambioTipoPago();
+        aplicarReglasTipoDocumento();
     };
 
     window.despachoPagoManejarCambioEstado = function () {

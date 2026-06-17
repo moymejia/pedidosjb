@@ -300,7 +300,7 @@ class despacho_pago extends table
     private function tabla_historial_pagos($iddespacho)
     {
         $result = mysql::getresult("SELECT v.iddespacho_pago, v.fecha, v.tipo_pago, v.tipo_documento, v.estado, v.signo, v.monto,
-                v.correlativo_documento, v.banco, v.referencia_pago, v.observaciones, v.usuario_creacion, dp.imagen
+                v.correlativo_documento, v.banco, v.referencia_pago, v.observaciones, v.usuario_creacion, dp.imagen, dp.numero_recuperado
             FROM view_despacho_pago_detalle v
             LEFT JOIN despacho_pago dp ON dp.iddespacho_pago = v.iddespacho_pago
             WHERE v.iddespacho = '$iddespacho'
@@ -432,6 +432,45 @@ class despacho_pago extends table
         }
 
         $idtipo_pago = trim($PARAMETROS['idtipo_pago'] . '');
+        $idtipo_documento = trim($PARAMETROS['idtipo_documento'] . '');
+        $tipo_documento = mysql::getvalue("SELECT nombre FROM tipo_documento WHERE idtipo_documento = '" . addslashes($idtipo_documento) . "' LIMIT 1", 'nombre');
+        $tipo_documento_normalizado = strtoupper(strtr(trim($tipo_documento . ''), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U']));
+        $es_recuperacion = $tipo_documento_normalizado === 'RECUPERACION';
+        $numero_recuperado = isset($PARAMETROS['numero_recuperado']) ? trim($PARAMETROS['numero_recuperado'] . '') : '';
+
+        if ($es_recuperacion && $numero_recuperado == '') {
+            $this->last_error = 'Debe ingresar el No. Recuperado.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+            return false;
+        }
+
+        if (strlen($numero_recuperado) > 50) {
+            $this->last_error = 'El No. Recuperado no puede exceder 50 caracteres.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+            return false;
+        }
+
+        $iddespacho_pago_recupera = 'NULL';
+        if ($es_recuperacion) {
+            $row_cheque_principal = $this->obtener_cheque_principal_recuperacion($numero_recuperado);
+            if (!$row_cheque_principal) {
+                $this->last_error = 'El número de cheque principal no existe. No se puede registrar una recuperación.';
+                utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+                return false;
+            }
+
+            $total_recuperado = $this->obtener_total_recuperado_cheque_principal($row_cheque_principal['iddespacho_pago'], $numero_recuperado, $iddespacho_pago);
+            $saldo_disponible = round((float)$row_cheque_principal['monto'] - $total_recuperado, 2);
+
+            if ($monto > $saldo_disponible) {
+                $this->last_error = 'El monto de la recuperación supera el saldo disponible del cheque principal.';
+                utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+                return false;
+            }
+
+            $iddespacho_pago_recupera = $row_cheque_principal['iddespacho_pago'];
+        }
+
         // Si es tipo de pago ANTICIPO (10), validar que se proporcione idcliente_anticipo
         if ($idtipo_pago === '10' && $estado !== 'ANULADO') {
             if (!isset($PARAMETROS['idcliente_anticipo']) || trim($PARAMETROS['idcliente_anticipo']) == '') {
@@ -462,10 +501,12 @@ class despacho_pago extends table
         $DATOS['iddespacho']        = $iddespacho;
         $DATOS['fecha']             = $PARAMETROS['fecha'];
         $DATOS['idtipo_pago']       = $idtipo_pago;
-        $DATOS['idtipo_documento']  = $PARAMETROS['idtipo_documento'];
+        $DATOS['idtipo_documento']  = $idtipo_documento;
         $DATOS['monto']             = number_format($monto, 2, '.', '');
         $DATOS['estado']            = $estado;
         $DATOS['correlativo_documento'] = $PARAMETROS['correlativo_documento'];
+        $DATOS['numero_recuperado'] = $es_recuperacion ? $numero_recuperado : 'NULL';
+        $DATOS['iddespacho_pago_recupera'] = $iddespacho_pago_recupera;
 
         $idcliente_anticipo          = isset($PARAMETROS['idcliente_anticipo']) ? trim($PARAMETROS['idcliente_anticipo']) : '';
         $DATOS['idcliente_anticipo'] = $idcliente_anticipo == '' ? 'NULL' : $idcliente_anticipo;
@@ -490,7 +531,6 @@ class despacho_pago extends table
             }
 
             $DATOS['idforma_pago'] = $idforma_pago_default;
-            $DATOS['iddespacho_pago_recupera'] = 'NULL';
             $DATOS['usuario_creacion'] = $security->get_actual_user();
             $DATOS['imagen'] = $imagen_nueva ? $imagen_nueva : 'NULL';
 
@@ -739,6 +779,44 @@ class despacho_pago extends table
         return trim($idtipo_pago . '');
     }
 
+    private function obtener_cheque_principal_recuperacion($numero_cheque_principal)
+    {
+        $numero_cheque_principal = strtoupper(trim($numero_cheque_principal . ''));
+
+        return mysql::getrow("SELECT iddespacho_pago, monto
+            FROM view_despacho_pago_recuperacion
+            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($numero_cheque_principal) . "'
+                AND estado <> 'ANULADO'
+                AND tipo_documento NOT LIKE 'RECUPER%'
+                AND tipo_pago LIKE '%CHEQUE%'
+            ORDER BY iddespacho_pago ASC
+            LIMIT 1");
+    }
+
+    private function obtener_total_recuperado_cheque_principal($iddespacho_pago_principal, $numero_cheque_principal, $iddespacho_pago_actual = '')
+    {
+        $iddespacho_pago_principal = trim($iddespacho_pago_principal . '');
+        $numero_cheque_principal = strtoupper(trim($numero_cheque_principal . ''));
+        $iddespacho_pago_actual = trim($iddespacho_pago_actual . '');
+        $where_actual = '';
+
+        if ($iddespacho_pago_actual != '') {
+            $where_actual = " AND iddespacho_pago <> '" . addslashes($iddespacho_pago_actual) . "'";
+        }
+
+        $total_recuperado = mysql::getvalue("SELECT IFNULL(SUM(monto), 0) AS total_recuperado
+            FROM view_despacho_pago_recuperacion
+            WHERE estado <> 'ANULADO'
+                AND tipo_documento LIKE 'RECUPER%'
+                AND (
+                    iddespacho_pago_recupera = '" . addslashes($iddespacho_pago_principal) . "'
+                    OR UPPER(TRIM(IFNULL(numero_recuperado, ''))) = '" . addslashes($numero_cheque_principal) . "'
+                )
+                $where_actual", 'total_recuperado');
+
+        return round((float)$total_recuperado, 2);
+    }
+
     private function validar_correlativo_anulado_reutilizable($correlativo_documento, $iddespacho_pago_actual = '')
     {
         $correlativo_norm = strtoupper(trim((string)$correlativo_documento));
@@ -775,7 +853,7 @@ class despacho_pago extends table
 
         $iddespacho_pago = trim($iddespacho_pago . '');
 
-        $row_despacho_pago = mysql::getrow("SELECT iddespacho_pago, iddespacho, fecha, idtipo_pago, idcliente_anticipo, idtipo_documento, estado, monto, correlativo_documento, banco, referencia_pago, observaciones, imagen FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago' LIMIT 1");
+        $row_despacho_pago = mysql::getrow("SELECT iddespacho_pago, iddespacho, fecha, idtipo_pago, idcliente_anticipo, idtipo_documento, estado, monto, correlativo_documento, numero_recuperado, banco, referencia_pago, observaciones, imagen FROM despacho_pago WHERE iddespacho_pago = '$iddespacho_pago' LIMIT 1");
 
         if (! $row_despacho_pago) {
             $this->last_error = 'El documento de pago indicado no existe.';

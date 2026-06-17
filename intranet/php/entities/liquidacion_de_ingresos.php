@@ -59,6 +59,7 @@ class liquidacion_de_ingresos extends table
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
                 IFNULL(correlativo_documento, '') AS numero_documento,
+                IFNULL(numero_recuperado, '') AS numero_recuperado,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 IFNULL(estado_pago_individual, '') AS estado_pago_individual,
@@ -84,6 +85,7 @@ class liquidacion_de_ingresos extends table
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
                 IFNULL(correlativo_documento, '') AS numero_documento,
+                IFNULL(numero_recuperado, '') AS numero_recuperado,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 CASE
@@ -108,6 +110,7 @@ class liquidacion_de_ingresos extends table
                 iddespacho,
                 DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
                 IFNULL(correlativo_documento, '') AS numero_documento,
+                IFNULL(numero_recuperado, '') AS numero_recuperado,
                 IFNULL(nombre_cliente, '') AS cliente,
                 IFNULL(tipo_pago, '') AS tipo_pago,
                 CASE
@@ -165,27 +168,23 @@ class liquidacion_de_ingresos extends table
         $DESPACHOS_FLETE = [];
         $filas_ejecutados = '';
         while ($row = mysql::getrowresult($sql_ejecutados)) {
-            $monto = (float)$row['monto_pago'];
-            $tipo_pago = strtoupper(trim($row['tipo_pago']));
             $iddespacho = (int)$row['iddespacho'];
             $estado_pago = strtoupper(trim($row['estado_pago_individual']));
-            $cliente = ($estado_pago === 'ANULADO') ? 'ANULADO' : $row['cliente'];
+            $categoria_pago = $this->obtener_categoria_liquidacion($row['tipo_pago'], $estado_pago);
+            if ($categoria_pago == '') {
+                continue;
+            }
+
+            $monto = (float)$row['monto_pago'];
+            $cliente = $row['cliente'];
 
             $valor_flete = '';
             $valor_deposito = '';
             $valor_cheque_vista = '';
             $valor_cheque_posfechado = '';
 
-            if ($estado_pago === 'ANULADO') {
-                $monto = 0;
-                $valor_flete = '0.00';
-                $valor_deposito = '0.00';
-                $valor_cheque_vista = '0.00';
-                $valor_cheque_posfechado = '0.00';
-            }
-
             // El flete se toma del despacho y se aplica una sola vez por iddespacho.
-            if ($estado_pago !== 'ANULADO' && !isset($DESPACHOS_FLETE[$iddespacho])) {
+            if (!isset($DESPACHOS_FLETE[$iddespacho])) {
                 $monto_flete = (float)$row['monto_flete'];
                 if ($monto_flete > 0) {
                     $valor_flete = $this->formatear_moneda($monto_flete);
@@ -194,15 +193,13 @@ class liquidacion_de_ingresos extends table
                 $DESPACHOS_FLETE[$iddespacho] = true;
             }
 
-            if ($estado_pago === 'ANULADO') {
-                // Para anulados no se acumula monto en ningun rubro.
-            } elseif ($estado_pago == 'PROGRAMADO') {
+            if ($categoria_pago == 'CHEQUE_POSFECHADO') {
                 $valor_cheque_posfechado = $this->formatear_moneda($monto);
                 $TOTALES_DETALLE['cheque_posfechado'] += $monto;
-            } elseif (strpos($tipo_pago, 'CHEQUE') !== false) {
+            } elseif ($categoria_pago == 'CHEQUE_VISTA') {
                 $valor_cheque_vista = $this->formatear_moneda($monto);
                 $TOTALES_DETALLE['cheque_vista'] += $monto;
-            } else {
+            } elseif ($categoria_pago == 'DEPOSITO') {
                 $valor_deposito = $this->formatear_moneda($monto);
                 $TOTALES_DETALLE['deposito'] += $monto;
             }
@@ -231,10 +228,15 @@ class liquidacion_de_ingresos extends table
         $filas_programados = '';
         $total_programados = 0;
         while ($row = mysql::getrowresult($sql_programados)) {
+            $estado_pago = isset($row['estado_pago_individual']) ? strtoupper(trim($row['estado_pago_individual'])) : '';
+            $categoria_pago = $this->obtener_categoria_liquidacion($row['tipo_pago'], $estado_pago);
+            if ($categoria_pago != 'CHEQUE_POSFECHADO') {
+                continue;
+            }
+
             $monto = (float)$row['monto_pago'];
             $total_programados += $monto;
-            $estado_pago = isset($row['estado_pago_individual']) ? strtoupper(trim($row['estado_pago_individual'])) : '';
-            $cliente = ($estado_pago === 'ANULADO') ? 'ANULADO' : $row['cliente'];
+            $cliente = $row['cliente'];
 
             $filas_programados .= '<tr>';
             $filas_programados .= '<td class="text-center">' . (int)$row['iddespacho'] . '</td>';
@@ -253,13 +255,18 @@ class liquidacion_de_ingresos extends table
         $filas_recuperacion = '';
         $total_recuperacion = 0;
         while ($row = mysql::getrowresult($sql_recuperacion)) {
+            $estado = strtoupper(trim($row['estado_pago_individual']));
+            $categoria_pago = $this->obtener_categoria_liquidacion($row['tipo_pago'], $estado);
+            if ($categoria_pago == '') {
+                continue;
+            }
+
             $monto = (float)$row['monto_pago'];
             $total_recuperacion += $monto;
 
-            $estado = strtoupper(trim($row['estado_pago_individual']));
-            $cliente = ($estado === 'ANULADO') ? 'ANULADO' : $row['cliente'];
-            $valor_deposito = ($estado == 'EJECUTADO') ? ('Q ' . $this->formatear_moneda($monto)) : '';
-            $valor_cheque = ($estado == 'PROGRAMADO') ? ('Q ' . $this->formatear_moneda($monto)) : '';
+            $cliente = $row['cliente'];
+            $valor_deposito = ($categoria_pago == 'DEPOSITO') ? ('Q ' . $this->formatear_moneda($monto)) : '';
+            $valor_cheque = ($categoria_pago == 'CHEQUE_POSFECHADO' || $categoria_pago == 'CHEQUE_VISTA') ? ('Q ' . $this->formatear_moneda($monto)) : '';
 
             $filas_recuperacion .= '<tr>';
             $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['fecha_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
@@ -268,7 +275,7 @@ class liquidacion_de_ingresos extends table
             $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_recuperacion .= '<td class="text-right">' . $valor_deposito . '</td>';
             $filas_recuperacion .= '<td class="text-right">' . $valor_cheque . '</td>';
-            $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
+            $filas_recuperacion .= '<td class="text-center">' . htmlspecialchars($row['numero_recuperado'], ENT_QUOTES, 'UTF-8') . '</td>';
             $filas_recuperacion .= '<td class="text-right">Q ' . $this->formatear_moneda($monto) . '</td>';
             $filas_recuperacion .= '</tr>';
         }
@@ -366,6 +373,37 @@ class liquidacion_de_ingresos extends table
         }
 
         return strcasecmp((string)$recibo_a, (string)$recibo_b);
+    }
+
+    private function obtener_categoria_liquidacion($tipo_pago, $estado_pago)
+    {
+        $tipo_pago_normalizado = $this->normalizar_texto_liquidacion($tipo_pago);
+        $estado_pago_normalizado = $this->normalizar_texto_liquidacion($estado_pago);
+
+        if ($tipo_pago_normalizado == '' || $estado_pago_normalizado == 'ANULADO') {
+            return '';
+        }
+
+        if (strpos($tipo_pago_normalizado, 'CHEQUE') !== false) {
+            return ($estado_pago_normalizado == 'PROGRAMADO') ? 'CHEQUE_POSFECHADO' : 'CHEQUE_VISTA';
+        }
+
+        if (
+            strpos($tipo_pago_normalizado, 'TRANSFER') !== false ||
+            strpos($tipo_pago_normalizado, 'DEPOSITO') !== false
+        ) {
+            return ($estado_pago_normalizado == 'EJECUTADO') ? 'DEPOSITO' : '';
+        }
+
+        return '';
+    }
+
+    private function normalizar_texto_liquidacion($texto)
+    {
+        $texto = strtoupper(trim((string)$texto));
+        $texto = str_replace(['Á', 'É', 'Í', 'Ó', 'Ú'], ['A', 'E', 'I', 'O', 'U'], $texto);
+
+        return $texto;
     }
 
     private function formatear_moneda($monto)

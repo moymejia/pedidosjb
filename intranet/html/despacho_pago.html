@@ -92,7 +92,7 @@
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='idtipo_documento'>Tipo de documento <span class='text-danger'>*</span></label>
-                        <select id='idtipo_documento' class='form-control' required>
+                        <select id='idtipo_documento' class='form-control' onchange='despachoPagoManejarCambioTipoDocumento();' required>
                             [options_tipos_documento]
                         </select>
                     </div>
@@ -101,6 +101,10 @@
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='correlativo_documento'>Correlativo <span class='text-danger'>*</span></label>
                         <input type='text' id='correlativo_documento' class='form-control' maxlength='50' placeholder='Serie/numero' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5' id='div_numero_recuperado' style='display:none;'>
+                        <label for='numero_recuperado'>No. Recuperado <span class='text-danger'>*</span></label>
+                        <input type='text' id='numero_recuperado' class='form-control' maxlength='50' placeholder='Cheque recuperado'>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='fecha'>Fecha <span class='text-danger'>*</span></label>
@@ -114,8 +118,6 @@
                             <option value='ANULADO'>ANULADO</option>
                         </select>
                     </div>
-                </div>
-                <div class='row'>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='monto'>Monto <span class='text-danger'>*</span></label>
                         <input type='text' id='monto' class='form-control' inputmode='decimal' placeholder='0.00' required>
@@ -128,8 +130,6 @@
                         <label for='referencia_pago'>Referencia</label>
                         <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.'>
                     </div>
-                </div>
-                <div class='row'>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='descuento'>Descuento</label>
                         <input type='text' id='descuento' class='form-control' inputmode='decimal' placeholder='0.00'>
