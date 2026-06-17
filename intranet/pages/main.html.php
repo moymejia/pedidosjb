@@ -42,6 +42,7 @@ $idubicacion = $row['idubicacion'];
     <link href="../assets/plugins/bootstrap-switch/bootstrap-switch.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet">
+    <link href="css/dt2.css" rel="stylesheet">
 
     <link href="../assets/plugins/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css" />
     <!-- You can change the theme colors from here -->

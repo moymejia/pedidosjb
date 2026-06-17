@@ -1,0 +1,142 @@
+div.dt-container div.dt-layout-cell.dt-layout-start {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+
+div.dt-container div.dt-layout-cell.dt-layout-start > .dt-buttons {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    order: 1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+}
+
+div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    order: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+}
+
+div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    order: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 0 0 12px !important;
+}
+
+/* Espacio entre select y label "Registros" */
+.dt-length select {
+    margin-right: 6px !important;
+    margin-left: 6px !important;
+}
+
+/* Lupa a la derecha del input */
+.dt-search {
+    flex-direction: row !important;
+}
+
+.dt-search input {
+    width: auto !important;
+    order: 1 !important;
+}
+
+.dt-search label {
+    order: 2 !important;
+    margin-left: 6px !important;
+}
+
+/* Tablet vertical */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-buttons {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        order: 1 !important;
+        margin-bottom: 6px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        order: 2 !important;
+        margin: 0 !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        order: 2 !important;
+        margin: 0 0 0 12px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
+        width: auto !important;
+    }
+}
+
+/* Celular horizontal */
+@media (max-height: 480px) and (orientation: landscape) {
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-buttons {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        order: 1 !important;
+        margin-bottom: 6px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        order: 2 !important;
+        margin: 0 !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        order: 2 !important;
+        margin: 0 0 0 12px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
+        width: auto !important;
+    }
+}
+
+/* Celular vertical */
+@media (max-width: 767px) and (orientation: portrait) {
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-buttons {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        order: 1 !important;
+        margin-bottom: 6px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        order: 2 !important;
+        margin: 0 !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        width: 0 !important;
+        order: 2 !important;
+        margin: 0 0 0 12px !important;
+    }
+
+    div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}

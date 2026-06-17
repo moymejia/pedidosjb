@@ -21,11 +21,11 @@ function mostrar_opcion(idopcion, opcion, menu, callback_retorno = null) {
         habilitar_floating_labels();
         desactivar_tablas();
         if (objeto("tabla_datos") != undefined && objeto("tabla_datos").classList.contains("datatable")) {
-            var inputDT = document.getElementById('datatableid');
-            var idFinal = 'tabla_datos';
+            var inputDT = document.getElementById("datatableid");
+            var idFinal = "tabla_datos";
             if (inputDT && inputDT.value.trim() !== "") {
                 var nuevoId = inputDT.value.trim();
-                var tablaPorDefecto = document.getElementById('tabla_datos');
+                var tablaPorDefecto = document.getElementById("tabla_datos");
                 if (tablaPorDefecto) {
                     tablaPorDefecto.id = nuevoId;
                     idFinal = nuevoId;
@@ -528,7 +528,7 @@ function print_div(divid) {
 }
 
 function build_all_datatables_report_content() {
-    var container = document.getElementById('contenedor_principal');
+    var container = document.getElementById("contenedor_principal");
     if (!container) return null;
 
     // Para cada tabla activa dentro del contenedor, obtener todas las filas filtradas
@@ -538,10 +538,10 @@ function build_all_datatables_report_content() {
             if (!dtInst) return;
             var tbl = dtInst.table().node();
             if (!container.contains(tbl) || !tbl.id) return;
-            var filas = '';
-            dtInst.rows({ search: 'applied', page: 'all' }).every(function () {
+            var filas = "";
+            dtInst.rows({ search: "applied", page: "all" }).every(function () {
                 var row = this.node().cloneNode(true);
-                row.querySelectorAll('input, select, textarea, button').forEach(function (elem) {
+                row.querySelectorAll("input, select, textarea, button").forEach(function (elem) {
                     elem.parentNode.removeChild(elem);
                 });
                 filas += row.outerHTML;
@@ -553,24 +553,24 @@ function build_all_datatables_report_content() {
     // Clonar el contenedor para no modificar el DOM visible
     var clone = container.cloneNode(true);
 
-    clone.querySelectorAll('form').forEach(function (form) {
+    clone.querySelectorAll("form").forEach(function (form) {
         form.parentNode.removeChild(form);
     });
 
-    clone.querySelectorAll('.header-titulo').forEach(function (el) {
+    clone.querySelectorAll(".header-titulo").forEach(function (el) {
         el.parentNode.removeChild(el);
     });
 
     // Reemplazar el tbody de cada tabla con todas sus filas filtradas
     Object.keys(filasTablas).forEach(function (id) {
-        var tbl = clone.querySelector('#' + id);
+        var tbl = clone.querySelector("#" + id);
         if (!tbl) return;
-        var tbody = tbl.querySelector('tbody');
+        var tbody = tbl.querySelector("tbody");
         if (tbody) tbody.innerHTML = filasTablas[id];
     });
 
-    clone.querySelectorAll('table.datatable th, table.datatables th, table.dataTable th').forEach(function (th) {
-        var titulo = th.querySelector('.dt-column-title');
+    clone.querySelectorAll("table.datatable th, table.datatables th, table.dataTable th").forEach(function (th) {
+        var titulo = th.querySelector(".dt-column-title");
         var texto = titulo ? titulo.textContent : th.textContent;
         th.textContent = texto.trim();
     });
@@ -582,24 +582,26 @@ function print_all_datatables(dt) {
     var clone = build_all_datatables_report_content();
     if (!clone) return;
 
-    var mywindow = window.open('', 'PRINT', 'fullscreen=yes');
-    mywindow.document.write('<html><head><title>' + document.title + '</title>');
-    mywindow.document.write('<style>' +
-        '@page { size: landscape; margin: 8mm; }' +
-        'html, body { background: #ffffff !important; color: #000000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }' +
-        'body { font-family: Arial, sans-serif; font-size: 10px; }' +
-        'h1, h2, h3, h4, h5, h6, p, span, div { color: #000000 !important; }' +
-        'table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; margin-bottom: 16px; }' +
-        'table thead { display: table-header-group; }' +
-        'table thead th { background: #ffffff !important; color: #000000 !important; border: 1px solid #000000 !important; font-weight: bold !important; font-size: 11px !important; }' +
-        'table th, table td { border: 1px solid #000000 !important; padding: 2px 4px !important; color: #000000 !important; background: #ffffff !important; white-space: normal !important; word-break: break-word !important; }' +
-        'table tbody td { font-size: 12px !important; }' +
-        '.dt-buttons, .dt-search, .dt-length, .dt-paging, .dt-info, .dataTables_filter, .dataTables_length, .dataTables_paginate { display: none !important; }' +
-        'table.dataTable { display: table !important; }' +
-        '</style>');
-    mywindow.document.write('</head><body>');
+    var mywindow = window.open("", "PRINT", "fullscreen=yes");
+    mywindow.document.write("<html><head><title>" + document.title + "</title>");
+    mywindow.document.write(
+        "<style>" +
+            "@page { size: landscape; margin: 8mm; }" +
+            "html, body { background: #ffffff !important; color: #000000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }" +
+            "body { font-family: Arial, sans-serif; font-size: 10px; }" +
+            "h1, h2, h3, h4, h5, h6, p, span, div { color: #000000 !important; }" +
+            "table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; margin-bottom: 16px; }" +
+            "table thead { display: table-header-group; }" +
+            "table thead th { background: #ffffff !important; color: #000000 !important; border: 1px solid #000000 !important; font-weight: bold !important; font-size: 11px !important; }" +
+            "table th, table td { border: 1px solid #000000 !important; padding: 2px 4px !important; color: #000000 !important; background: #ffffff !important; white-space: normal !important; word-break: break-word !important; }" +
+            "table tbody td { font-size: 12px !important; }" +
+            ".dt-buttons, .dt-search, .dt-length, .dt-paging, .dt-info, .dataTables_filter, .dataTables_length, .dataTables_paginate { display: none !important; }" +
+            "table.dataTable { display: table !important; }" +
+            "</style>",
+    );
+    mywindow.document.write("</head><body>");
     mywindow.document.write(clone.innerHTML);
-    mywindow.document.write('</body></html>');
+    mywindow.document.write("</body></html>");
     mywindow.document.close();
     mywindow.focus();
     mywindow.print();
@@ -609,15 +611,15 @@ function export_all_datatables(dt) {
     var clone = build_all_datatables_report_content();
     if (!clone) return;
 
-    var tempContainer = document.createElement('div');
-    var tempId = 'tmp_export_all_' + new Date().getTime();
+    var tempContainer = document.createElement("div");
+    var tempId = "tmp_export_all_" + new Date().getTime();
     tempContainer.id = tempId;
-    tempContainer.style.display = 'none';
+    tempContainer.style.display = "none";
     tempContainer.appendChild(clone);
     document.body.appendChild(tempContainer);
 
     try {
-        export_to_xlsx(tempId, 'reporte.xlsx');
+        export_to_xlsx(tempId, "reporte.xlsx");
     } finally {
         if (tempContainer && tempContainer.parentNode) {
             tempContainer.parentNode.removeChild(tempContainer);
@@ -630,23 +632,23 @@ function resolve_print_asset_url(relativePath) {
 }
 
 function inject_print_fallback_styles(doc) {
-    var style = doc.createElement('style');
-    style.type = 'text/css';
+    var style = doc.createElement("style");
+    style.type = "text/css";
     style.textContent =
-        '@page { margin: 10mm; }' +
-        'body.dt-print-view, body { background: #ffffff !important; color: #000000 !important; }' +
-        '.dt-print-header { margin-bottom: 16px; text-align: center; }' +
-        '.dt-print-title { font-size: 18px; font-weight: 700; color: #000000 !important; }' +
-        '.dt-print-company { font-size: 12px; color: #000000 !important; }' +
-        'table, table.dataTable { width: 100% !important; border-collapse: collapse !important; }' +
-        'table thead th, table.dataTable thead th { background: #1e3a5f !important; color: #ffffff !important; border: 1px solid #000000 !important; padding: 0.5em !important; text-align: left !important; }' +
-        'table tbody td, table.dataTable tbody td { background: #f2f2f2 !important; color: #000000 !important; border: 1px solid #000000 !important; padding: 0.5em !important; }' +
-        'table tbody tr:nth-child(even) td, table.dataTable tbody tr:nth-child(even) td { background: #dfe6ee !important; }';
+        "@page { margin: 10mm; }" +
+        "body.dt-print-view, body { background: #ffffff !important; color: #000000 !important; }" +
+        ".dt-print-header { margin-bottom: 16px; text-align: center; }" +
+        ".dt-print-title { font-size: 18px; font-weight: 700; color: #000000 !important; }" +
+        ".dt-print-company { font-size: 12px; color: #000000 !important; }" +
+        "table, table.dataTable { width: 100% !important; border-collapse: collapse !important; }" +
+        "table thead th, table.dataTable thead th { background: #1e3a5f !important; color: #ffffff !important; border: 1px solid #000000 !important; padding: 0.5em !important; text-align: left !important; }" +
+        "table tbody td, table.dataTable tbody td { background: #f2f2f2 !important; color: #000000 !important; border: 1px solid #000000 !important; padding: 0.5em !important; }" +
+        "table tbody tr:nth-child(even) td, table.dataTable tbody tr:nth-child(even) td { background: #dfe6ee !important; }";
     doc.head.appendChild(style);
 }
 
 function append_print_stylesheet(doc, href, optional, onComplete) {
-    var link = doc.createElement('link');
+    var link = doc.createElement("link");
     var finished = false;
     var finalize = function () {
         if (finished) {
@@ -656,12 +658,12 @@ function append_print_stylesheet(doc, href, optional, onComplete) {
         onComplete();
     };
 
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
+    link.rel = "stylesheet";
+    link.type = "text/css";
     link.onload = finalize;
     link.onerror = function () {
         if (!optional) {
-            console.error('No se pudo cargar el CSS de impresión:', href);
+            console.error("No se pudo cargar el CSS de impresión:", href);
         }
         finalize();
     };
@@ -684,10 +686,10 @@ function prepare_print_window_styles(win, idtabla, callback) {
     inject_print_fallback_styles(doc);
 
     pending++;
-    append_print_stylesheet(doc, resolve_print_asset_url('../css/datatables.css?x=' + version), false, finalize);
+    append_print_stylesheet(doc, resolve_print_asset_url("../css/datatables.css?x=" + version), false, finalize);
 
     pending++;
-    append_print_stylesheet(doc, resolve_print_asset_url('../css/print/' + idtabla + '.css?x=' + version), true, finalize);
+    append_print_stylesheet(doc, resolve_print_asset_url("../css/print/" + idtabla + ".css?x=" + version), true, finalize);
 }
 /* FIN REPORTES/IMPRIMIR EXPOTRTAR */
 
@@ -810,9 +812,7 @@ function habilitar_floating_labels() {
 }
 
 function activate_select2() {
-    $(".select2").select2({
-        width: '100%'
-    });
+    $(".select2").select2();
 }
 
 function datatables_staterestore_ajax(idtabla, data, callback) {
@@ -821,18 +821,24 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
         return;
     }
 
-    if (data.action === 'load') {
-        upload_action('idtabla=' + encodeURIComponent(idtabla), 'datatables', 'cargar_estados_datatables_staterestore', function (respuesta) {
-            var estados = {};
-            try {
-                estados = JSON.parse(respuesta || '{}');
-            } catch (e) {
-                estados = {};
-            }
-            if (callback) callback(estados);
-        }, function () {
-            if (callback) callback({});
-        });
+    if (data.action === "load") {
+        upload_action(
+            "idtabla=" + encodeURIComponent(idtabla),
+            "datatables",
+            "cargar_estados_datatables_staterestore",
+            function (respuesta) {
+                var estados = {};
+                try {
+                    estados = JSON.parse(respuesta || "{}");
+                } catch (e) {
+                    estados = {};
+                }
+                if (callback) callback(estados);
+            },
+            function () {
+                if (callback) callback({});
+            },
+        );
         return;
     }
 
@@ -845,13 +851,13 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
 
     var pendientes = nombres.length;
     var cerrar_modal_confirmacion = function () {
-        var fondo = document.querySelector('div.dtsr-background');
+        var fondo = document.querySelector("div.dtsr-background");
         if (fondo) {
             fondo.click();
             return;
         }
 
-        var confirmacion = document.querySelector('div.dtsr-confirmation');
+        var confirmacion = document.querySelector("div.dtsr-confirmation");
         if (confirmacion && confirmacion.parentNode) {
             confirmacion.parentNode.removeChild(confirmacion);
         }
@@ -862,7 +868,7 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
             console.log(respuesta);
             // Para remove con error (ej. estado protegido), cerramos modal sin
             // ejecutar callback de StateRestore para que no desaparezca del listado.
-            if (data.action === 'remove') {
+            if (data.action === "remove") {
                 cerrar_modal_confirmacion();
                 return;
             }
@@ -876,38 +882,57 @@ function datatables_staterestore_ajax(idtabla, data, callback) {
     };
 
     nombres.forEach(function (nombre) {
-        var payload = '';
-        if (data.action === 'save') {
-            payload = 'idtabla=' + encodeURIComponent(idtabla)
-                + ',nombre_estado=' + encodeURIComponent(nombre)
-                + ',estadotabla=' + encodeURIComponent(JSON.stringify(estados[nombre]));
+        var payload = "";
+        if (data.action === "save") {
+            payload =
+                "idtabla=" +
+                encodeURIComponent(idtabla) +
+                ",nombre_estado=" +
+                encodeURIComponent(nombre) +
+                ",estadotabla=" +
+                encodeURIComponent(JSON.stringify(estados[nombre]));
             upload_action(
                 payload,
-                'datatables',
-                'guardar_estado_datatables_staterestore',
-                function (respuesta) { finalizar(true, respuesta); },
-                function (respuesta) { finalizar(false, respuesta); }
+                "datatables",
+                "guardar_estado_datatables_staterestore",
+                function (respuesta) {
+                    finalizar(true, respuesta);
+                },
+                function (respuesta) {
+                    finalizar(false, respuesta);
+                },
             );
-        } else if (data.action === 'rename') {
-            payload = 'idtabla=' + encodeURIComponent(idtabla)
-                + ',nombre_estado_actual=' + encodeURIComponent(nombre)
-                + ',nombre_estado_nuevo=' + encodeURIComponent(estados[nombre]);
+        } else if (data.action === "rename") {
+            payload =
+                "idtabla=" +
+                encodeURIComponent(idtabla) +
+                ",nombre_estado_actual=" +
+                encodeURIComponent(nombre) +
+                ",nombre_estado_nuevo=" +
+                encodeURIComponent(estados[nombre]);
             upload_action(
                 payload,
-                'datatables',
-                'renombrar_estado_datatables_staterestore',
-                function (respuesta) { finalizar(true, respuesta); },
-                function (respuesta) { finalizar(false, respuesta); }
+                "datatables",
+                "renombrar_estado_datatables_staterestore",
+                function (respuesta) {
+                    finalizar(true, respuesta);
+                },
+                function (respuesta) {
+                    finalizar(false, respuesta);
+                },
             );
-        } else if (data.action === 'remove') {
-            payload = 'idtabla=' + encodeURIComponent(idtabla)
-                + ',nombre_estado=' + encodeURIComponent(nombre);
+        } else if (data.action === "remove") {
+            payload = "idtabla=" + encodeURIComponent(idtabla) + ",nombre_estado=" + encodeURIComponent(nombre);
             upload_action(
                 payload,
-                'datatables',
-                'eliminar_estado_datatables_staterestore',
-                function (respuesta) { finalizar(true, respuesta); },
-                function (respuesta) { finalizar(false, respuesta); }
+                "datatables",
+                "eliminar_estado_datatables_staterestore",
+                function (respuesta) {
+                    finalizar(true, respuesta);
+                },
+                function (respuesta) {
+                    finalizar(false, respuesta);
+                },
             );
         } else {
             finalizar(true, null);
@@ -929,6 +954,7 @@ function activar_tablas() {
     return tablas_activadas;
 }
 
+// ACTIVARTABBLAS11
 function activar_tabla(idtabla) {
     var tabla = document.getElementById(idtabla);
     var ds = tabla.dataset;
@@ -1018,92 +1044,44 @@ function activar_tabla(idtabla) {
     });
 
     var botones = [];
-    if (resetUser) {
-        botones.push({
-            text: 'Reiniciar',
-            className: 'btn btn-warning btn-sm',
-            action: function (e, dt) {
-                localStorage.removeItem('DataTables_' + dt.settings()[0].sInstance);
-
-                // Reinicia estado sin destruir la tabla para evitar perder referencia del nodo.
-                if (dt.state && typeof dt.state.clear === 'function') {
-                    dt.state.clear();
-                }
-                if (dt.search && typeof dt.search === 'function') {
-                    dt.search('');
-                }
-                if (dt.columns && typeof dt.columns === 'function') {
-                    dt.columns().search('');
-                    dt.columns().visible(true, false);
-                }
-                if (dt.colReorder && typeof dt.colReorder.reset === 'function') {
-                    dt.colReorder.reset();
-                }
-                dt.order([]);
-                dt.draw();
-            }
-        });
-    }
-    if (buttonsUser) {
-        if (stateRestoreActivo) {
-            botones.push({
-                extend: 'createState',
-                text: 'Crear estado',
-                config: {
-                    creationModal: true,
-                    ajax: function (data, callback) {
-                        datatables_staterestore_ajax(idtabla, data, callback);
-                    }
-                }
-            });
-            botones.push({
-                extend: 'savedStates',
-                text: 'Estados guardados',
-                config: {
-                    splitSecondaries: ['updateState', 'renameState', 'removeState'],
-                    ajax: function (data, callback) {
-                        datatables_staterestore_ajax(idtabla, data, callback);
-                    }
-                }
-            });
-        }
-        botones.push({
-            extend: "colvis",
-            text: "Seleccionar columnas",
-            //columns: ":not(:first-child)"
-        });
-        if (exportButtonsRequested.copy) {
+    
+    if (buttonsUser) { // BOTONES DE EXPORTACION 
+        if (exportButtonsRequested.copy) { // BOTON DE COPIAR 
             botones.push({
                 extend: "copy",
-                text: "Copiar",
+                text: '<i class="fas fa-copy"></i>',
+                titleAttr: 'Copiar al portapapeles',
                 className: "btn btn-secondary btn-sm",
                 title: exportTitle,
                 messageTop: exportCompany
             });
         }
-        if (exportButtonsRequested.csv) {
+        if (exportButtonsRequested.csv) {  // BOTON CSV
             botones.push({
                 extend: "csv",
-                text: "CSV",
+                text: '<i class="fas fa-file"></i>',
+                titleAttr: 'Exportar a CSV',
                 className: "btn btn-secondary btn-sm",
                 title: exportTitle,
                 filename: exportFileName
             });
         }
-        if (exportButtonsRequested.excel) {
+        if (exportButtonsRequested.excel) { //BOTON EXCEL 
             botones.push({
                 extend: "excel",
-                text: "Excel",
+                text: '<i class="fas fa-file-excel"></i>',
+                titleAttr: 'Exportar a Excel',
+
                 className: "btn btn-success btn-sm",
                 title: exportTitle,
                 filename: exportFileName,
                 messageTop: exportCompany
             });
         }
-        if (exportButtonsRequested.pdf) {
+        if (exportButtonsRequested.pdf) { // BOTON PDF
             botones.push({
-                extend: "pdf",
-                text: "PDF",
+                extend: "pdf",text: '<i class="fas fa-file-pdf"></i>',
+                titleAttr: 'Exportar a PDF',
                 className: "btn btn-danger btn-sm",
                 title: exportTitle,
                 messageTop: exportCompany,
@@ -1179,10 +1157,11 @@ function activar_tabla(idtabla) {
                 }
             });
         }
-        if (exportButtonsRequested.print) {
+        if (exportButtonsRequested.print) { // BOTON IMPRIMIR 
             botones.push({
                 extend: "print",
-                text: "Imprimir",
+                text: '<i class="fas fa-print"></i>',
+                titleAttr: 'Imprimir',
                 className: "btn btn-primary btn-sm",
                 title: "",
                 messageTop: "",
@@ -1203,6 +1182,63 @@ function activar_tabla(idtabla) {
                 }
             });
         }
+        if (stateRestoreActivo) { // BOTONES DE ESTADO 
+            
+            botones.push({        // BOTON MANEJAR ESTADOS 
+                extend: 'savedStates',
+                text: 'Vistas',
+                config: {
+                    splitSecondaries: ['updateState', 'renameState', 'removeState'],
+                    ajax: function (data, callback) {
+                        datatables_staterestore_ajax(idtabla, data, callback);
+                    }
+                }
+            });
+            botones.push({           // BOTON GUARDAD ESTADO
+                extend: 'createState',
+                text: '<i class="fas fa-save"></i>',
+                titleAttr: 'Guardar estado',
+                config: {
+                    creationModal: true,
+                    ajax: function (data, callback) {
+                        datatables_staterestore_ajax(idtabla, data, callback);
+                    }
+                }
+            });
+        }
+        botones.push({
+            extend: "colvis",
+            text: "Columnas",
+            //columns: ":not(:first-child)"
+        });
+        
+    }
+    if (resetUser) { // INSERTAR EL BOTON REINICIAR 
+        botones.push({
+            text: '<i class="fas fa-sync"></i>' ,
+            titleAttr: 'Reiniciar tabla',
+            className: 'btn btn-warning btn-sm',
+            action: function (e, dt) {
+                localStorage.removeItem('DataTables_' + dt.settings()[0].sInstance);
+
+                // Reinicia estado sin destruir la tabla para evitar perder referencia del nodo.
+                if (dt.state && typeof dt.state.clear === 'function') {
+                    dt.state.clear();
+                }
+                if (dt.search && typeof dt.search === 'function') {
+                    dt.search('');
+                }
+                if (dt.columns && typeof dt.columns === 'function') {
+                    dt.columns().search('');
+                    dt.columns().visible(true, false);
+                }
+                if (dt.colReorder && typeof dt.colReorder.reset === 'function') {
+                    dt.colReorder.reset();
+                }
+                dt.order([]);
+                dt.draw();
+            }
+        });
     }
     if (rowGroupUser) {
         botones.push({
@@ -1354,11 +1390,13 @@ function activar_tabla(idtabla) {
         }),
         language: {
             url: "../assets/plugins/datatables/media/datatables.spanish.lang",
-
+            lengthMenu: '_MENU_ Registros', 
+            search: '🔍',
+            searchPlaceholder: 'Buscar...',
             // ── BUTTONS (una sola clave, todo junto) ──────────────────────────
             buttons: {
                 // StateRestore
-                savedStates:  'Estados guardados',
+                savedStates:  'Vistas',
                 createState:  'Crear estado',
                 updateState:  'Actualizar',       // ← "UPDATE" en inglés
                 stateRestore: 'Estado %d',        // ← "STATE 1" en inglés (%d = número)
@@ -1371,7 +1409,7 @@ function activar_tabla(idtabla) {
 
             // ── STATE RESTORE (modales y confirmaciones) ───────────────────────
             stateRestore: {
-                emptyStates:   'Sin estados guardados',
+                emptyStates:   'Sin vistas',
                 removeConfirm: '¿Seguro que desea eliminar "%s"?',
                 removeSubmit:  'Eliminar',
                 renameButton:  'Renombrar',
@@ -1531,6 +1569,7 @@ function activar_tabla(idtabla) {
 
     return tabla_nueva;
 }
+//ACTIVARTABBLAS11
 
 function desactivar_tabla(tabla) {
     if (tabla != undefined) {
@@ -1770,15 +1809,18 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
     var rootElement = document.getElementById(idtabla);
 
     if (!rootElement) {
-        console.error("No se encontró el elemento con id:", idtabla);
+        console.error("No se encontro el elemento con id:", idtabla);
         return;
     }
 
     var exportNodes = [];
-    if (rootElement.tagName && ["table"].includes(rootElement.tagName.toLowerCase())) {
+    if (rootElement.tagName && rootElement.tagName.toLowerCase() === "table") {
         exportNodes = [rootElement];
     } else {
-        exportNodes = Array.from(rootElement.querySelectorAll("h2, h4, table"));
+        exportNodes = Array.from(rootElement.querySelectorAll("h2, h4, table")).filter(function (node) {
+            if (!node.tagName || node.tagName.toLowerCase() !== "table") return true;
+            return !node.parentElement || !node.parentElement.closest("table");
+        });
     }
 
     if (exportNodes.length === 0) {
@@ -1786,44 +1828,383 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
         return;
     }
 
-    // generar fecha y hora
     var now = new Date();
     var fechaHora =
         now.getFullYear() +
         String(now.getMonth() + 1).padStart(2, "0") +
-        String(now.getDate()).padStart(2, "0") + "_" +
+        String(now.getDate()).padStart(2, "0") +
+        "_" +
         String(now.getHours()).padStart(2, "0") +
         String(now.getMinutes()).padStart(2, "0") +
         String(now.getSeconds()).padStart(2, "0");
 
-    var finalFilename = filename.replace(".xlsx", "") + "_" + fechaHora + ".xlsx";
+    var finalFilename = filename.replace(/\.xlsx$/i, "") + "_" + fechaHora + ".xlsx";
+
+    function normalizeText(text) {
+        return String(text || "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function getDirectSection(table, sectionTag) {
+        for (var i = 0; i < table.children.length; i++) {
+            var child = table.children[i];
+            if (child.tagName && child.tagName.toLowerCase() === sectionTag) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    function getDirectRows(table) {
+        var rows = [];
+
+        for (var i = 0; i < table.children.length; i++) {
+            var child = table.children[i];
+            if (child.tagName && child.tagName.toLowerCase() === "tr") {
+                rows.push(child);
+            }
+        }
+
+        var sections = ["thead", "tbody", "tfoot"];
+        for (var s = 0; s < sections.length; s++) {
+            var sec = getDirectSection(table, sections[s]);
+            if (!sec) continue;
+            for (var r = 0; r < sec.rows.length; r++) {
+                rows.push(sec.rows[r]);
+            }
+        }
+
+        if (rows.length === 0) {
+            var all = table.rows || [];
+            for (var k = 0; k < all.length; k++) rows.push(all[k]);
+        }
+
+        return rows;
+    }
+
+    function getDirectCells(row) {
+        var cells = [];
+        for (var i = 0; i < row.children.length; i++) {
+            var c = row.children[i];
+            if (!c.tagName) continue;
+            var tag = c.tagName.toLowerCase();
+            if (tag === "td" || tag === "th") cells.push(c);
+        }
+        return cells;
+    }
+
+    function trimRightEmptyColumns(aoa) {
+        var maxCol = 0;
+        for (var r = 0; r < aoa.length; r++) {
+            var row = aoa[r] || [];
+            var last = -1;
+            for (var c = row.length - 1; c >= 0; c--) {
+                if (row[c] !== "" && row[c] != null) {
+                    last = c;
+                    break;
+                }
+            }
+            if (last + 1 > maxCol) maxCol = last + 1;
+        }
+
+        for (var r2 = 0; r2 < aoa.length; r2++) {
+            aoa[r2] = (aoa[r2] || []).slice(0, maxCol);
+        }
+
+        return aoa;
+    }
+
+    function getCellTextWithoutNestedTables(cell) {
+        var clone = cell.cloneNode(true);
+        var nested = clone.querySelectorAll("table");
+        for (var i = nested.length - 1; i >= 0; i--) {
+            nested[i].parentNode.removeChild(nested[i]);
+        }
+        return normalizeText(clone.textContent);
+    }
+
+    function toExpandedRow(row) {
+        var rowData = [];
+        var cells = getDirectCells(row);
+        var colIndex = 0;
+
+        for (var c = 0; c < cells.length; c++) {
+            while (rowData[colIndex] !== undefined) colIndex++;
+
+            var cell = cells[c];
+            var colspan = parseInt(cell.getAttribute("colspan") || "1", 10);
+            if (!Number.isFinite(colspan) || colspan < 1) colspan = 1;
+
+            rowData[colIndex] = {
+                text: getCellTextWithoutNestedTables(cell),
+                nestedTable: cell.querySelector("table"),
+            };
+
+            for (var cc = 1; cc < colspan; cc++) {
+                rowData[colIndex + cc] = { text: "", nestedTable: null };
+            }
+
+            colIndex += colspan;
+        }
+
+        return rowData;
+    }
+
+    function parseNestedTable(nestedTable) {
+        if (!nestedTable) return null;
+
+        var nestedRows = getDirectRows(nestedTable);
+        var normalizedRows = [];
+
+        for (var r = 0; r < nestedRows.length; r++) {
+            var cells = getDirectCells(nestedRows[r]);
+            var row = [];
+
+            for (var c = 0; c < cells.length; c++) {
+                var txt = normalizeText(cells[c].textContent);
+                var colspan = parseInt(cells[c].getAttribute("colspan") || "1", 10);
+                if (!Number.isFinite(colspan) || colspan < 1) colspan = 1;
+                for (var cc = 0; cc < colspan; cc++) {
+                    row.push(txt);
+                }
+            }
+
+            if (
+                row.some(function (v) {
+                    return v !== "";
+                })
+            ) {
+                normalizedRows.push(row);
+            }
+        }
+
+        if (normalizedRows.length === 0) return null;
+
+        var headers = normalizedRows[0].slice();
+        var values = normalizedRows.length > 1 ? normalizedRows[1].slice() : [];
+
+        if (headers.length === 0) return null;
+
+        var valueByHeader = {};
+        var safeHeaders = [];
+
+        for (var i = 0; i < headers.length; i++) {
+            var rawHeader = normalizeText(headers[i]);
+            var headerKey = rawHeader || "col_" + (i + 1);
+
+            if (valueByHeader[headerKey] !== undefined) {
+                headerKey = headerKey + "_" + (i + 1);
+            }
+
+            safeHeaders.push(headerKey);
+            valueByHeader[headerKey] = normalizeText(values[i]);
+        }
+
+        return {
+            headers: safeHeaders,
+            valueByHeader: valueByHeader,
+        };
+    }
+
+    function extractHeaderTitles(table) {
+        var titles = [];
+        var thead = getDirectSection(table, "thead");
+
+        if (thead && thead.rows && thead.rows.length > 0) {
+            var headerRow = thead.rows[thead.rows.length - 1];
+            var cells = getDirectCells(headerRow);
+
+            for (var c = 0; c < cells.length; c++) {
+                var title = normalizeText(cells[c].textContent);
+                var colspan = parseInt(cells[c].getAttribute("colspan") || "1", 10);
+                if (!Number.isFinite(colspan) || colspan < 1) colspan = 1;
+
+                for (var cc = 0; cc < colspan; cc++) {
+                    titles.push(title);
+                }
+            }
+
+            return titles;
+        }
+
+        var rows = getDirectRows(table);
+        for (var r = 0; r < rows.length; r++) {
+            var cells = getDirectCells(rows[r]);
+            var hasTH = cells.some(function (cell) {
+                return cell.tagName.toLowerCase() === "th";
+            });
+
+            if (!hasTH) continue;
+
+            for (var c2 = 0; c2 < cells.length; c2++) {
+                var t = normalizeText(cells[c2].textContent);
+                var colspan2 = parseInt(cells[c2].getAttribute("colspan") || "1", 10);
+                if (!Number.isFinite(colspan2) || colspan2 < 1) colspan2 = 1;
+                for (var cc2 = 0; cc2 < colspan2; cc2++) {
+                    titles.push(t);
+                }
+            }
+            break;
+        }
+
+        return titles;
+    }
+
+    function tableToAOAWithNestedColumns(table) {
+        var headerTitles = extractHeaderTitles(table);
+        var tbody = getDirectSection(table, "tbody");
+        var dataRows = [];
+
+        if (tbody && tbody.rows && tbody.rows.length > 0) {
+            for (var i = 0; i < tbody.rows.length; i++) {
+                dataRows.push(tbody.rows[i]);
+            }
+        } else {
+            var directRows = getDirectRows(table);
+            for (var r = 0; r < directRows.length; r++) {
+                var hasTD = getDirectCells(directRows[r]).some(function (cell) {
+                    return cell.tagName.toLowerCase() === "td";
+                });
+                if (hasTD) dataRows.push(directRows[r]);
+            }
+        }
+
+        var parsedRows = [];
+        var nestedHeadersByColumn = {};
+        var maxBaseColumns = headerTitles.length;
+
+        for (var dr = 0; dr < dataRows.length; dr++) {
+            var rowData = toExpandedRow(dataRows[dr]);
+            parsedRows.push(rowData);
+            if (rowData.length > maxBaseColumns) maxBaseColumns = rowData.length;
+
+            for (var bc = 0; bc < rowData.length; bc++) {
+                if (!rowData[bc] || !rowData[bc].nestedTable) continue;
+
+                var parsedNested = parseNestedTable(rowData[bc].nestedTable);
+                if (!parsedNested || parsedNested.headers.length === 0) continue;
+
+                rowData[bc].nestedParsed = parsedNested;
+
+                if (!nestedHeadersByColumn[bc]) nestedHeadersByColumn[bc] = [];
+                for (var nh = 0; nh < parsedNested.headers.length; nh++) {
+                    if (nestedHeadersByColumn[bc].indexOf(parsedNested.headers[nh]) === -1) {
+                        nestedHeadersByColumn[bc].push(parsedNested.headers[nh]);
+                    }
+                }
+            }
+        }
+
+        if (maxBaseColumns === 0) {
+            return [headerTitles.length ? headerTitles : [""]];
+        }
+
+        var expandedHeader = [];
+        var columnMap = [];
+
+        for (var c = 0; c < maxBaseColumns; c++) {
+            var nestedHeaders = nestedHeadersByColumn[c];
+            if (nestedHeaders && nestedHeaders.length > 0) {
+                columnMap[c] = { nested: true, headers: nestedHeaders.slice() };
+                for (var n = 0; n < nestedHeaders.length; n++) {
+                    expandedHeader.push(nestedHeaders[n]);
+                }
+            } else {
+                columnMap[c] = { nested: false };
+                expandedHeader.push(headerTitles[c] || "");
+            }
+        }
+
+        var aoa = [expandedHeader];
+
+        for (var pr = 0; pr < parsedRows.length; pr++) {
+            var sourceRow = parsedRows[pr];
+            var finalRow = [];
+
+            for (var sc = 0; sc < maxBaseColumns; sc++) {
+                var map = columnMap[sc];
+                var sourceCell = sourceRow[sc] || { text: "", nestedParsed: null };
+
+                if (map.nested) {
+                    var valuesByHeader = sourceCell.nestedParsed ? sourceCell.nestedParsed.valueByHeader : {};
+                    for (var nh2 = 0; nh2 < map.headers.length; nh2++) {
+                        var key = map.headers[nh2];
+                        finalRow.push(valuesByHeader[key] != null ? valuesByHeader[key] : "");
+                    }
+                } else {
+                    finalRow.push(sourceCell.text || "");
+                }
+            }
+
+            aoa.push(finalRow);
+        }
+
+        return trimRightEmptyColumns(aoa);
+    }
+
+    function tryParseNumber(rawValue) {
+        if (rawValue == null) return null;
+
+        var s = String(rawValue).trim();
+        if (!s) return null;
+        if (/\n/.test(s)) return null;
+        if (/[a-zA-Z]/.test(s)) return null;
+
+        s = s.replace(/\s+/g, "").replace(/[Q$]/g, "");
+        if (!/^[-+]?[\d.,]+$/.test(s)) return null;
+
+        var lastComma = s.lastIndexOf(",");
+        var lastDot = s.lastIndexOf(".");
+
+        if (lastComma > -1 && lastDot > -1) {
+            if (lastComma > lastDot) {
+                s = s.replace(/\./g, "").replace(",", ".");
+            } else {
+                s = s.replace(/,/g, "");
+            }
+        } else if (lastComma > -1) {
+            var parts = s.split(",");
+            if (parts.length === 2 && parts[1].length <= 2) {
+                s = parts[0].replace(/\./g, "") + "." + parts[1];
+            } else {
+                s = s.replace(/,/g, "");
+            }
+        } else {
+            var dotParts = s.split(".");
+            if (dotParts.length > 2) s = s.replace(/\./g, "");
+        }
+
+        var n = Number(s);
+        return Number.isFinite(n) ? n : null;
+    }
 
     try {
-
         var AOA = [];
+        var headerRowIndexes = {};
 
         for (var t = 0; t < exportNodes.length; t++) {
             var node = exportNodes[t];
             var tag = node.tagName.toLowerCase();
 
             if (tag === "h2" || tag === "h4") {
-                var titulo = node.textContent.replace(/\s+/g, " ").trim();// limpiar espacios extra
-                if (AOA.length > 0) {
-                    AOA.push([]);
-                }
-                AOA.push([titulo]);// agregar título como fila separada
+                var titulo = normalizeText(node.textContent);
+                if (AOA.length > 0) AOA.push([]);
+                AOA.push([titulo]);
+                continue;
             }
 
             if (tag === "table") {
-                var tempSheet = XLSX.utils.table_to_sheet(node, { raw: true });
-                var tempData = XLSX.utils.sheet_to_json(tempSheet, { header: 1, raw: true });
+                var tableAOA = tableToAOAWithNestedColumns(node);
+                if (!tableAOA || tableAOA.length === 0) continue;
 
-                if (AOA.length > 0) {
-                    AOA.push([]);
-                }
+                if (AOA.length > 0) AOA.push([]);
 
-                for (var i = 0; i < tempData.length; i++) {
-                    AOA.push(tempData[i]);
+                var startRow = AOA.length;
+                headerRowIndexes[startRow] = true;
+
+                for (var i2 = 0; i2 < tableAOA.length; i2++) {
+                    AOA.push(tableAOA[i2]);
                 }
             }
         }
@@ -1835,31 +2216,23 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
 
         var wb = XLSX.utils.book_new();
         var ws = XLSX.utils.aoa_to_sheet(AOA);
-        XLSX.utils.book_append_sheet(wb, ws, "Hoja 1");
 
-        if (ws && ws["!ref"]) {// si la hoja tiene datos, intentar convertir valores numéricos
-
+        if (ws && ws["!ref"]) {
             var range = XLSX.utils.decode_range(ws["!ref"]);
+            for (var r2 = 0; r2 <= range.e.r; r2++) {
+                if (headerRowIndexes[r2]) continue;
 
-            for (var r = 1; r <= range.e.r; r++) {
-
-                for (var c = 0; c <= range.e.c; c++) {
-
-                    var addr = XLSX.utils.encode_cell({ r: r, c: c });
+                for (var c2 = 0; c2 <= range.e.c; c2++) {
+                    var addr = XLSX.utils.encode_cell({ r: r2, c: c2 });
                     var cell = ws[addr];
 
                     if (!cell || cell.v == null || cell.v === "") continue;
 
-                    var value = String(cell.v)
-                        .replace(/[Q$,]/g, "") // quitar moneda y comas
-                        .trim();
-
-                    var n = Number(value);
-
-                    if (isNaN(n)) continue;
+                    var parsed = tryParseNumber(cell.v);
+                    if (parsed == null) continue;
 
                     cell.t = "n";
-                    cell.v = n;
+                    cell.v = parsed;
 
                     delete cell.w;
                     delete cell.z;
@@ -1867,9 +2240,20 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
             }
         }
 
+        XLSX.utils.book_append_sheet(wb, ws, "Hoja 1");
         XLSX.writeFile(wb, finalFilename);
-
     } catch (error) {
         console.error("Error exportando la tabla:", error);
     }
 }
+document.addEventListener('click', function (e) {
+    const label = e.target.closest('.dt-search label');
+    if (!label) return;
+
+    const container = label.closest('.dt-search');
+    const input = container.querySelector('input[type="search"]');
+
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
