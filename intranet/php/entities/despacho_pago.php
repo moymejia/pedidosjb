@@ -454,8 +454,8 @@ class despacho_pago extends table
         if ($es_recuperacion) {
             $row_cheque_principal = $this->obtener_cheque_principal_recuperacion($numero_recuperado);
             if (!$row_cheque_principal) {
-                $this->last_error = 'El número de cheque principal no existe. No se puede registrar una recuperación.';
-                utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+                $this->last_error = 'El No. Recuperado no existe. No se puede registrar una recuperación.';
+                utils::report_error(validation_error, ['numero_recuperado' => $numero_recuperado], $this->last_error);
                 return false;
             }
 
@@ -779,13 +779,13 @@ class despacho_pago extends table
         return trim($idtipo_pago . '');
     }
 
-    private function obtener_cheque_principal_recuperacion($numero_cheque_principal)
+    private function obtener_cheque_principal_recuperacion($numero_recuperado)
     {
-        $numero_cheque_principal = strtoupper(trim($numero_cheque_principal . ''));
+        $numero_recuperado = strtoupper(trim($numero_recuperado . ''));
 
         return mysql::getrow("SELECT iddespacho_pago, monto
             FROM view_despacho_pago_recuperacion
-            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($numero_cheque_principal) . "'
+            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($numero_recuperado) . "'
                 AND estado <> 'ANULADO'
                 AND tipo_documento NOT LIKE 'RECUPER%'
                 AND tipo_pago LIKE '%CHEQUE%'
