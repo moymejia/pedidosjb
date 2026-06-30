@@ -76,12 +76,45 @@ class usuario extends table
                     self::end_error($this->last_error);
                 }
             }
+            //
+            if ($PARAMETROS['operacion'] == 'options_usuarios_activos') {
+
+                    if ($resultado = $this->options_usuarios_activos() ){
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($this->last_error);
+                    }
+                
+            }
+            //
         }
     }
 
-    public function options_usuarios_activos()
+        public function options_usuarios_activos()
     {
-        return mysql::getoptions("SELECT usuario id, nombre descripcion FROM usuario WHERE estado = 'ACTIVO' ");
+        $usuario_actual = (new security())->get_actual_user();
+
+        $result = mysql::getresult("SELECT usuario id, nombre descripcion FROM usuario WHERE estado = 'ACTIVO' ");
+        $html = "";
+        while ($row = mysql::getrowresult($result)) {
+            $id          = $row['id'];
+            $descripcion = $row['descripcion'];
+
+            if ($id === $usuario_actual) {
+                continue;
+            }
+
+            $html .= "<div class='form-check'>
+                <input class='form-check-input' type='checkbox' name='usuarios_compartir[]' value='$id' id='check_usuario_$id'>
+                <label class='form-check-label' for='check_usuario_$id'>$descripcion</label>
+            </div>";
+        }
+
+        if ($html === "") {
+            $html = "No hay usuarios";
+        }
+
+        return $html;
     }
 
     public function tabla_todos_usuarios()

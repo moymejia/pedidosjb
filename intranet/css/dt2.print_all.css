@@ -1,0 +1,30 @@
+/* ============================================================
+    dt2.print_all.css 
+    Css para cuando se incluye todo el reporte 
+    Su funcionalidad es heredada de la impresion de report.php 
+    La parte mas importante es que oculta todos los botones/paginacion/etc de dt2
+
+============================================================ */
+
+
+@page { size: landscape; margin: 8mm; }
+
+html, body { background: #ffffff !important; color: #000000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+body { font-family: Arial, sans-serif; font-size: 10px; }
+
+h1, h2, h3, h4, h5, h6, p, span, div { color: #000000 !important; }
+
+table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; margin-bottom: 16px; }
+
+table thead { display: table-header-group; }
+
+table thead th { background: #ffffff !important; color: #000000 !important; border: 1px solid #000000 !important; font-weight: bold !important; font-size: 11px !important; }
+
+table th, table td { border: 1px solid #000000 !important; padding: 2px 4px !important; color: #000000 !important; background: #ffffff !important; white-space: normal !important; word-break: break-word !important; }
+
+table tbody td { font-size: 12px !important; }
+
+.dt-buttons, .dt-search, .dt-length, .dt-paging, .dt-info, .dataTables_filter, .dataTables_length, .dataTables_paginate { display: none !important; }
+
+table.dataTable { display: table !important; }

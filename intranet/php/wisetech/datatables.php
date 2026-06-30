@@ -7,18 +7,20 @@ class datatables extends mysql {
     private $html = "";
     private $IDS = [];
     private $OPTIONS = [];
+    private $ACCIONES   = [];
 
     public function __construct($PARAMETROS = null, $OPTIONS = []) {
         $this->OPTIONS = is_array($OPTIONS) ? $OPTIONS : [];
         $this->base_datos = prefijo . '_seguridad';
-        
+        $this->ACCIONES['actualizar_vista'] = 'actualizar_vista';
+        $this->ACCIONES['compartir_vista']  = 'compartir_vista';
+
         if (isset($PARAMETROS) && isset($PARAMETROS['operacion'])) {
             $this->seleccionar_operacion($PARAMETROS);
         } else {
             $this->addButtonBar();
         }
     }
-
     private function addButtonBar() {
         if (empty($this->OPTIONS)) return;
         
@@ -38,9 +40,18 @@ class datatables extends mysql {
             $this->html .= $buttons;
         }
     }
-
     private function seleccionar_operacion($PARAMETROS) {
         switch ($PARAMETROS['operacion']) {
+            case 'opciones_estado_columna':
+                echo "|correcto|" . $this->opciones_estado_columna();
+                break;
+            case 'compartir_estados':
+                if (isset($PARAMETROS['idtabla']) && isset($PARAMETROS['nombre_estado']) && isset($PARAMETROS['usuarios'])) {
+                    echo "|correcto|" . $this->compartir_estados($PARAMETROS['idtabla'], $PARAMETROS['nombre_estado'], $PARAMETROS['usuarios']);
+                } else {
+                    echo "|error|Datos incompletos|";
+                }
+                break;
             case 'mostrar_tabla':
                 if (isset($PARAMETROS['result'])) {
                     $CONFIGURACION = isset($PARAMETROS['configuracion']) ? $PARAMETROS['configuracion'] : [];
@@ -118,6 +129,51 @@ class datatables extends mysql {
                 break;
         }
     }
+    private function opciones_estado_columna(){
+        return json_encode(['ACTIVO', 'INACTIVO', 'PROTEGIDO']);
+    }
+    private function compartir_estados($idtabla, $nombre_estado, $usuarios){
+        
+        $security = new security($this->ACCIONES['compartir_vista']);
+        $usuario_actual = $security->get_actual_user();
+        $usuario_actual = $this->escape_sql($usuario_actual);
+
+        $idtabla       = $this->escape_sql($idtabla);
+        $nombre_estado = $this->escape_sql($nombre_estado);
+
+        // Obtener el estado original del usuario actual
+        $sql_origen = "SELECT estado FROM {$this->base_datos}.datatables WHERE usuario = '$usuario_actual' AND tabla = '$idtabla' AND nombre_estado = '$nombre_estado'";
+
+        $db = new mysql();
+        $estado_original = $db->getvalue($sql_origen);
+
+        if (!$estado_original) {
+            return "Estado no encontrado";
+        }
+
+        $estado_escapado = $this->escape_sql($estado_original);
+
+        $usuarios = urldecode($usuarios);
+        $lista_usuarios = explode(',', $usuarios);
+
+        $resultados = [];
+        foreach ($lista_usuarios as $usuario_destino) {
+            $usuario_destino = trim($usuario_destino);
+            if ($usuario_destino === '') {
+                continue;
+            }
+            $usuario_destino_escapado = $this->escape_sql($usuario_destino);
+
+            $sql = "INSERT INTO {$this->base_datos}.datatables (usuario, tabla, nombre_estado, estado)
+                    VALUES ('$usuario_destino_escapado', '$idtabla', '$nombre_estado', '$estado_escapado')
+                    ON DUPLICATE KEY UPDATE estado = VALUES(estado)";
+
+            $db->getresult($sql);
+            $resultados[] = $usuario_destino;
+        }
+
+        return "Estado compartido con: " . implode(', ', $resultados);
+    }
     public function cargar_status_datatables(string $tabla, string $nombre_estado) {
         if (!$this->has_state_name_column()) {
             return '';
@@ -138,27 +194,43 @@ class datatables extends mysql {
     public function addTable($result, $PARAMETROS = [], $style = "", $special_columns = [], $aligments = [], $hidden_columns = [], $idtabla = "tabla_datos") {
         $PARAMETROS = is_array($PARAMETROS) ? $PARAMETROS : [];
 
+        //
+        $add_filter    = isset($PARAMETROS['add_filter'])    ? $PARAMETROS['add_filter']    : false;
+        $add_filter_value = 'false';
+        if (!($add_filter === false || $add_filter === '' || $add_filter === null)) {
+            $add_filter_value = trim((string)$add_filter);
+            if ($add_filter_value !== '') {
+                $normalized_parts = [];
+                foreach (explode(',', $add_filter_value) as $part) {
+                    $part = strtoupper(str_replace('_', ' ', trim((string)$part)));
+                    if ($part !== '') {
+                        $normalized_parts[] = $part;
+                    }
+                }
+                $add_filter_value = empty($normalized_parts) ? 'false' : implode(',', $normalized_parts);
+            } else {
+                $add_filter_value = 'false';
+            }
+        }
+        //
         $columncontrol = isset($PARAMETROS['columncontrol']) ? $PARAMETROS['columncontrol'] : false;
-        $responsive    = isset($PARAMETROS['responsive']) ? $PARAMETROS['responsive'] : false;
-        $colreorder    = isset($PARAMETROS['colreorder']) ? $PARAMETROS['colreorder'] : false;
-        $select        = isset($PARAMETROS['select']) ? $PARAMETROS['select'] : false;
-        $buttons       = isset($PARAMETROS['buttons']) ? $PARAMETROS['buttons'] : false;
-        $paging        = isset($PARAMETROS['paging']) ? $PARAMETROS['paging'] : false;
-        $ordering      = isset($PARAMETROS['ordering']) ? $PARAMETROS['ordering'] : false;
-        $reset         = isset($PARAMETROS['reset']) ? $PARAMETROS['reset'] : false;
-        $rowgroup      = isset($PARAMETROS['rowgroup']) ? $PARAMETROS['rowgroup'] : false;
-        $columncontrol_exclude = isset($PARAMETROS['columncontrolexclude']) ? $PARAMETROS['columncontrolexclude'] : false;
-        $edit_button      = isset($PARAMETROS['edit_button']) ? $PARAMETROS['edit_button'] : false;
-        $export_all    = isset($PARAMETROS['export_all']) ? $PARAMETROS['export_all'] : false;
-        $staterestore  = isset($PARAMETROS['staterestore']) ? $PARAMETROS['staterestore'] : false;
-
-        $titulo_tabla  = isset($PARAMETROS['titulotabla']) ? $PARAMETROS['titulotabla'] : false;
-        $file_name     = isset($PARAMETROS['filename']) ? $PARAMETROS['filename'] : false;
-
+        $responsive    = isset($PARAMETROS['responsive'])    ? $PARAMETROS['responsive']    : false;
+        $colreorder    = isset($PARAMETROS['colreorder'])    ? $PARAMETROS['colreorder']    : false;
+        $select        = isset($PARAMETROS['select'])        ? $PARAMETROS['select']        : false;
+        $buttons       = isset($PARAMETROS['buttons'])       ? $PARAMETROS['buttons']       : false;
+        $paging        = isset($PARAMETROS['paging'])        ? $PARAMETROS['paging']        : false;
+        $ordering      = isset($PARAMETROS['ordering'])      ? $PARAMETROS['ordering']      : false;
+        $reset         = isset($PARAMETROS['reset'])         ? $PARAMETROS['reset']         : false;
+        $rowgroup      = isset($PARAMETROS['rowgroup'])      ? $PARAMETROS['rowgroup']      : false;
+        $edit_button   = isset($PARAMETROS['edit_button'])   ? $PARAMETROS['edit_button']   : false;
+        $export_all    = isset($PARAMETROS['export_all'])    ? $PARAMETROS['export_all']    : false;
+        $staterestore  = isset($PARAMETROS['staterestore'])  ? $PARAMETROS['staterestore']  : false;
+        $titulo_tabla  = isset($PARAMETROS['titulotabla'])   ? $PARAMETROS['titulotabla']   : false;
+        $file_name     = isset($PARAMETROS['filename'])      ? $PARAMETROS['filename']      : false;
         $titulo_tabla = ($titulo_tabla === false || $titulo_tabla === '') ? 'Listado' : $titulo_tabla;
-        $file_name    = ($file_name === false || $file_name === '') ? 'Listado' : $file_name;
-        $row_group    = ($rowgroup === false || $rowgroup === '') ? 'false' : strtoupper(str_replace('_', ' ', (string)$rowgroup));
-
+        $file_name    = ($file_name    === false || $file_name === '')    ? 'Listado' : $file_name;
+        $row_group    = ($rowgroup     === false || $rowgroup === '')     ? 'false'   : strtoupper(str_replace('_', ' ', (string)$rowgroup));
+        $columncontrol_exclude = isset($PARAMETROS['columncontrolexclude']) ? $PARAMETROS['columncontrolexclude'] : false;
         $columncontrol_exclude_value = 'false';
         if (!($columncontrol_exclude === false || $columncontrol_exclude === '' || $columncontrol_exclude === null)) {
             $columncontrol_exclude_value = trim((string)$columncontrol_exclude);
@@ -195,19 +267,20 @@ class datatables extends mysql {
 
         $data_ = "";
         $data_ .= " data-conf-columncontrol='" . ($columncontrol ? "true" : "false") . "' ";
+        $data_ .= " data-conf-rowgroup='"      . $row_group . "' ";
+        $data_ .= " data-conf-titulotabla='"   . $titulo_tabla . "' ";
+        $data_ .= " data-conf-filename='"      . $file_name . "' ";
+        $data_ .= " data-conf-responsive='"    . ($responsive ? "true" : "false") . "' ";
+        $data_ .= " data-conf-colreorder='"    . ($colreorder ? "true" : "false") . "' ";
+        $data_ .= " data-conf-select='"        . ($select ? "true" : "false") . "' ";
+        $data_ .= " data-conf-buttons='"       . $buttons_value . "' ";
+        $data_ .= " data-conf-paging='"        . ($paging ? "true" : "false") . "' ";
+        $data_ .= " data-conf-ordering='"      . ($ordering ? "true" : "false") . "' ";
+        $data_ .= " data-conf-reset='"         . ($reset ? "true" : "false") . "' ";
+        $data_ .= " data-conf-exportall='"     . ($export_all ? "true" : "false") . "' ";
+        $data_ .= " data-conf-staterestore='"  . ($staterestore ? "true" : "false") . "' ";
+        $data_ .= " data-conf-addfilter='"            . htmlspecialchars($add_filter_value, ENT_QUOTES, 'UTF-8') . "' ";
         $data_ .= " data-conf-columncontrolexclude='" . htmlspecialchars($columncontrol_exclude_value, ENT_QUOTES, 'UTF-8') . "' ";
-        $data_ .= " data-conf-rowgroup='" . $row_group . "' ";
-        $data_ .= " data-conf-titulotabla='" . $titulo_tabla . "' ";
-        $data_ .= " data-conf-filename='" . $file_name . "' ";
-        $data_ .= " data-conf-responsive='" . ($responsive ? "true" : "false") . "' ";
-        $data_ .= " data-conf-colreorder='" . ($colreorder ? "true" : "false") . "' ";
-        $data_ .= " data-conf-select='" . ($select ? "true" : "false") . "' ";
-        $data_ .= " data-conf-buttons='" . $buttons_value . "' ";
-        $data_ .= " data-conf-paging='" . ($paging ? "true" : "false") . "' ";
-        $data_ .= " data-conf-ordering='" . ($ordering ? "true" : "false") . "' ";
-        $data_ .= " data-conf-reset='" . ($reset ? "true" : "false") . "' ";
-        $data_ .= " data-conf-exportall='" . ($export_all ? "true" : "false") . "' ";
-        $data_ .= " data-conf-staterestore='" . ($staterestore ? "true" : "false") . "' ";
 
         $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
         if (in_array($idtabla, $this->IDS, true)) {
@@ -328,10 +401,10 @@ class datatables extends mysql {
             }
             $estados[$idtabla] = $estado;
         }
-        return json_encode($estados);
+        $json = json_encode($estados);
+        $json = str_replace('|', '##PIPE##', $json);
+        return $json; 
     }
-
-
     public function guardar_estado_datatables($tabla, $estado) {
         
         $usuario = (new security())->get_actual_user();
@@ -355,7 +428,6 @@ class datatables extends mysql {
         $db = new mysql();
         return $db->getresult($sql);
     }
-
     public function guardar_estado_datatables_staterestore($tabla, $nombre_estado, $estado) {
         if (!$this->has_state_name_column()) {
             return false;
@@ -373,7 +445,6 @@ class datatables extends mysql {
         $db = new mysql();
         return $db->getresult($sql);
     }
-
     public function listar_estados_datatables_staterestore($tabla) {
         if (!$this->has_state_name_column()) {
             return json_encode([]);
@@ -396,7 +467,6 @@ class datatables extends mysql {
 
         return json_encode($estados);
     }
-
     public function cargar_estados_datatables_staterestore($tabla) {
         if (!$this->has_state_name_column()) {
             return json_encode((object)[]);
@@ -416,10 +486,10 @@ class datatables extends mysql {
         while ($row = $db->getrowresult($result)) {
             $estados[$row['nombre_estado']] = json_decode($row['estado'], true);
         }
-
-        return json_encode($estados);
+        $json = json_encode($estados);
+        $json = str_replace('|', '##PIPE##', $json);
+        return $json;
     }
-
     public function cargar_estado_datatables_staterestore($tabla, $nombre_estado) {
         if (!$this->has_state_name_column()) {
             return json_encode([]);
@@ -438,11 +508,9 @@ class datatables extends mysql {
         $estado = $db->getvalue($sql, 'estado');
         return $estado ? $estado : json_encode([]);
     }
-
     public function actualizar_estado_datatables_staterestore($tabla, $nombre_estado, $estado) {
         return $this->guardar_estado_datatables_staterestore($tabla, $nombre_estado, $estado);
     }
-
     public function renombrar_estado_datatables_staterestore($tabla, $nombre_estado_actual, $nombre_estado_nuevo) {
         if (!$this->has_state_name_column()) {
             return false;
@@ -465,7 +533,6 @@ class datatables extends mysql {
 
         return $db->getresult($sql);
     }
-
     public function eliminar_estado_datatables_staterestore($tabla, $nombre_estado) {
         if (!$this->has_state_name_column()) {
             return false;
@@ -485,7 +552,6 @@ class datatables extends mysql {
 
         return $db->getresult($sql);
     }
-
     private function normalizar_nombre_estado($nombre_estado) {
         $nombre = trim((string) $nombre_estado);
         if ($nombre === '') {
@@ -493,11 +559,9 @@ class datatables extends mysql {
         }
         return substr($nombre, 0, 100);
     }
-
     private function escape_sql($valor) {
         return str_replace("'", "\\'", (string) $valor);
     }
-
     private function has_state_name_column() {
         static $cache = null;
         if ($cache !== null) {
@@ -513,14 +577,11 @@ class datatables extends mysql {
         $cache = ((int) $db->getvalue($sql, 'existe')) > 0;
         return $cache;
     }
-
     // ========== MÉTODOS PARA CONSTRUCCIÓN DE REPORTES ==========
-
     public function addTitle($text)
     {
         $this->html .= "<h2 style='width:100%;display:block;text-align:center; color: black;'>$text</h2>";
     }
-
     public function addSubTitle($text)
     {
         $this->html .= "<h4 style='color: black;'>$text</h4>";

@@ -1,0 +1,79 @@
+/* ============================================================
+    dt2.print.css 
+    Css generico cuando se impirme UNA tabla desde el boton propiop de dt2
+    se complementa (NO SE OMITE) con idtabla.css si es que existe 
+    Si existe idtabla.css entonces sus estilos se 'agregan al final' de dt2.css 
+============================================================ */
+
+
+@page { margin: 10mm; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table.dataTable thead th,
+body.dt-print-view table thead th,
+body.dt-print-view table.dataTable thead th {
+    background-color: #1e5f4b;
+    color: #ffffff;
+    border: 1px solid #000000;
+    padding: 0.5em;
+    text-align: left;
+}
+
+table td,
+table.dataTable tbody td,
+body.dt-print-view table tbody td,
+body.dt-print-view table.dataTable tbody td {
+    background-color: #f2f2f2;
+    color: #000000;
+    border: 1px solid #000000;
+    padding: 0.5em;
+}
+
+table tr:nth-child(even) td,
+table.dataTable tbody tr:nth-child(even) td,
+body.dt-print-view table tbody tr:nth-child(even) td,
+body.dt-print-view table.dataTable tbody tr:nth-child(even) td {
+    background-color: #dfe6ee;
+}
+
+table tr:hover td {
+    background-color: #c7d7eb;
+    color: #000000;
+}
+
+body.dt-print-view,
+body.dt-print-view table,
+body.dt-print-view table.dataTable,
+body.dt-print-view h1,
+body.dt-print-view h2,
+body.dt-print-view h3,
+body.dt-print-view h4,
+body.dt-print-view div,
+body.dt-print-view span,
+body.dt-print-view p {
+    color: #000000 !important;
+}
+
+body.dt-print-view {
+    background-color: #ffffff !important;
+}
+
+body.dt-print-view .dt-print-header {
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+body.dt-print-view .dt-print-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000000 !important;
+}
+
+body.dt-print-view .dt-print-company {
+    font-size: 12px;
+    color: #000000 !important;
+}

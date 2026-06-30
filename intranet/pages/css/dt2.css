@@ -1,3 +1,10 @@
+/* ============================================================
+    dt2.css
+    Ubicacion de  div de paginacion .dt-length y  div de busqueda .dt-search en dispositivos moviles 
+    Tambien afecta al div de bottones buttons 
+    y a los contenedores de los tres  mencionados 
+============================================================ */
+
 div.dt-container div.dt-layout-cell.dt-layout-start {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -34,13 +41,11 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
     margin: 0 0 0 12px !important;
 }
 
-/* Espacio entre select y label "Registros" */
 .dt-length select {
     margin-right: 6px !important;
     margin-left: 6px !important;
 }
 
-/* Lupa a la derecha del input */
 .dt-search {
     flex-direction: row !important;
 }
@@ -63,21 +68,18 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         order: 1 !important;
         margin-bottom: 6px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
         flex: 0 0 auto !important;
         width: auto !important;
         order: 2 !important;
         margin: 0 !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         flex: 0 0 auto !important;
         width: auto !important;
         order: 2 !important;
         margin: 0 0 0 12px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
         width: auto !important;
     }
@@ -91,21 +93,18 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         order: 1 !important;
         margin-bottom: 6px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
         flex: 0 0 auto !important;
         width: auto !important;
         order: 2 !important;
         margin: 0 !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         flex: 0 0 auto !important;
         width: auto !important;
         order: 2 !important;
         margin: 0 0 0 12px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
         width: auto !important;
     }
@@ -119,14 +118,12 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         order: 1 !important;
         margin-bottom: 6px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-length {
         flex: 0 0 auto !important;
         width: auto !important;
         order: 2 !important;
         margin: 0 !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         flex: 1 1 0 !important;
         min-width: 0 !important;
@@ -134,9 +131,9 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         order: 2 !important;
         margin: 0 0 0 12px !important;
     }
-
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search input {
         width: 100% !important;
         min-width: 0 !important;
     }
 }
+

@@ -134,6 +134,7 @@ $idubicacion = $row['idubicacion'];
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
+    <script src="../js/dt2.js?x=<?php echo $version ?>"></script>
     <script src="../js/xlsx.full.min.js?x=<?php echo $version ?>"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -146,6 +147,7 @@ $idubicacion = $row['idubicacion'];
 <body class="fix-header card-no-border fix-sidebar" onload="
     callback_cargar_estado_tabla = function(respuesta){
         if (!respuesta) return;
+        respuesta = respuesta.replace(/##PIPE##/g, '|');
         let estados = JSON.parse(respuesta);
         console.log('Estados cargados:', estados);
         Object.keys(estados).forEach(function(idtabla){

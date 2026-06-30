@@ -1,0 +1,124 @@
+{
+  "sProcessing":     "Procesando...",
+  "sLengthMenu":     "_MENU_ Registros",
+  "sZeroRecords":    "No se encontraron resultados",
+  "sEmptyTable":     "Ningún dato disponible en esta tabla",
+  "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+  "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
+  "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+  "sInfoPostFix":    "",
+  "sSearch":         "🔍",
+  "sUrl":            "",
+  "sInfoThousands":  ",",
+  "sLoadingRecords": "Cargando...",
+  "lengthLabels": {
+      "-1": "Todo"
+  },
+  "oPaginate": {
+    "sFirst":    "Primero",
+    "sLast":     "Último",
+    "sNext":     "Siguiente",
+    "sPrevious": "Anterior"
+  },
+  "oAria": {
+    "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+  },
+  "searchPlaceholder": "Buscar...",
+  "buttons": {
+    "savedStates": "Vistas",
+    "createState": "Crear estado",
+    "updateState": "Actualizar",
+    "stateRestore": "Estado %d",
+    "removeState":  "Eliminar",
+    "renameState":  "Renombrar",
+    "searchClear":  "Limpiar búsqueda"
+  },
+  "stateRestore": {
+    "emptyStates":   "Sin vistas",
+    "removeConfirm": "¿Seguro que desea eliminar \"%s\"?",
+    "removeSubmit":  "Eliminar",
+    "renameButton":  "Renombrar",
+    "renameLabel":   "Nuevo nombre:",
+    "creationModal": {
+      "button":  "Crear",
+      "title":   "Crear nuevo estado",
+      "name":    "Nombre:",
+      "order":   "Ordenación:",
+      "search":  "Búsqueda:",
+      "paging":  "Paginación:",
+      "length":  "Registros por página:",
+      "columns": {
+        "search":  "Búsqueda por columna:",
+        "visible": "Visibilidad de columnas:"
+      }
+    }
+  },
+  "columnControl": {
+    "colVis":         "Visibilidad de columnas",
+    "colVisDropdown": "Visibilidad de columnas",
+    "dropdown":       "Más...",
+    "orderAddAsc":    "Añadir orden ascendente",
+    "orderAddDesc":   "Añadir orden descendente",
+    "orderAsc":       "Ascendente",
+    "orderClear":     "Quitar orden",
+    "orderDesc":      "Descendente",
+    "orderRemove":    "Quitar de la ordenación",
+    "reorder":        "Reordenar columnas",
+    "reorderLeft":    "Mover columna a la izquierda",
+    "reorderRight":   "Mover columna a la derecha",
+    "searchClear":    "Limpiar búsqueda",
+    "searchDropdown": "Buscar",
+    "list": {
+      "all":    "Seleccionar todo",
+      "empty":  "Vacío",
+      "none":   "Deseleccionar",
+      "search": "Buscar..."
+    },
+    "search": {
+      "text": {
+        "contains":    "Contiene",
+        "notContains": "No contiene",
+        "equal":       "Igual a",
+        "notEqual":    "Distinto de",
+        "starts":      "Inicia con",
+        "ends":        "Termina con",
+        "empty":       "Vacío",
+        "notEmpty":    "No vacío"
+      },
+      "number": {
+        "equal":          "Igual a",
+        "notEqual":       "Distinto de",
+        "greater":        "Mayor que",
+        "greaterOrEqual": "Mayor o igual que",
+        "less":           "Menor que",
+        "lessOrEqual":    "Menor o igual que",
+        "empty":          "Vacío",
+        "notEmpty":       "No vacío"
+      },
+      "datetime": {
+        "equal":    "Igual a",
+        "notEqual": "Distinto de",
+        "greater":  "Posterior a",
+        "less":     "Anterior a",
+        "empty":    "Vacío",
+        "notEmpty": "No vacío"
+      }
+    }
+  },
+  "searchBuilder": {
+    "conditions": {
+      "string": {
+        "contains":    "Contiene",
+        "!contains":   "No contiene",
+        "equals":      "Igual a",
+        "!equals":     "Distinto de",
+        "starts":      "Inicia con",
+        "ends":        "Termina con",
+        "empty":       "Vacío",
+        "!empty":      "No vacío"
+      }
+    }
+  }
+
+}
