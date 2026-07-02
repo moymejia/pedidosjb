@@ -17,6 +17,34 @@
         color: #ffffff;
         background-color: #0b6fa4;
     }
+
+    #modal_ejecutar_pago .modal-content {
+        background-color: var(--brg-card);
+        border: 1px solid var(--fondoformulario);
+        color: #ffffff;
+    }
+
+    #modal_ejecutar_pago .modal-header {
+        background-color: var(--color-card-titile);
+        border-bottom: 1px solid var(--fondoformulario);
+        color: #ffffff;
+    }
+
+    #modal_ejecutar_pago .modal-footer {
+        background-color: var(--fondoformulario);
+        border-top: 1px solid var(--fondoformulario);
+    }
+
+    #modal_ejecutar_pago .close {
+        color: #ffffff;
+        opacity: 1;
+        text-shadow: none;
+    }
+
+    #modal_ejecutar_pago .text-muted {
+        color: #d1d5db !important;
+    }
+
 </style>
 
 <div class="margen-formulario" id="despachoPagoApp">
@@ -67,6 +95,32 @@
             <i class="fas fa-arrow-left"></i> Regresar
         </button>
     </div>
+
+</div>
+
+<div class="modal fade " id="modal_ejecutar_pago" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ejecutar documento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modal_ejecutar_iddespacho_pago" value="">
+                <div class="form-group m-b-5">
+                    <label for="modal_ejecutar_fecha">Fecha ejecutado <span class="text-danger">*</span></label>
+                    <input type="date" id="modal_ejecutar_fecha" class="form-control" required>
+                    <small class="text-muted">Seleccione la fecha real en la que se ejecutó el documento.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success waves-effect waves-light" onclick="despachoPagoConfirmarEjecutar();">Confirmar</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/template" id="tpl_despacho_pago_formulario">
@@ -104,7 +158,7 @@
                     </div>
                     <div class='col-md-4 form-group m-b-5' id='div_numero_recuperado' style='display:none;'>
                         <label for='numero_recuperado'>No. Recuperado <span class='text-danger'>*</span></label>
-                        <input type='text' id='numero_recuperado' class='form-control' maxlength='50' placeholder='Cheque recuperado'>
+                        <input type='text' id='numero_recuperado' class='form-control' maxlength='50' placeholder='Cheque recuperado' onchange='despachoPagoValidarNumeroRecuperado();'>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='fecha'>Fecha <span class='text-danger'>*</span></label>
@@ -115,7 +169,6 @@
                         <select id='estado' class='form-control' onchange='despachoPagoManejarCambioEstado();' required>
                             <option value='PROGRAMADO'>PROGRAMADO</option>
                             <option value='EJECUTADO'>EJECUTADO</option>
-                            <option value='ANULADO'>ANULADO</option>
                         </select>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
@@ -128,7 +181,7 @@
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='referencia_pago'>Referencia</label>
-                        <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.'>
+                        <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.' required>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='descuento'>Descuento</label>
@@ -163,6 +216,7 @@
                     <div class='col-md-12 form-group m-b-5 d-flex align-items-end'>
                         <div>
                             <button type='submit' id='btn_guardar_documento' class='btn btn-success waves-effect waves-light m-r-10'>Guardar documento</button>
+                            <button type='button' id='btn_agregar_documento' class='btn btn-primary waves-effect waves-light m-r-10' onclick='despachoPagoAgregar();'>Agregar</button>
                             <button type='button' class='btn btn-inverse waves-effect waves-light' onclick='despachoPagoLimpiarFormulario();'>Limpiar</button>
                             <button type='button' id='btn_imprimir_documento' class='btn btn-warning waves-effect waves-light m-l-10' style='display:none;' onclick='despachoPagoImprimirRegistro();'>
                                 <i class='fas fa-print'></i>

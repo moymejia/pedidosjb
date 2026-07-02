@@ -36,7 +36,7 @@ class cartera_de_clientes extends table
         $_SECURITY->get_actual_user();
 
         $DATA = [];
-        $DATA['vendedores_activos'] = (new usuario())->options_usuarios_activos();
+        $DATA['vendedores_activos'] = (new usuario())->options_activas();
         $DATA['clientes_activos']   = (new cliente())->option_activas();
 
         $_HTML = new html('cartera_de_clientes', $DATA);

@@ -883,7 +883,7 @@ class despacho extends table
 			<thead>
 				<tr>
 					<th>Cliente</th>
-					<th>Total facturado</th>
+					<th>Facturado</th>
 					<th>Total pagado</th>
 					<th>Total programado</th>
 					<th>Saldo</th>
@@ -937,6 +937,10 @@ class despacho extends table
 					monto_total,
 					estado_pago,
 					monto_pago,
+					signo_pago,
+					correlativo_documento,
+					referencia_pago,
+					numero_recuperado,
 					fecha_pago AS fecha_pago_raw,
 					DATE_FORMAT(fecha_pago, '%d-%m-%Y') AS fecha_pago,
 					tipo_pago,
@@ -966,7 +970,10 @@ class despacho extends table
 					$GRUPOS[$iddespacho]['pagos'][] = [
 						'fecha_pago' => $row_detalle['fecha_pago'],
 						'tipo_pago' => $row_detalle['tipo_pago'],
-						'numero_factura' => $row_detalle['numero_factura'],
+						'signo_pago' => isset($row_detalle['signo_pago']) ? (float)$row_detalle['signo_pago'] : 1,
+						'correlativo_documento' => isset($row_detalle['correlativo_documento']) ? trim($row_detalle['correlativo_documento'] . '') : '',
+						'referencia_pago' => isset($row_detalle['referencia_pago']) ? trim($row_detalle['referencia_pago'] . '') : '',
+						'numero_recuperado' => isset($row_detalle['numero_recuperado']) ? trim($row_detalle['numero_recuperado'] . '') : '',
 						'estado_pago' => $row_detalle['estado_pago'],
 						'estado_pago_individual' => $row_detalle['estado_pago_individual'],
 						'monto_pago' => (float)$row_detalle['monto_pago']
@@ -1009,10 +1016,12 @@ class despacho extends table
 				<thead>
 					<tr>
 						<th>Tipo registro</th>
-						<th>Fecha despacho</th>
-						<th>Total facturado</th>
+						<th>Despachado en</th>
+						<th>Facturado</th>
 						<th>Tipo de pago</th>
-						<th>Numero documento</th>
+						<th>Recibo</th>
+						<th>Ref.</th>
+						<th>Cheque recuperado</th>
 						<th>Fecha pago</th>
 						<th>Valor pagado</th>
 						<th>Valor programado</th>
@@ -1024,9 +1033,13 @@ class despacho extends table
 
 			foreach ($GRUPOS as $iddespacho => $grupo) {
 				$total_pagos = 0;
+				$total_valor_pagado = 0;
+				$total_valor_programado = 0;
 
 				$tabla_detallada .= "<tr class='bg-info' style='font-weight:bold; color: white; background-color: #438eb9;'>
 					<td>Cliente: " . $grupo['nombre_cliente'] . "</td>
+					<td></td>
+					<td></td>
 					<td></td>
 					<td></td>
 					<td></td>
@@ -1049,17 +1062,24 @@ class despacho extends table
 					<td></td>
 					<td></td>
 					<td></td>
+					<td></td>
+					<td></td>
 				</tr>";
 
 				foreach ($grupo['pagos'] as $pago) {
 					$valor_pago = 0;
 					$valor_programado = 0;
+					$cheque_recuperado = trim($pago['numero_recuperado'] . '');
+					$monto_aplicado = round((float)$pago['monto_pago'] * (float)$pago['signo_pago'], 2);
+					$estado_pago_individual = strtoupper(trim($pago['estado_pago_individual'] . ''));
 					
-					// Mostrar como programado si el estado_pago_individual contiene PROGRAMADO
-					if ($pago['estado_pago_individual'] === 'PROGRAMADO') {
-						$valor_programado = $pago['monto_pago'];
-					} else { // necesariamente será 'EJECUTADO'
-						$valor_pago = $pago['monto_pago'];
+					// Solo PROGRAMADO y EJECUTADO deben impactar montos.
+					if ($estado_pago_individual === 'PROGRAMADO') {
+						$valor_programado = $monto_aplicado;
+						$total_valor_programado += $valor_programado;
+					} elseif ($estado_pago_individual === 'EJECUTADO') {
+						$valor_pago = $monto_aplicado;
+						$total_valor_pagado += $valor_pago;
 						$total_pagos += $valor_pago;
 					}
 
@@ -1068,10 +1088,12 @@ class despacho extends table
 						<td></td>
 						<td></td>
 						<td>" . $pago['tipo_pago'] . " (" . $pago['estado_pago_individual'] . ")" . "</td>
-						<td>" . $pago['numero_factura'] . "</td>
+						<td>" . $pago['correlativo_documento'] . "</td>
+						<td>" . $pago['referencia_pago'] . "</td>
+						<td>" . $cheque_recuperado . "</td>
 						<td>" . $pago['fecha_pago'] . "</td>
-						<td style='text-align:right;'>" . (($valor_pago > 0) ? ('Q. ' . number_format($valor_pago, 2)) : '') . "</td>
-						<td style='text-align:right;'>" . (($valor_programado > 0) ? ('Q. ' . number_format($valor_programado, 2)) : '') . "</td>
+						<td style='text-align:right;'>" . (($valor_pago != 0) ? ('Q. ' . number_format($valor_pago, 2)) : '') . "</td>
+						<td style='text-align:right;'>" . (($valor_programado != 0) ? ('Q. ' . number_format($valor_programado, 2)) : '') . "</td>
 						<td></td>
 						<td></td>
 					</tr>";
@@ -1088,6 +1110,8 @@ class despacho extends table
 					<td></td>
 					<td></td>
 					<td></td>
+					<td style='text-align:right;'>Q. " . number_format($total_valor_pagado, 2) . "</td>
+					<td style='text-align:right;'>Q. " . number_format($total_valor_programado, 2) . "</td>
 					<td style='text-align:right;'>Q. " . number_format($total_pagos, 2) . "</td>
 					<td style='text-align:right;'>Q. " . number_format($saldo, 2) . "</td>
 				</tr>";
@@ -1173,10 +1197,10 @@ class despacho extends table
 		$tabla .= "<table id='tabla_datos' " . $data_ . " class='display nowrap table table-hover table-bordered datatable' cellspacing='0' width='100%'>
 			<thead>
 				<tr>
-					<th>Facturado</th>
-					<th>No. despacho/factura</th>
+					<th>Despachado en</th>
+					<th>Recibo</th>
 					<th>Cliente</th>
-					<th>Total facturado</th>
+					<th>Facturado</th>
 					<th>Total pagado</th>
 					<th>Total programado</th>
 					<th>Saldo</th>

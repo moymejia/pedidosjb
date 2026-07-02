@@ -2,6 +2,7 @@
     var isRefreshingPanel = false;
     var isRefreshingPendientes = false;
     var mostrarSinSaldo = false;
+    var idDespachoPagoPendienteEjecutar = '';
 
     function normalizarMonto(valor) {
         var monto = String(valor === null || valor === undefined ? '' : valor).replace(/,/g, '').trim();
@@ -40,6 +41,52 @@
             .toUpperCase();
     }
 
+    function fechaEsValidaISO(fecha) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+            return false;
+        }
+
+        var partes = fecha.split('-');
+        var year = Number(partes[0]);
+        var month = Number(partes[1]);
+        var day = Number(partes[2]);
+        var fechaObj = new Date(year, month - 1, day);
+
+        return fechaObj.getFullYear() === year &&
+            (fechaObj.getMonth() + 1) === month &&
+            fechaObj.getDate() === day;
+    }
+
+    function mostrarModalEjecutar(iddespacho_pago) {
+        var inputFecha = objeto('modal_ejecutar_fecha');
+        var inputId = objeto('modal_ejecutar_iddespacho_pago');
+
+        if (!inputFecha || !inputId) {
+            notify_error('No se pudo abrir el formulario de fecha de ejecución.');
+            return;
+        }
+
+        idDespachoPagoPendienteEjecutar = String(iddespacho_pago || '');
+        inputId.value = idDespachoPagoPendienteEjecutar;
+        inputFecha.value = (new Date()).toISOString().slice(0, 10);
+        $('#modal_ejecutar_pago').modal('show');
+    }
+
+    function cerrarModalEjecutar() {
+        var inputFecha = objeto('modal_ejecutar_fecha');
+        var inputId = objeto('modal_ejecutar_iddespacho_pago');
+
+        idDespachoPagoPendienteEjecutar = '';
+        if (inputId) {
+            inputId.value = '';
+        }
+        if (inputFecha) {
+            inputFecha.value = '';
+        }
+
+        $('#modal_ejecutar_pago').modal('hide');
+    }
+
     function tipoDocumentoEsRecuperacion() {
         var select = objeto('idtipo_documento');
         if (!select || select.selectedIndex < 0) {
@@ -66,6 +113,14 @@
             } else {
                 objeto('numero_recuperado').removeAttribute('required');
                 objeto('numero_recuperado').value = '';
+            }
+        }
+
+        if (objeto('referencia_pago') !== undefined) {
+            if (mostrar) {
+                objeto('referencia_pago').setAttribute('required', 'required');
+            } else {
+                objeto('referencia_pago').removeAttribute('required');
             }
         }
     }
@@ -349,7 +404,7 @@
         showElement('card_despachos_pendientes');
     };
 
-    window.despachoPagoGuardar = function () {
+    function guardarDocumentoPago(limpiarSoloMontos) {
         var iddespacho = elementValue('iddespacho');
         var iddespacho_pago = elementValue('iddespacho_pago');
         var idtipo_pago = elementValue('idtipo_pago');
@@ -358,6 +413,7 @@
         var fecha = elementValue('fecha');
         var correlativo_documento = elementValue('correlativo_documento');
         var numero_recuperado = elementValue('numero_recuperado');
+        var referencia_pago = elementValue('referencia_pago');
         var monto = normalizarMonto(elementValue('monto'));
         var descuento = normalizarMonto(elementValue('descuento'));
         var devolucion = normalizarMonto(elementValue('devolucion'));
@@ -370,7 +426,7 @@
             return false;
         }
 
-        if (!idtipo_pago || !idtipo_documento || !estado || !fecha || !correlativo_documento) {
+        if (!idtipo_pago || !idtipo_documento || !estado || !fecha || !correlativo_documento || !referencia_pago) {
             notify_warning('Complete todos los campos obligatorios.');
             return false;
         }
@@ -378,6 +434,12 @@
         if (tipoDocumentoEsRecuperacion() && !numero_recuperado) {
             notify_warning('Ingrese el No. Recuperado.');
             element('numero_recuperado').focus();
+            return false;
+        }
+
+        if (tipoDocumentoEsRecuperacion() && !referencia_pago) {
+            notify_warning('Ingrese la Referencia del cheque recuperado.');
+            element('referencia_pago').focus();
             return false;
         }
 
@@ -421,8 +483,13 @@
                 notify_success('Pago registrado correctamente.');
             }
 
-            window.despachoPagoLimpiarFormulario();
-            refrescarPanelPagos(iddespacho, false);
+            if (limpiarSoloMontos) {
+                window.despachoPagoLimpiarSoloMontos();
+                refrescarPanelPagos(iddespacho, true);
+            } else {
+                window.despachoPagoLimpiarFormulario();
+                refrescarPanelPagos(iddespacho, false);
+            }
 
             if (elementValue('idcliente')) {
                 refrescarPendientesCliente(elementValue('idcliente'));
@@ -435,26 +502,75 @@
             upload_action(fields, 'despacho_pago', 'guardar', callback_guardar_despacho_pago);
         }
         return false;
+    }
+
+    window.despachoPagoGuardar = function () {
+        return guardarDocumentoPago(false);
+    };
+
+    window.despachoPagoAgregar = function () {
+        return guardarDocumentoPago(true);
     };
 
     window.despachoPagoManejarCambioTipoDocumento = function () {
         aplicarReglasTipoDocumento();
     };
 
+    window.despachoPagoValidarNumeroRecuperado = function () {
+        var numero_recuperado = String(elementValue('numero_recuperado') || '').trim();
+
+        if (!tipoDocumentoEsRecuperacion()) {
+            return;
+        }
+
+        if (!numero_recuperado) {
+            return;
+        }
+
+        upload_action('numero_recuperado=' + encodeURIComponent(numero_recuperado), 'despacho_pago', 'validar_numero_recuperado', function () {
+            // Validación correcta, no se requiere notificación para no saturar la UI.
+        });
+    };
+
     window.despachoPagoEjecutarRegistro = function (iddespacho_pago) {
+        if (!iddespacho_pago) {
+            notify_warning('Documento de pago invalido.');
+            return;
+        }
+
+        mostrarModalEjecutar(iddespacho_pago);
+    };
+
+    window.despachoPagoConfirmarEjecutar = function () {
         var iddespacho = elementValue('iddespacho');
+        var inputFecha = objeto('modal_ejecutar_fecha');
+        var iddespacho_pago = idDespachoPagoPendienteEjecutar || (objeto('modal_ejecutar_iddespacho_pago') ? elementValue('modal_ejecutar_iddespacho_pago') : '');
+        var fecha_ejecutado = inputFecha ? String(inputFecha.value || '').trim() : '';
 
         if (!iddespacho_pago) {
             notify_warning('Documento de pago invalido.');
             return;
         }
 
-        if (!confirm('¿Confirma ejecutar este documento programado?')) {
+        if (!fecha_ejecutado) {
+            notify_warning('Debe seleccionar la fecha de ejecución.');
+            if (inputFecha) {
+                inputFecha.focus();
+            }
+            return;
+        }
+
+        if (!fechaEsValidaISO(fecha_ejecutado)) {
+            notify_warning('La fecha de ejecucion no es valida. Use el formato YYYY-MM-DD.');
+            if (inputFecha) {
+                inputFecha.focus();
+            }
             return;
         }
 
         callback_ejecutar_despacho_pago = function () {
             notify_success('Documento ejecutado correctamente.');
+            cerrarModalEjecutar();
 
             if (iddespacho) {
                 refrescarPanelPagos(iddespacho, false);
@@ -465,8 +581,24 @@
             }
         };
 
-        upload_action('iddespacho_pago=' + iddespacho_pago, 'despacho_pago', 'ejecutar', callback_ejecutar_despacho_pago);
+        upload_action('iddespacho_pago=' + iddespacho_pago + ',fecha_ejecutado=' + fecha_ejecutado, 'despacho_pago', 'ejecutar', callback_ejecutar_despacho_pago);
     };
+
+    $(document).on('shown.bs.modal', '#modal_ejecutar_pago', function () {
+        if (objeto('modal_ejecutar_fecha') !== undefined) {
+            objeto('modal_ejecutar_fecha').focus();
+        }
+    });
+
+    $(document).on('hidden.bs.modal', '#modal_ejecutar_pago', function () {
+        idDespachoPagoPendienteEjecutar = '';
+        if (objeto('modal_ejecutar_iddespacho_pago') !== undefined) {
+            objeto('modal_ejecutar_iddespacho_pago').value = '';
+        }
+        if (objeto('modal_ejecutar_fecha') !== undefined) {
+            objeto('modal_ejecutar_fecha').value = '';
+        }
+    });
 
     window.despachoPagoEditarRegistro = function (iddespacho_pago) {
         if (!iddespacho_pago) {
@@ -477,7 +609,7 @@
         cargarDocumentoParaEdicion(iddespacho_pago);
     };
 
-    window.despachoPagoEliminarRegistro = function (iddespacho_pago) {
+    window.despachoPagoAnularRegistro = function (iddespacho_pago) {
         var iddespacho = elementValue('iddespacho');
 
         if (!iddespacho_pago) {
@@ -485,12 +617,12 @@
             return;
         }
 
-        if (!confirm('¿Confirma eliminar este documento de pago?')) {
+        if (!confirm('¿Confirma anular este documento de pago?')) {
             return;
         }
 
-        callback_eliminar_despacho_pago = function () {
-            notify_success('Documento eliminado correctamente.');
+        callback_anular_despacho_pago = function () {
+            notify_success('Documento anulado correctamente.');
 
             if (elementValue('iddespacho_pago') === String(iddespacho_pago)) {
                 window.despachoPagoLimpiarFormulario();
@@ -505,8 +637,11 @@
             }
         };
 
-        upload_action('iddespacho_pago=' + iddespacho_pago, 'despacho_pago', 'eliminar', callback_eliminar_despacho_pago);
+        upload_action('iddespacho_pago=' + iddespacho_pago, 'despacho_pago', 'anular', callback_anular_despacho_pago);
     };
+
+    // Compatibilidad para llamadas existentes que aun usen el nombre anterior.
+    window.despachoPagoEliminarRegistro = window.despachoPagoAnularRegistro;
 
     window.despachoPagoImprimirRegistro = function (iddespacho_pago_param) {
         var iddespacho_pago = iddespacho_pago_param || elementValue('iddespacho_pago');
@@ -587,6 +722,17 @@
         actualizarModoFormulario();
         despachoPagoManejarCambioTipoPago();
         aplicarReglasTipoDocumento();
+    };
+
+    window.despachoPagoLimpiarSoloMontos = function () {
+        if (objeto('monto') !== undefined) objeto('monto').value = '';
+        if (objeto('descuento') !== undefined) objeto('descuento').value = '';
+        if (objeto('devolucion') !== undefined) objeto('devolucion').value = '';
+        activarFormatoMonto();
+        aplicarReglasEstadoDocumento();
+        if (objeto('monto') !== undefined) {
+            objeto('monto').focus();
+        }
     };
 
     window.despachoPagoManejarCambioEstado = function () {

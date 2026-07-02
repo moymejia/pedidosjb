@@ -38,8 +38,8 @@ class despacho_pago extends table
             }
 
             if ($PARAMETROS['operacion'] == 'ejecutar') {
-                if (table::validate_parameter_existence(['iddespacho_pago'], $PARAMETROS, false)) {
-                    if ($this->ejecutar_despacho_pago($PARAMETROS['iddespacho_pago'])) {
+                if (table::validate_parameter_existence(['iddespacho_pago', 'fecha_ejecutado'], $PARAMETROS, false)) {
+                    if ($this->ejecutar_despacho_pago($PARAMETROS['iddespacho_pago'], $PARAMETROS['fecha_ejecutado'])) {
                         self::end_success('ejecutado');
                     } else {
                         self::end_error($this->last_error);
@@ -49,10 +49,10 @@ class despacho_pago extends table
                 }
             }
 
-            if ($PARAMETROS['operacion'] == 'eliminar') {
+            if ($PARAMETROS['operacion'] == 'anular' || $PARAMETROS['operacion'] == 'eliminar') {
                 if (table::validate_parameter_existence(['iddespacho_pago'], $PARAMETROS, false)) {
-                    if ($this->eliminar_despacho_pago($PARAMETROS['iddespacho_pago'])) {
-                        self::end_success('eliminado');
+                    if ($this->anular_despacho_pago($PARAMETROS['iddespacho_pago'])) {
+                        self::end_success('anulado');
                     } else {
                         self::end_error($this->last_error);
                     }
@@ -115,6 +115,18 @@ class despacho_pago extends table
                     $_CLIENTE_ANTICIPO = new cliente_anticipo();
                     $resultado = $_CLIENTE_ANTICIPO->obtener_anticipos_cliente($PARAMETROS['idcliente']);
                     self::end_success($resultado);
+                } else {
+                    self::end_error('Datos incompletos.');
+                }
+            }
+
+            if ($PARAMETROS['operacion'] == 'validar_numero_recuperado') {
+                if (table::validate_parameter_existence(['numero_recuperado'], $PARAMETROS, false)) {
+                    if ($this->validar_numero_recuperado($PARAMETROS['numero_recuperado'])) {
+                        self::end_success('ok');
+                    } else {
+                        self::end_error($this->last_error);
+                    }
                 } else {
                     self::end_error('Datos incompletos.');
                 }
@@ -300,9 +312,8 @@ class despacho_pago extends table
     private function tabla_historial_pagos($iddespacho)
     {
         $result = mysql::getresult("SELECT v.iddespacho_pago, v.fecha, v.tipo_pago, v.tipo_documento, v.estado, v.signo, v.monto,
-                v.correlativo_documento, v.banco, v.referencia_pago, v.observaciones, v.usuario_creacion, dp.imagen, dp.numero_recuperado
+                v.correlativo_documento, v.banco, v.referencia_pago, v.observaciones, v.usuario_creacion, v.imagen, v.numero_recuperado
             FROM view_despacho_pago_detalle v
-            LEFT JOIN despacho_pago dp ON dp.iddespacho_pago = v.iddespacho_pago
             WHERE v.iddespacho = '$iddespacho'
             ORDER BY v.fecha DESC, v.iddespacho_pago DESC");
 
@@ -321,8 +332,6 @@ class despacho_pago extends table
                             <thead>
                                 <tr>
                                     <th>Acciones</th>
-                                    <th>ID</th>
-                                    <th>Fecha</th>
                                     <th>Tipo documento</th>
                                     <th>Correlativo</th>
                                     <th>Tipo pago</th>
@@ -330,6 +339,7 @@ class despacho_pago extends table
                                     <th>Referencia</th>
                                     <th>Monto</th>
                                     <th>Observaciones</th>
+                                    <th>Fecha</th>
                                     <th>Estado</th>
                                     <th>Usuario</th>
                                 </tr>
@@ -342,18 +352,18 @@ class despacho_pago extends table
             $acciones = "<span class='text-muted'>-</span>";
             $estado_actual = strtoupper(trim($row['estado'] . ''));
 
-            $acciones = "<button type='button' class='btn btn-sm btn-info waves-effect waves-light m-r-5' onclick='despachoPagoEditarRegistro(" . (int)$row['iddespacho_pago'] . ")'>Editar</button>";
-
             if ($estado_actual === 'PROGRAMADO') {
-                $acciones .= "<button type='button' class='btn btn-sm btn-warning waves-effect waves-light m-r-5' onclick='despachoPagoEjecutarRegistro(" . (int)$row['iddespacho_pago'] . ")'>Ejecutar</button>";
+                $acciones .= "<button type='button' class='btn btn-sm btn-info waves-effect waves-light m-r-5' onclick='despachoPagoEjecutarRegistro(" . (int)$row['iddespacho_pago'] . ")'><i class='fas fa-bolt m-r-5'></i>Ejecutar</button>";
             }
 
-            $acciones .= "<button type='button' class='btn btn-sm btn-danger waves-effect waves-light' onclick='despachoPagoEliminarRegistro(" . (int)$row['iddespacho_pago'] . ")'>Eliminar</button>";
+            $acciones .= "<button type='button' class='btn btn-sm btn-warning waves-effect waves-light m-r-5' onclick='despachoPagoImprimirRegistro(" . (int)$row['iddespacho_pago'] . ")'><i class='fas fa-file-alt m-r-5'></i>Ver docs</button>";
+
+            if ($estado_actual !== 'ANULADO') {
+                $acciones .= "<button type='button' class='btn btn-sm btn-danger waves-effect waves-light' onclick='despachoPagoAnularRegistro(" . (int)$row['iddespacho_pago'] . ")'>Anular</button>";
+            }
 
             $tabla .= "<tr>
                 <td>" . $acciones . "</td>
-                <td>" . (int)$row['iddespacho_pago'] . "</td>
-                <td>" . $row['fecha'] . "</td>
                 <td>" . $row['tipo_documento'] . "</td>
                 <td>" . $row['correlativo_documento'] . "</td>
                 <td>" . $row['tipo_pago'] . "</td>
@@ -361,13 +371,14 @@ class despacho_pago extends table
                 <td>" . $row['referencia_pago'] . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['monto'], 2) . "</td>
                 <td>" . $row['observaciones'] . "</td>
+                <td>" . $row['fecha'] . "</td>
                 <td>" . $estado_actual . "</td>
                 <td>" . $row['usuario_creacion'] . "</td>
             </tr>";
         }
 
         if (! $hay) {
-            $tabla .= "<tr><td colspan='12' class='text-center text-muted'>Sin documentos registrados.</td></tr>";
+            $tabla .= "<tr><td colspan='11' class='text-center text-muted'>Sin documentos registrados.</td></tr>";
         }
 
         $tabla .= "
@@ -426,17 +437,23 @@ class despacho_pago extends table
             return false;
         }
 
-        $iddespacho_pago = isset($PARAMETROS['iddespacho_pago']) ? trim($PARAMETROS['iddespacho_pago']) : '';
-        if (! $this->validar_correlativo_anulado_reutilizable($PARAMETROS['correlativo_documento'], $iddespacho_pago)) {
+        $idtipo_pago = trim($PARAMETROS['idtipo_pago'] . '');
+        $idtipo_documento = trim($PARAMETROS['idtipo_documento'] . '');
+        $referencia_pago = isset($PARAMETROS['referencia_pago']) ? trim($PARAMETROS['referencia_pago'] . '') : '';
+
+        if ($referencia_pago == '') {
+            $this->last_error = 'Debe ingresar la Referencia del documento.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
         }
 
-        $idtipo_pago = trim($PARAMETROS['idtipo_pago'] . '');
-        $idtipo_documento = trim($PARAMETROS['idtipo_documento'] . '');
+        $iddespacho_pago = isset($PARAMETROS['iddespacho_pago']) ? trim($PARAMETROS['iddespacho_pago']) : '';
+
         $tipo_documento = mysql::getvalue("SELECT nombre FROM tipo_documento WHERE idtipo_documento = '" . addslashes($idtipo_documento) . "' LIMIT 1", 'nombre');
         $tipo_documento_normalizado = strtoupper(strtr(trim($tipo_documento . ''), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U']));
         $es_recuperacion = $tipo_documento_normalizado === 'RECUPERACION';
         $numero_recuperado = isset($PARAMETROS['numero_recuperado']) ? trim($PARAMETROS['numero_recuperado'] . '') : '';
+        $referencia_recuperado = $es_recuperacion ? $numero_recuperado : '';
 
         if ($es_recuperacion && $numero_recuperado == '') {
             $this->last_error = 'Debe ingresar el No. Recuperado.';
@@ -444,7 +461,13 @@ class despacho_pago extends table
             return false;
         }
 
-        if (strlen($numero_recuperado) > 50) {
+        if ($es_recuperacion && $referencia_pago == '') {
+            $this->last_error = 'Debe ingresar la Referencia del cheque recuperado.';
+            utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+            return false;
+        }
+
+        if ($es_recuperacion && strlen($numero_recuperado) > 50) {
             $this->last_error = 'El No. Recuperado no puede exceder 50 caracteres.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
@@ -452,14 +475,14 @@ class despacho_pago extends table
 
         $iddespacho_pago_recupera = 'NULL';
         if ($es_recuperacion) {
-            $row_cheque_principal = $this->obtener_cheque_principal_recuperacion($numero_recuperado);
+            $row_cheque_principal = $this->obtener_cheque_principal_recuperacion($referencia_recuperado);
             if (!$row_cheque_principal) {
-                $this->last_error = 'El No. Recuperado no existe. No se puede registrar una recuperación.';
+                $this->last_error = 'El No. Recuperado ingresado no corresponde a un cheque ANULADO. No se puede registrar una recuperación.';
                 utils::report_error(validation_error, ['numero_recuperado' => $numero_recuperado], $this->last_error);
                 return false;
             }
 
-            $total_recuperado = $this->obtener_total_recuperado_cheque_principal($row_cheque_principal['iddespacho_pago'], $numero_recuperado, $iddespacho_pago);
+            $total_recuperado = $this->obtener_total_recuperado_cheque_principal($row_cheque_principal['iddespacho_pago'], $iddespacho_pago);
             $saldo_disponible = round((float)$row_cheque_principal['monto'] - $total_recuperado, 2);
 
             if ($monto > $saldo_disponible) {
@@ -531,6 +554,7 @@ class despacho_pago extends table
             }
 
             $DATOS['idforma_pago'] = $idforma_pago_default;
+            $DATOS['fecha_ejecutado'] = ($estado === 'EJECUTADO') ? date('Y-m-d') : 'NULL';
             $DATOS['usuario_creacion'] = $security->get_actual_user();
             $DATOS['imagen'] = $imagen_nueva ? $imagen_nueva : 'NULL';
 
@@ -730,6 +754,14 @@ class despacho_pago extends table
         }
         $DATOS_AJUSTE['idforma_pago'] = $idforma_pago_default;
         $DATOS_AJUSTE['iddespacho_pago_recupera'] = 'NULL';
+        if (strtoupper(trim($DATOS_BASE['estado'] . '')) === 'EJECUTADO') {
+            $fecha_ejecutado_base = isset($DATOS_BASE['fecha_ejecutado']) ? trim($DATOS_BASE['fecha_ejecutado'] . '') : '';
+            $DATOS_AJUSTE['fecha_ejecutado'] = ($fecha_ejecutado_base !== '' && strtoupper($fecha_ejecutado_base) !== 'NULL')
+                ? $fecha_ejecutado_base
+                : date('Y-m-d');
+        } else {
+            $DATOS_AJUSTE['fecha_ejecutado'] = 'NULL';
+        }
         $DATOS_AJUSTE['usuario_creacion'] = $usuario_creacion;
         $DATOS_AJUSTE['imagen'] = 'NULL';
 
@@ -779,24 +811,44 @@ class despacho_pago extends table
         return trim($idtipo_pago . '');
     }
 
-    private function obtener_cheque_principal_recuperacion($numero_recuperado)
+    private function obtener_cheque_principal_recuperacion($referencia_pago)
     {
-        $numero_recuperado = strtoupper(trim($numero_recuperado . ''));
+        $referencia_pago = strtoupper(trim($referencia_pago . ''));
 
         return mysql::getrow("SELECT iddespacho_pago, monto
             FROM view_despacho_pago_recuperacion
-            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($numero_recuperado) . "'
-                AND estado <> 'ANULADO'
+            WHERE UPPER(TRIM(IFNULL(referencia_pago, ''))) = '" . addslashes($referencia_pago) . "'
+                AND estado = 'ANULADO'
                 AND tipo_documento NOT LIKE 'RECUPER%'
                 AND tipo_pago LIKE '%CHEQUE%'
             ORDER BY iddespacho_pago ASC
             LIMIT 1");
     }
 
-    private function obtener_total_recuperado_cheque_principal($iddespacho_pago_principal, $numero_cheque_principal, $iddespacho_pago_actual = '')
+    private function validar_numero_recuperado($numero_recuperado)
+    {
+        $security = new security($this->ACCIONES['consultar_despacho_pago']);
+
+        $numero_recuperado = trim($numero_recuperado . '');
+        if ($numero_recuperado == '') {
+            $this->last_error = 'Debe ingresar el No. Recuperado.';
+            utils::report_error(validation_error, $numero_recuperado, $this->last_error);
+            return false;
+        }
+
+        if (! $this->obtener_cheque_principal_recuperacion($numero_recuperado)) {
+            $this->last_error = 'El No. Recuperado ingresado no corresponde a un cheque ANULADO. No se puede registrar una recuperación.';
+            utils::report_error(validation_error, ['numero_recuperado' => $numero_recuperado], $this->last_error);
+            return false;
+        }
+
+        $security->registrar_bitacora($this->ACCIONES['consultar_despacho_pago'], $numero_recuperado, 'validar_numero_recuperado');
+        return true;
+    }
+
+    private function obtener_total_recuperado_cheque_principal($iddespacho_pago_principal, $iddespacho_pago_actual = '')
     {
         $iddespacho_pago_principal = trim($iddespacho_pago_principal . '');
-        $numero_cheque_principal = strtoupper(trim($numero_cheque_principal . ''));
         $iddespacho_pago_actual = trim($iddespacho_pago_actual . '');
         $where_actual = '';
 
@@ -808,42 +860,10 @@ class despacho_pago extends table
             FROM view_despacho_pago_recuperacion
             WHERE estado <> 'ANULADO'
                 AND tipo_documento LIKE 'RECUPER%'
-                AND (
-                    iddespacho_pago_recupera = '" . addslashes($iddespacho_pago_principal) . "'
-                    OR UPPER(TRIM(IFNULL(numero_recuperado, ''))) = '" . addslashes($numero_cheque_principal) . "'
-                )
+                AND iddespacho_pago_recupera = '" . addslashes($iddespacho_pago_principal) . "'
                 $where_actual", 'total_recuperado');
 
         return round((float)$total_recuperado, 2);
-    }
-
-    private function validar_correlativo_anulado_reutilizable($correlativo_documento, $iddespacho_pago_actual = '')
-    {
-        $correlativo_norm = strtoupper(trim((string)$correlativo_documento));
-        if ($correlativo_norm === '') {
-            return true;
-        }
-
-        $where_excluir = '';
-        $iddespacho_pago_actual = trim((string)$iddespacho_pago_actual);
-        if ($iddespacho_pago_actual !== '') {
-            $where_excluir = " AND iddespacho_pago != '" . addslashes($iddespacho_pago_actual) . "'";
-        }
-
-        $id_anulado = mysql::getvalue("SELECT iddespacho_pago
-            FROM despacho_pago
-            WHERE UPPER(TRIM(correlativo_documento)) = '" . addslashes($correlativo_norm) . "'
-                AND UPPER(TRIM(estado)) = 'ANULADO'" . $where_excluir . "
-            ORDER BY iddespacho_pago DESC
-            LIMIT 1", 'iddespacho_pago');
-
-        if ($id_anulado) {
-            $this->last_error = 'El numero de documento ' . $correlativo_documento . ' ya fue registrado como ANULADO y no puede reutilizarse.';
-            utils::report_error(validation_error, ['correlativo_documento' => $correlativo_documento, 'iddespacho_pago_anulado' => $id_anulado], $this->last_error);
-            return false;
-        }
-
-        return true;
     }
 
     private function obtener_despacho_pago($iddespacho_pago)
@@ -952,9 +972,16 @@ class despacho_pago extends table
         return trim($idforma_pago . '');
     }
 
-    private function ejecutar_despacho_pago($iddespacho_pago)
+    private function ejecutar_despacho_pago($iddespacho_pago, $fecha_ejecutado)
     {
         $iddespacho_pago = trim($iddespacho_pago . '');
+        $fecha_ejecutado = trim($fecha_ejecutado . '');
+
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_ejecutado) || ! strtotime($fecha_ejecutado)) {
+            $this->last_error = 'La fecha de ejecucion es invalida.';
+            utils::report_error(validation_error, $fecha_ejecutado, $this->last_error);
+            return false;
+        }
 
         $row_despacho_pago = mysql::getrow("SELECT iddespacho_pago, iddespacho, estado
             FROM despacho_pago
@@ -979,6 +1006,7 @@ class despacho_pago extends table
         $DATOS = [];
         $DATOS['iddespacho_pago']         = $iddespacho_pago;
         $DATOS['estado']                  = 'EJECUTADO';
+        $DATOS['fecha_ejecutado']         = $fecha_ejecutado;
         $DATOS['fecha_modificacion']      = date('Y-m-d H:i:s');
         $DATOS['usuario_modificacion']    = $usuario;
 
@@ -988,11 +1016,11 @@ class despacho_pago extends table
             return false;
         }
 
-        $security->registrar_bitacora($this->ACCIONES['ejecutar_despacho_pago'], $iddespacho_pago, $row_despacho_pago['iddespacho'], 'PROGRAMADO->EJECUTADO');
+        $security->registrar_bitacora($this->ACCIONES['ejecutar_despacho_pago'], $iddespacho_pago, $row_despacho_pago['iddespacho'], ('PROGRAMADO->EJECUTADO (' . $fecha_ejecutado . ')'));
         return true;
     }
 
-    private function eliminar_despacho_pago($iddespacho_pago)
+    private function anular_despacho_pago($iddespacho_pago)
     {
         $iddespacho_pago = trim($iddespacho_pago . '');
 
@@ -1007,20 +1035,30 @@ class despacho_pago extends table
             return false;
         }
 
+        if (strtoupper(trim($row_despacho_pago['estado'] . '')) === 'ANULADO') {
+            $this->last_error = 'El documento ya se encuentra en estado ANULADO.';
+            utils::report_error(validation_error, $row_despacho_pago, $this->last_error);
+            return false;
+        }
+
         $security = new security($this->ACCIONES['eliminar_despacho_pago']);
 
         $DATOS = [];
         $DATOS['iddespacho_pago'] = $iddespacho_pago;
+        $DATOS['estado'] = 'ANULADO';
+        $DATOS['fecha_ejecutado'] = 'NULL';
+        $DATOS['fecha_modificacion'] = date('Y-m-d H:i:s');
+        $DATOS['usuario_modificacion'] = $security->get_actual_user();
 
-        if (! table::delete_record($DATOS)) {
-            $this->last_error = 'Error al eliminar el documento de pago.';
+        if (! $this->update_record($DATOS, ['iddespacho_pago'])) {
+            $this->last_error = 'Error al anular el documento de pago.';
             utils::report_error(bd_error, $DATOS, $this->last_error);
             return false;
         }
 
-        // Si era ANTICIPO, revertir
+        // Si era ANTICIPO con monto aplicado, revertir
         $idtipo_pago = trim($row_despacho_pago['idtipo_pago'] . '');
-        if ($idtipo_pago === '10') {
+        if ($idtipo_pago === '10' && (float)$row_despacho_pago['monto'] > 0) {
             $idcliente_anticipo = trim($row_despacho_pago['idcliente_anticipo'] . '');
             $monto = (float)$row_despacho_pago['monto'];
             
@@ -1036,7 +1074,7 @@ class despacho_pago extends table
             }
         }
 
-        $security->registrar_bitacora($this->ACCIONES['eliminar_despacho_pago'], $iddespacho_pago, $row_despacho_pago['iddespacho'], $row_despacho_pago['estado']);
+        $security->registrar_bitacora($this->ACCIONES['eliminar_despacho_pago'], $iddespacho_pago, $row_despacho_pago['iddespacho'], ($row_despacho_pago['estado'] . '->ANULADO'));
         return true;
     }
 
@@ -1072,15 +1110,14 @@ class despacho_pago extends table
 
         $nombre_tipo_documento = trim($row_tipo_documento['nombre'] . '');
         $serie_documento = trim($row_tipo_documento['correlativo'] . '');
+        $nombre_tipo_documento_norm = strtoupper(trim($nombre_tipo_documento));
 
-        $sql_documentos = mysql::getresult("SELECT dp.iddespacho_pago, dp.fecha, dp.correlativo_documento, dp.imagen,
-                td.nombre AS tipo_documento
-            FROM despacho_pago dp
-            LEFT JOIN tipo_documento td ON td.idtipo_documento = dp.idtipo_documento
-            WHERE dp.iddespacho = '$iddespacho'
-                AND dp.idtipo_documento = '" . addslashes($idtipo_documento) . "'
-                AND UPPER(TRIM(dp.correlativo_documento)) = '" . addslashes($correlativo_documento_norm) . "'
-            ORDER BY dp.fecha ASC, dp.iddespacho_pago ASC");
+        $sql_documentos = mysql::getresult("SELECT iddespacho_pago, fecha, correlativo_documento, imagen, tipo_documento
+            FROM view_despacho_pago_detalle
+            WHERE iddespacho = '$iddespacho'
+                AND UPPER(TRIM(tipo_documento)) = '" . addslashes($nombre_tipo_documento_norm) . "'
+                AND UPPER(TRIM(correlativo_documento)) = '" . addslashes($correlativo_documento_norm) . "'
+            ORDER BY fecha ASC, iddespacho_pago ASC");
 
         if (!$sql_documentos) {
             $this->last_error = 'Error al obtener los documentos del recibo.';
