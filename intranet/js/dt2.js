@@ -935,7 +935,7 @@ function activar_tabla(idtabla) {
         layout: layoutConfig,
         retrieve: true,
         fixedHeader: fixedHeaderUser,
-        responsive: responsiveUser,
+        responsive: false,
         colReorder: colReorderUser,
         select: selectUser ? { style: 'multi' } : false,
         paging: true,
@@ -997,7 +997,13 @@ function activar_tabla(idtabla) {
                 selected: haySeleccion ? true : null
             });
 
-            exportOptionsActual.columns = ':visible';
+            exportOptionsActual.columns = function (idx) {
+                if (typeof tabla_nueva === "undefined" || !tabla_nueva) {
+                    return true;
+                }
+
+                return tabla_nueva.column(idx).visible();
+            };
             if (esBotonImprimir || esBotonPdf || esBotonExcel) {
                 exportOptionsActual.stripHtml = false;
             }
@@ -1128,6 +1134,12 @@ function activar_tabla(idtabla) {
             return data;
         }
     });
+    if (responsiveUser) {
+        var tableNode = tabla_nueva.table().node();
+        if (tableNode && tableNode.parentNode) {
+            tableNode.parentNode.classList.add('dt2-table-scroll');
+        }
+    }
     return tabla_nueva;
 }
 //

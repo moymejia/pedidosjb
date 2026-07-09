@@ -60,6 +60,16 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
     margin-left: 6px !important;
 }
 
+.dt2-table-scroll {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dt2-table-scroll > table.dataTable {
+    min-width: max-content;
+}
+
 /* Tablet vertical */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
     div.dt-container div.dt-layout-cell.dt-layout-start > .dt-buttons {
@@ -136,4 +146,3 @@ div.dt-container div.dt-layout-cell.dt-layout-start > .dt-search {
         min-width: 0 !important;
     }
 }
-
