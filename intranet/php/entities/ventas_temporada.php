@@ -174,7 +174,7 @@ class ventas_temporada extends table
         ");
 
         $columnControl = true;
-        $responsive    = true;
+        $responsive    = false;
         $colReorder    = true;
         $select        = false;
         $buttons       = true;

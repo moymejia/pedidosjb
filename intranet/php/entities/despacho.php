@@ -867,7 +867,7 @@ class despacho extends table
 		$data_resumen .= " data-conf-rowgroup=''";
 		$data_resumen .= " data-conf-titulotabla='" . $tituloTablaResumen . "' ";
 		$data_resumen .= " data-conf-filename='" . $fileNameResumen . "' ";
-		$data_resumen .= " data-conf-responsive='true' ";
+		$data_resumen .= " data-conf-responsive='false' ";
 		$data_resumen .= " data-conf-colreorder='true' ";
 		$data_resumen .= " data-conf-select='false' ";
 		$data_resumen .= " data-conf-buttons='true' ";
@@ -982,7 +982,7 @@ class despacho extends table
 			}
 
 			$columnControl = true;
-			$responsive    = true;
+			$responsive    = false;
 			$colReorder    = false;
 			$select        = false;
 			$buttons       = true;
@@ -1163,7 +1163,7 @@ class despacho extends table
 		}
 
 		$columnControl = true;
-		$responsive    = true;
+		$responsive    = false;
 		$colReorder    = true;
 		$select        = false;
 		$buttons       = true;
