@@ -214,7 +214,24 @@ class datatables extends mysql {
         }
         //
         $columncontrol = isset($PARAMETROS['columncontrol']) ? $PARAMETROS['columncontrol'] : false;
-        $responsive    = isset($PARAMETROS['responsive'])    ? $PARAMETROS['responsive']    : false;
+        $responsive = isset($PARAMETROS['responsive']) ? $PARAMETROS['responsive'] : false;
+        $responsive = isset($PARAMETROS['responsive']) ? $PARAMETROS['responsive'] : false;
+        $responsive_value = 'false';
+        if (!($responsive === false || $responsive === '' || $responsive === null)) {
+            $responsive_value = trim((string)$responsive);
+            if ($responsive_value !== '') {
+                $normalized_parts = [];
+                foreach (explode(',', $responsive_value) as $part) {
+                    $part = strtoupper(str_replace('_', ' ', trim((string)$part)));
+                    if ($part !== '') {
+                        $normalized_parts[] = $part;
+                    }
+                }
+                $responsive_value = empty($normalized_parts) ? 'false' : implode(',', $normalized_parts);
+            } else {
+                $responsive_value = 'false';
+            }
+        }
         $colreorder    = isset($PARAMETROS['colreorder'])    ? $PARAMETROS['colreorder']    : false;
         $select        = isset($PARAMETROS['select'])        ? $PARAMETROS['select']        : false;
         $buttons       = isset($PARAMETROS['buttons'])       ? $PARAMETROS['buttons']       : false;
@@ -270,7 +287,8 @@ class datatables extends mysql {
         $data_ .= " data-conf-rowgroup='"      . $row_group . "' ";
         $data_ .= " data-conf-titulotabla='"   . $titulo_tabla . "' ";
         $data_ .= " data-conf-filename='"      . $file_name . "' ";
-        $data_ .= " data-conf-responsive='"    . ($responsive ? "true" : "false") . "' ";
+        // $data_ .= " data-conf-responsive='"    . ($responsive ? "true" : "false") . "' ";
+        $data_ .= " data-conf-responsive='"    . htmlspecialchars($responsive_value, ENT_QUOTES, 'UTF-8') . "' ";
         $data_ .= " data-conf-colreorder='"    . ($colreorder ? "true" : "false") . "' ";
         $data_ .= " data-conf-select='"        . ($select ? "true" : "false") . "' ";
         $data_ .= " data-conf-buttons='"       . $buttons_value . "' ";
@@ -379,6 +397,7 @@ class datatables extends mysql {
 
         return $tabla_marca;
     }
+
 
     public function cargar_estado_datatables() {
         $db = new mysql();

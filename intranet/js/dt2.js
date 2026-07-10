@@ -426,6 +426,7 @@ function mostrar_popup_compartir(idtabla, nombreEstado) {
     });
 }
 //
+//
 function activar_tabla(idtabla) {
     var tabla = document.getElementById(idtabla);
     var ds = tabla.dataset;
@@ -458,6 +459,34 @@ function activar_tabla(idtabla) {
     var fixedHeaderDisponible = (typeof DataTable !== "undefined" && typeof DataTable.FixedHeader !== "undefined") ||
         (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.FixedHeader !== "undefined");
     var fixedHeaderUser = ds.confFixedheader === "true" && fixedHeaderDisponible;
+    //
+    var responsiveDisponible = (typeof DataTable !== "undefined" && typeof DataTable.Responsive !== "undefined") ||
+        (typeof $.fn !== "undefined" && $.fn.dataTable && typeof $.fn.dataTable.Responsive !== "undefined");
+    var responsiveConfigRaw = (ds.confResponsive === undefined || ds.confResponsive === null) ? "false" : String(ds.confResponsive).trim();
+    var responsiveUser = !(responsiveConfigRaw === "" || responsiveConfigRaw.toLowerCase() === "false") && responsiveDisponible;
+    if (responsiveUser === false && responsiveConfigRaw !== "" && responsiveConfigRaw.toLowerCase() !== "false" && !responsiveDisponible) {
+        console.warn('[' + idtabla + '] responsive solicitado pero DataTables.Responsive no está cargado.');
+    }
+    var responsivePriorityIndices = [];
+    if (responsiveUser) {
+        responsiveConfigRaw.split(',').forEach(function (nombreColumna) {
+            var nombreBuscado = normalizarNombreColumna(nombreColumna);
+            if (nombreBuscado === '') {
+                return;
+            }
+            var indiceEncontrado = -1;
+            $('#' + idtabla + ' thead th').each(function (i) {
+                if (normalizarNombreColumna($(this).text()) === nombreBuscado) {
+                    indiceEncontrado = i;
+                    return false;
+                }
+            });
+            if (indiceEncontrado !== -1 && responsivePriorityIndices.indexOf(indiceEncontrado) === -1) {
+                responsivePriorityIndices.push(indiceEncontrado);
+            }
+        });
+    }
+    //
     var exportTitle = (ds.confTitulotabla) ? ds.confTitulotabla : "Listado";
     var exportCompany = "Solo moda S.A.S.";
     var exportFileName = (ds.confFilename) ? "Listado_de_" + ds.confFilename + "_Solo_moda_S.A.S." : "Listado";
@@ -521,7 +550,7 @@ function activar_tabla(idtabla) {
     var stateRestoreUser = ds.confStaterestore === "true";
     var stateRestoreDisponible = typeof DataTable !== "undefined" && DataTable.ext && DataTable.ext.buttons && DataTable.ext.buttons.savedStates;
     var stateRestoreActivo = stateRestoreUser && stateRestoreDisponible;
-    var responsiveUser = ds.confResponsive === "true";
+    // var responsiveUser = ds.confResponsive === "true";
     var colReorderUser = ds.confColreorder === "true";
     var columnControlUser = ds.confColumncontrol === "true";
     var orderingUser = (ds.confOrdering === undefined || ds.confOrdering === "true");
@@ -930,12 +959,16 @@ function activar_tabla(idtabla) {
     //
         };
     }
-
+    //
+    if ($.fn.DataTable.isDataTable('#' + idtabla)) {
+        $('#' + idtabla).DataTable().destroy();
+    }
+    //
     var tabla_nueva = new DataTable('#' + idtabla, {
         layout: layoutConfig,
-        retrieve: true,
+        // retrieve: true,
         fixedHeader: fixedHeaderUser,
-        responsive: false,
+        responsive: responsiveUser,
         colReorder: colReorderUser,
         select: selectUser ? { style: 'multi' } : false,
         paging: true,
@@ -976,7 +1009,39 @@ function activar_tabla(idtabla) {
                     });
                 });
             }
+            //
+            if (responsiveUser && responsivePriorityIndices.length > 0) {
+                var buscarDef = function (indice) {
+                    for (var i = 0; i < defs.length; i++) {
+                        if (defs[i].target === indice) return defs[i];
+                    }
+                    return null;
+                };
 
+                responsivePriorityIndices.forEach(function (indice, orden) {
+                    var defExistente = buscarDef(indice);
+                    if (defExistente) {
+                        defExistente.responsivePriority = orden + 1;
+                    } else {
+                        defs.push({ target: indice, responsivePriority: orden + 1 });
+                    }
+                });
+
+                $('#' + idtabla + ' thead th').each(function (i) {
+                    if (responsivePriorityIndices.indexOf(i) === -1) {
+                        var defExistente2 = buscarDef(i);
+                        var prioridadBaja = 1000 + i;
+                        if (defExistente2) {
+                            if (defExistente2.responsivePriority === undefined) {
+                                defExistente2.responsivePriority = prioridadBaja;
+                            }
+                        } else {
+                            defs.push({ target: i, responsivePriority: prioridadBaja });
+                        }
+                    }
+                });
+            }
+            //
             return defs;
         })(),
         //
@@ -997,13 +1062,7 @@ function activar_tabla(idtabla) {
                 selected: haySeleccion ? true : null
             });
 
-            exportOptionsActual.columns = function (idx) {
-                if (typeof tabla_nueva === "undefined" || !tabla_nueva) {
-                    return true;
-                }
-
-                return tabla_nueva.column(idx).visible();
-            };
+            exportOptionsActual.columns = ':visible';
             if (esBotonImprimir || esBotonPdf || esBotonExcel) {
                 exportOptionsActual.stripHtml = false;
             }
@@ -1134,12 +1193,6 @@ function activar_tabla(idtabla) {
             return data;
         }
     });
-    if (responsiveUser) {
-        var tableNode = tabla_nueva.table().node();
-        if (tableNode && tableNode.parentNode) {
-            tableNode.parentNode.classList.add('dt2-table-scroll');
-        }
-    }
     return tabla_nueva;
 }
 //

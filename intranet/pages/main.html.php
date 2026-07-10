@@ -130,6 +130,7 @@ $idubicacion = $row['idubicacion'];
     <link rel="stylesheet" href="../assets/plugins/datatables2/columnControl.dataTables.min.css" >
     <link rel="stylesheet" href="../assets/plugins/datatables2/buttons.dataTables.min.css">
     <link rel="stylesheet" href="../assets/plugins/datatables2/rowGroup.dataTables.css">
+    <link rel="stylesheet" href="../assets/plugins/datatables2/responsive.dataTables.min.css">
     <!-- fin de  data table -->
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
