@@ -9,7 +9,7 @@ USE pedidosjb_pedidos;
 
 -- 1) Agregar fecha real de ejecucion si no existe
 ALTER TABLE despacho_pago
-    ADD COLUMN IF NOT EXISTS fecha_ejecutado DATE NULL AFTER estado;
+    ADD COLUMN fecha_ejecutado DATE NULL AFTER estado;
 
 -- 3) Tipos de pago para ajustes (segun solicitud)
 INSERT INTO pedidosjb_pedidos.tipo_pago
