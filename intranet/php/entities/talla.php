@@ -59,7 +59,7 @@ class talla extends table
     {
         $result = mysql::getresult("SELECT idtalla, numero, estado AS estado_talla FROM talla ORDER BY CAST(numero AS UNSIGNED) ASC");
 
-        $tabla = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" width="100%">
+        $tabla = '<table id="tabla_talla_datos" class="display nowrap table table-hover table-bordered datatable" width="100%">
             <thead style="background-color: var(--datatable-color); color: white;">
                 <tr>
                     <th>Acciones</th>

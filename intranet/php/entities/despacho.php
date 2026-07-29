@@ -445,7 +445,7 @@ class despacho extends table
 
 		if ($iddespacho != '') {
 			$iddespacho = addslashes($iddespacho);
-			$row_despacho = mysql::getrow("SELECT iddespacho, idpedido, estado, monto_subtotal, monto_total, saldo_pendiente
+			$row_despacho = mysql::getrow("SELECT iddespacho, idpedido, estado, monto_subtotal, monto_total, saldo_pendiente, numero_factura
 				FROM despacho
 				WHERE iddespacho = '" . $iddespacho . "'
 				LIMIT 1");
@@ -468,14 +468,8 @@ class despacho extends table
 				return false;
 			}
 
-			$factura_existente = mysql::getvalue("SELECT iddespacho
-				FROM despacho
-				WHERE numero_factura = '" . addslashes($numero_factura) . "'
-				AND iddespacho <> '" . $iddespacho . "'
-				LIMIT 1");
-
-			if (!empty($factura_existente)) {
-				$this->last_error = 'El número de factura ya está asignado a otro despacho.';
+			if (trim($row_despacho['numero_factura'] . '') !== $numero_factura) {
+				$this->last_error = 'No se permite modificar el número de factura del despacho.';
 				utils::report_error(validation_error, $PARAMETROS, $this->last_error);
 				return false;
 			}
@@ -495,7 +489,6 @@ class despacho extends table
 			$DATOS['monto_flete'] = $monto_flete;
 			$DATOS['monto_otros'] = $monto_otros;
 			$DATOS['fecha_factura'] = date('Y-m-d', strtotime($fecha_factura));
-			$DATOS['numero_factura'] = $numero_factura;
 			$DATOS['observaciones'] = empty($observaciones) ? 'NULL' : $observaciones;
 			$DATOS['monto_total'] = $monto_total;
 			$DATOS['saldo_pendiente'] = $saldo_pendiente;
@@ -510,6 +503,12 @@ class despacho extends table
 
 			$security->registrar_bitacora($this->ACCIONES['Modificar_despacho'], $iddespacho, 'MODIFICAR_DESPACHO_MANUAL', $usuario);
 			return json_encode(['iddespacho' => (int)$iddespacho]);
+		}
+
+		if (mysql::exists('despacho', "numero_factura = '" . addslashes($numero_factura) . "'")) {
+			$this->last_error = 'El número de factura ya existe. Ingrese un número de factura diferente.';
+			utils::report_error(validation_error, $PARAMETROS, $this->last_error);
+			return false;
 		}
 
 		$pendientes = mysql::getvalue("SELECT COUNT(*)
@@ -1019,7 +1018,7 @@ class despacho extends table
 						<th>Despachado en</th>
 						<th>Facturado</th>
 						<th>Tipo de pago</th>
-						<th>Recibo</th>
+						<th>Factura</th>
 						<th>Ref.</th>
 						<th>Cheque recuperado</th>
 						<th>Fecha pago</th>
@@ -1198,7 +1197,7 @@ class despacho extends table
 			<thead>
 				<tr>
 					<th>Despachado en</th>
-					<th>Recibo</th>
+					<th>Factura</th>
 					<th>Cliente</th>
 					<th>Facturado</th>
 					<th>Total pagado</th>

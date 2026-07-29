@@ -53,9 +53,12 @@
     function setCamposEncabezadoEditable(editable) {
         element('monto_flete').disabled = !editable;
         element('monto_otros').disabled = !editable;
-        element('numero_factura').disabled = !editable;
         element('observaciones').disabled = !editable;
         element('fecha_factura').disabled = !editable;
+    }
+
+    function setNumeroFacturaEditable(editable) {
+        element('numero_factura').readOnly = !editable;
     }
 
     function agruparDetalle(data) {
@@ -244,6 +247,7 @@
         element('observaciones').value = '';
         element('fecha_factura').value = '';
         setCamposEncabezadoEditable(true);
+        setNumeroFacturaEditable(false);
 
         hideElements('detalle_despacho,btn_cerrar_despacho,btn_guardar_encabezado_despacho,btn_despachar,btn_todos');
         showElements('panel_seleccion_pedido');
@@ -273,6 +277,7 @@
             }
             element('pedido_seleccionado').value = state.nopedido || 'Sin selección';
             setCamposEncabezadoEditable(true);
+            setNumeroFacturaEditable(false);
 
             hideElements('panel_seleccion_pedido');
             showElements('detalle_despacho');
@@ -348,6 +353,7 @@
     window.despachoNuevo = function () {
         limpiarContextoDespacho();
         state.modo = 'nuevo';
+        setNumeroFacturaEditable(true);
 
         hideElements('div_tabla');
         showElements('div_form_despacho,panel_seleccion_pedido');
@@ -429,6 +435,7 @@
             element('idpedido').value = state.idpedido;
             element('despacho_seleccionado').value = etiquetaDespacho(numeroFactura, state.iddespacho);
             element('pedido_seleccionado').value = state.nopedido || 'Sin selección';
+            setNumeroFacturaEditable(false);
 
             notify_success('Despacho creado correctamente.');
             cargarDetalleDespacho(state.iddespacho);

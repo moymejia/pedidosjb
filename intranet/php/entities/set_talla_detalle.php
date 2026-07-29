@@ -142,6 +142,11 @@ class set_talla_detalle extends table
 
         $estado_actual = $set_talla->estado($idset_talla);
 
+        if (! $set_talla->validar_modificacion_permitida($idset_talla)) {
+            $this->last_error = $set_talla->last_error;
+            return false;
+        }
+
         if ($estado_actual == 'INACTIVO' || $estado_actual == 'PROTEGIDO') {
             $this->last_error = "El set de tallas se encuentra en estado $estado_actual y no puede modificarse";
             utils::report_error(validation_error, "Modificar set de tallas", $this->last_error);
@@ -179,6 +184,11 @@ class set_talla_detalle extends table
         $SET_TALLA = new set_talla();
 
         $estado_actual = $SET_TALLA->estado($idset_talla);
+
+        if (! $SET_TALLA->validar_modificacion_permitida($idset_talla)) {
+            $this->last_error = $SET_TALLA->last_error;
+            return false;
+        }
 
         if ($estado_actual == 'INACTIVO' || $estado_actual == 'PROTEGIDO') {
             $this->last_error = "El set de tallas se encuentra en estado $estado_actual y no puede modificarse";

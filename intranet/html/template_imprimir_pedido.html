@@ -62,7 +62,7 @@
         .img img { width: 40px; } /* antes 55px */
     
         .fila-totales td { 
-            height: 30px; /* antes 45px */
+            height: 30px;
         }
     
         .totales { 
@@ -115,7 +115,12 @@
         /* Quitar toda la cuadrícula */
         .firmas td {
             border: none;
-            font-size: 11px;
+            font-size: 12px;
+        }
+
+        .firmas td.totales-finales {
+            font-size: 15px;
+            line-height: 1;
         }
 
         /* Líneas tipo firma */
@@ -317,9 +322,9 @@
                     Precios más flete de envío. Al recibir este pedido acepta las condiciones.
                     <span class="rojo">NO SE ACEPTAN DEVOLUCIONES POR QUE NO SE VENDA EL PRODUCTO. Si algún código y color no llega al mínimo requerido se ajustará.</span>
                 </td>
-                <td colspan="2" class="titulo-totales gris cuadricula" style="font-size: 11px;">Totales</td>
-                <td class="totales gris cuadricula">[total_pares]</td>
-                <td colspan="2" class="totales gris cuadricula">Q [total]</td>
+                <td colspan="2" class="titulo-totales gris cuadricula">Totales</td>
+                <td class="totales totales-finales gris cuadricula">[total_pares]</td>
+                <td colspan="2" class="totales totales-finales gris cuadricula">Q [total]</td>
             </tr>
 
             <tr>

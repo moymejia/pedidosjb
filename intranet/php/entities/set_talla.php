@@ -61,7 +61,7 @@ class set_talla extends table
     public function cargar_set_talla()
     {
         $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
-        $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+        $tabla  = '<table id="tabla_set_talla" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <th>Acciones</th>
@@ -109,7 +109,7 @@ class set_talla extends table
     {
         $DATA   = [];
         $result = mysql::getresult("SELECT idset_talla, grupo, descripcion, estado FROM set_talla ORDER BY idset_talla DESC");
-        $tabla  = '<table id="tabla_datos" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
+        $tabla  = '<table id="tabla_set_talla" class="display nowrap table table-hover table-bordered datatable" cellspacing="0" width="100%">
                 <thead>
                     <tr>
                         <th>Acciones</th>
@@ -217,6 +217,10 @@ class set_talla extends table
         } else {
             $security = new security($this->ACCIONES['modificar']);
 
+            if (! $this->validar_modificacion_permitida($PARAMETROS['idset_talla'])) {
+                return false;
+            }
+
             if ($PARAMETROS['estado'] == 'INACTIVO') {
                 $this->last_error = "Set de tallas inactivo, no se pueden modificar sus datos.";
                 utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -303,6 +307,10 @@ class set_talla extends table
         $estado_actual        = mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla' ");
         $DATOS['idset_talla'] = $idset_talla;
 
+        if (! $this->validar_modificacion_permitida($idset_talla)) {
+            return false;
+        }
+
         $DATOS['estado']               = ($estado_actual == 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
         $DATOS['usuario_modificacion'] = $security->get_actual_user();
         $llaves                        = ['idset_talla'];
@@ -359,6 +367,44 @@ class set_talla extends table
     public function estado($idset_talla)
     {
         return mysql::getvalue("SELECT estado FROM set_talla WHERE idset_talla = '$idset_talla'");
+    }
+
+    public function validar_modificacion_permitida($idset_talla)
+    {
+        $idset_talla = (int)$idset_talla;
+
+        if ($idset_talla <= 0) {
+            $this->last_error = 'Set de tallas invalido.';
+            utils::report_error(validation_error, $idset_talla, $this->last_error);
+            return false;
+        }
+
+        $despachos = mysql::getvalue("SELECT COUNT(1)
+            FROM despacho_detalle
+            WHERE IFNULL(estado, '') <> 'ANULADO'
+            AND idpedido_detalle IN (
+                SELECT idpedido_detalle
+                FROM pedido_detalle
+                WHERE idset_talla = '$idset_talla'
+            )");
+
+        if ($despachos > 0) {
+            $this->last_error = 'No se puede modificar el set de tallas porque ya se esta utilizando en un despacho.';
+            utils::report_error(validation_error, $idset_talla, $this->last_error);
+            return false;
+        }
+
+        $pedidos = mysql::getvalue("SELECT COUNT(1)
+            FROM pedido_detalle
+            WHERE idset_talla = '$idset_talla'");
+
+        if ($pedidos > 0) {
+            $this->last_error = 'No se puede modificar el set de tallas porque ya se esta utilizando en un pedido.';
+            utils::report_error(validation_error, $idset_talla, $this->last_error);
+            return false;
+        }
+
+        return true;
     }
 
     public function options_activos()
