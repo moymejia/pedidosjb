@@ -131,6 +131,7 @@ $idubicacion = $row['idubicacion'];
     <link rel="stylesheet" href="../assets/plugins/datatables2/buttons.dataTables.min.css">
     <link rel="stylesheet" href="../assets/plugins/datatables2/rowGroup.dataTables.css">
     <link rel="stylesheet" href="../assets/plugins/datatables2/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="../assets/plugins/datatables2/stateRestore.dataTables.min.css">
     <!-- fin de  data table -->
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
@@ -495,7 +496,8 @@ $idubicacion = $row['idubicacion'];
     <!-- This is data table -->
     <script src="../assets/plugins/datatables2/datatables.min.js"></script>
     <script src="../assets/plugins/datatables2/dataTables.rowGroup.js"></script>
-    <script src="../assets/plugins/datatables2/rowGroup.dataTables.js"></script> 
+    <script src="../assets/plugins/datatables2/rowGroup.dataTables.js"></script>
+    <script src="../assets/plugins/datatables2/dataTables.stateRestore.min.js"></script>
     <!-- This is data table 
         <script src="../assets/plugins/datatables/datatables.min.js"></script>
         `<script src="../assets/plugins/datatables/media/js/dataTables.buttons.min.js"></script>

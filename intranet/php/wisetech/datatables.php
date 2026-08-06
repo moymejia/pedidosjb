@@ -12,8 +12,9 @@ class datatables extends mysql {
     public function __construct($PARAMETROS = null, $OPTIONS = []) {
         $this->OPTIONS = is_array($OPTIONS) ? $OPTIONS : [];
         $this->base_datos = prefijo . '_seguridad';
-        $this->ACCIONES['actualizar_vista'] = 'actualizar_vista';
-        $this->ACCIONES['compartir_vista']  = 'compartir_vista';
+        $_MYSQL = new mysql($this->base_datos);
+        $this->ACCIONES['actualizar_vista'] = $_MYSQL->getvalue("SELECT idaccion FROM accion WHERE nombre = 'actualizar_vista' AND estado = 'ACTIVO' LIMIT 1", 'idaccion');
+        $this->ACCIONES['compartir_vista']  = $_MYSQL->getvalue("SELECT idaccion FROM accion WHERE nombre = 'compartir_vista' AND estado = 'ACTIVO' LIMIT 1", 'idaccion');
 
         if (isset($PARAMETROS) && isset($PARAMETROS['operacion'])) {
             $this->seleccionar_operacion($PARAMETROS);
@@ -191,8 +192,379 @@ class datatables extends mysql {
         $status = $db->getvalue($sql, 'status');
         return $status !== null ? $status : '';
     }
-    public function addTable($result, $PARAMETROS = [], $style = "", $special_columns = [], $aligments = [], $hidden_columns = [], $idtabla = "tabla_datos") {
+    private function cargar_configuracion_datatable($idtabla) {
+        $idtabla_sql = $this->escape_sql($idtabla);
+        $_MYSQL = new mysql($this->base_datos);
+
+        $sql = "SELECT idtabla
+            FROM {$this->base_datos}.datatable_configuracion
+            WHERE idtabla = '$idtabla_sql'
+            LIMIT 1";
+        $resultado = $_MYSQL->getresult($sql);
+        if ($resultado === false) {
+            return false;
+        }
+
+        $FILA = $_MYSQL->getrowresult($resultado);
+        if (!$FILA) {
+            return null;
+        }
+
+        $sql = "SELECT idtabla_detalle, parametro, valor
+            FROM {$this->base_datos}.datatable_configuracion_detalle
+            WHERE idtabla = '$idtabla_sql'
+            ORDER BY idtabla_detalle";
+        $resultado = $_MYSQL->getresult($sql);
+        if ($resultado === false) {
+            return false;
+        }
+
+        $DETALLES = [];
+        while ($FILA = $_MYSQL->getrowresult($resultado)) {
+            $parametro = trim((string)$FILA['parametro']);
+            if ($parametro === '') {
+                continue;
+            }
+            $DETALLES[(int)$FILA['idtabla_detalle']] = [
+                'parametro' => $parametro,
+                'valor' => $FILA['valor']
+            ];
+        }
+
+        $VALORES_DETALLE = [];
+        if (!empty($DETALLES)) {
+            $sql = "SELECT idtabla_detalle, clave, valor
+                FROM {$this->base_datos}.datatable_configuracion_detalle_valor
+                WHERE idtabla_detalle IN (
+                    SELECT idtabla_detalle
+                    FROM {$this->base_datos}.datatable_configuracion_detalle
+                    WHERE idtabla = '$idtabla_sql'
+                )
+                ORDER BY idtabla_detalle, orden";
+            $resultado = $_MYSQL->getresult($sql);
+            if ($resultado === false) {
+                return false;
+            }
+
+            while ($FILA = $_MYSQL->getrowresult($resultado)) {
+                $idtabla_detalle = (int)$FILA['idtabla_detalle'];
+                if (!isset($VALORES_DETALLE[$idtabla_detalle])) {
+                    $VALORES_DETALLE[$idtabla_detalle] = [];
+                }
+                $VALORES_DETALLE[$idtabla_detalle][] = [
+                    'clave' => $FILA['clave'],
+                    'valor' => $FILA['valor']
+                ];
+            }
+        }
+
+        $CONFIGURACION = [];
+        foreach ($DETALLES as $idtabla_detalle => $DETALLE) {
+            $parametro = $DETALLE['parametro'];
+            if (!isset($VALORES_DETALLE[$idtabla_detalle])) {
+                $CONFIGURACION[$parametro] = $this->normalizar_valor_configuracion($DETALLE['valor']);
+                continue;
+            }
+
+            $VALORES = [];
+            $es_asociativo = false;
+            foreach ($VALORES_DETALLE[$idtabla_detalle] as $VALOR_DETALLE) {
+                if ($VALOR_DETALLE['clave'] !== null && $VALOR_DETALLE['clave'] !== '') {
+                    $es_asociativo = true;
+                    $VALORES[$VALOR_DETALLE['clave']] = $VALOR_DETALLE['valor'];
+                } else {
+                    $VALORES[] = $VALOR_DETALLE['valor'];
+                }
+            }
+
+            if (!$es_asociativo && in_array($parametro, ['add_filter', 'columncontrolexclude', 'buttons', 'responsive'], true)) {
+                $CONFIGURACION[$parametro] = implode(',', $VALORES);
+            } else {
+                $CONFIGURACION[$parametro] = $VALORES;
+            }
+        }
+
+        return $CONFIGURACION;
+    }
+    private function guardar_configuracion_datatable($idtabla, $PARAMETROS, $style, $special_columns, $aligments, $hidden_columns) {
         $PARAMETROS = is_array($PARAMETROS) ? $PARAMETROS : [];
+        $CONFIGURACION = array_fill_keys($this->obtener_parametros_configuracion_datatable(), false);
+        foreach ($PARAMETROS as $parametro => $valor) {
+            $CONFIGURACION[$parametro] = $valor;
+        }
+        $CONFIGURACION['style'] = ($style === null || $style === '') ? false : $style;
+        $CONFIGURACION['special_columns'] = empty($special_columns) ? false : $special_columns;
+        $CONFIGURACION['aligments'] = empty($aligments) ? false : $aligments;
+        $CONFIGURACION['hidden_columns'] = empty($hidden_columns) ? false : $hidden_columns;
+
+        $_SECURITY = new security($this->ACCIONES['actualizar_vista']);
+        $usuario = $this->escape_sql($_SECURITY->get_actual_user());
+        $idtabla_sql = $this->escape_sql($idtabla);
+        $_MYSQL = new mysql($this->base_datos);
+
+        if (!$_MYSQL->put('START TRANSACTION')) {
+            return false;
+        }
+
+        $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion
+            (idtabla, creado_por)
+            VALUES ('$idtabla_sql', '$usuario')";
+        if (!$_MYSQL->put($sql)) {
+            $_MYSQL->put('ROLLBACK');
+            return false;
+        }
+
+        foreach ($CONFIGURACION as $parametro => $valor) {
+            $LISTADO = $this->obtener_listado_valor_configuracion($parametro, $valor);
+            $parametro_sql = $this->escape_sql($parametro);
+            $valor_sql = ($LISTADO !== null)
+                ? 'NULL'
+                : "'" . $this->escape_sql($this->convertir_valor_configuracion_texto($valor)) . "'";
+
+            $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle
+                (idtabla, parametro, valor, creado_por)
+                VALUES ('$idtabla_sql', '$parametro_sql', $valor_sql, '$usuario')";
+            if (!$_MYSQL->put($sql)) {
+                $_MYSQL->put('ROLLBACK');
+                return false;
+            }
+
+            if ($LISTADO === null) {
+                continue;
+            }
+
+            $idtabla_detalle = $_MYSQL->last_id();
+            $orden = 1;
+            foreach ($LISTADO as $VALOR_LISTADO) {
+                $clave_sql = ($VALOR_LISTADO['clave'] === null)
+                    ? 'NULL'
+                    : "'" . $this->escape_sql($VALOR_LISTADO['clave']) . "'";
+                $valor_listado_sql = $this->escape_sql($VALOR_LISTADO['valor']);
+                $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle_valor
+                    (idtabla_detalle, clave, valor, orden, creado_por)
+                    VALUES ('$idtabla_detalle', $clave_sql, '$valor_listado_sql', '$orden', '$usuario')";
+                if (!$_MYSQL->put($sql)) {
+                    $_MYSQL->put('ROLLBACK');
+                    return false;
+                }
+                $orden++;
+            }
+        }
+
+        if (!$_MYSQL->put('COMMIT')) {
+            $_MYSQL->put('ROLLBACK');
+            return false;
+        }
+
+        $_SECURITY->registrar_bitacora(
+            $this->ACCIONES['actualizar_vista'],
+            $idtabla,
+            'CREAR CONFIGURACION DATATABLE'
+        );
+
+        return true;
+    }
+    private function obtener_parametros_configuracion_datatable() {
+        return [
+            'add_filter',
+            'columncontrol',
+            'columncontrolexclude',
+            'responsive',
+            'colreorder',
+            'select',
+            'buttons',
+            'paging',
+            'ordering',
+            'reset',
+            'rowgroup',
+            'edit_button',
+            'export_all',
+            'staterestore',
+            'titulotabla',
+            'filename'
+        ];
+    }
+    private function obtener_listado_valor_configuracion($parametro, $valor) {
+        if ($valor === false || $valor === null || $valor === '' || (is_array($valor) && empty($valor))) {
+            return null;
+        }
+        if ($parametro === 'responsive' && !is_array($valor) && ($valor === true || $valor === 1 || $valor === '1' || strtolower(trim((string)$valor)) === 'true')) {
+            return null;
+        }
+
+        $PARAMETROS_LISTA_SIMPLE = ['add_filter', 'columncontrolexclude', 'buttons', 'responsive', 'hidden_columns'];
+        $PARAMETROS_LISTA_ASOCIATIVA = ['special_columns', 'aligments'];
+        if (!in_array($parametro, $PARAMETROS_LISTA_SIMPLE, true) && !in_array($parametro, $PARAMETROS_LISTA_ASOCIATIVA, true) && !is_array($valor)) {
+            return null;
+        }
+
+        if (in_array($parametro, $PARAMETROS_LISTA_ASOCIATIVA, true)) {
+            if (!is_array($valor)) {
+                return null;
+            }
+            $LISTADO = [];
+            foreach ($valor as $clave => $contenido) {
+                $LISTADO[] = [
+                    'clave' => (string)$clave,
+                    'valor' => $this->convertir_valor_configuracion_texto($contenido)
+                ];
+            }
+            return $LISTADO;
+        }
+
+        if (is_array($valor)) {
+            $VALORES = array_values($valor);
+        } elseif ($parametro === 'buttons' && $valor === true) {
+            $VALORES = ['all'];
+        } elseif (in_array($parametro, ['add_filter', 'columncontrolexclude', 'buttons', 'responsive'], true)) {
+            $VALORES = explode(',', (string)$valor);
+        } else {
+            $VALORES = [$valor];
+        }
+
+        $LISTADO = [];
+        foreach ($VALORES as $valor_listado) {
+            $valor_listado = trim($this->convertir_valor_configuracion_texto($valor_listado));
+            if ($valor_listado === '') {
+                continue;
+            }
+            $LISTADO[] = ['clave' => null, 'valor' => $valor_listado];
+        }
+
+        return empty($LISTADO) ? null : $LISTADO;
+    }
+    private function convertir_valor_configuracion_texto($valor) {
+        if ($valor === true) {
+            return 'true';
+        }
+        if ($valor === false || $valor === null || $valor === '' || is_array($valor)) {
+            return 'false';
+        }
+        return (string)$valor;
+    }
+    private function sincronizar_campos_query_datatable($idtabla, $CAMPOS_QUERY) {
+        if (empty($CAMPOS_QUERY)) {
+            return false;
+        }
+
+        $_SECURITY = new security($this->ACCIONES['actualizar_vista']);
+        $usuario = $this->escape_sql($_SECURITY->get_actual_user());
+        $idtabla_sql = $this->escape_sql($idtabla);
+        $_MYSQL = new mysql($this->base_datos);
+
+        if (!$_MYSQL->put('START TRANSACTION')) {
+            return false;
+        }
+
+        $sql = "SELECT idtabla_detalle
+            FROM {$this->base_datos}.datatable_configuracion_detalle
+            WHERE idtabla = '$idtabla_sql' AND parametro = 'query_fields'
+            LIMIT 1";
+        $idtabla_detalle = $_MYSQL->getvalue($sql, 'idtabla_detalle');
+
+        if ($idtabla_detalle === false) {
+            $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle
+                (idtabla, parametro, valor, creado_por)
+                VALUES ('$idtabla_sql', 'query_fields', NULL, '$usuario')";
+            if (!$_MYSQL->put($sql)) {
+                $_MYSQL->put('ROLLBACK');
+                return false;
+            }
+            $idtabla_detalle = $_MYSQL->last_id();
+        } else {
+            $sql = "UPDATE {$this->base_datos}.datatable_configuracion_detalle
+                SET valor = NULL, actualizado_por = '$usuario'
+                WHERE idtabla_detalle = '$idtabla_detalle'";
+            if (!$_MYSQL->put($sql)) {
+                $_MYSQL->put('ROLLBACK');
+                return false;
+            }
+
+            $sql = "DELETE FROM {$this->base_datos}.datatable_configuracion_detalle_valor
+                WHERE idtabla_detalle = '$idtabla_detalle'";
+            if (!$_MYSQL->put($sql)) {
+                $_MYSQL->put('ROLLBACK');
+                return false;
+            }
+        }
+
+        $orden = 1;
+        foreach ($CAMPOS_QUERY as $campo) {
+            $campo_sql = $this->escape_sql($campo);
+            $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle_valor
+                (idtabla_detalle, clave, valor, orden, creado_por)
+                VALUES ('$idtabla_detalle', NULL, '$campo_sql', '$orden', '$usuario')";
+            if (!$_MYSQL->put($sql)) {
+                $_MYSQL->put('ROLLBACK');
+                return false;
+            }
+            $orden++;
+        }
+
+        if (!$_MYSQL->put('COMMIT')) {
+            $_MYSQL->put('ROLLBACK');
+            return false;
+        }
+
+        $_SECURITY->registrar_bitacora(
+            $this->ACCIONES['actualizar_vista'],
+            $idtabla,
+            'ACTUALIZAR CAMPOS QUERY DATATABLE'
+        );
+
+        return true;
+    }
+    private function normalizar_valor_configuracion($valor) {
+        if ($valor === null) {
+            return true;
+        }
+
+        $valor = trim((string)$valor);
+        $valor_normalizado = strtolower($valor);
+        if ($valor_normalizado === 'true') {
+            return true;
+        }
+        if ($valor_normalizado === 'false') {
+            return false;
+        }
+
+        return $valor;
+    }
+    public function addTable($result, $PARAMETROS = [], $style = "", $special_columns = [], $aligments = [], $hidden_columns = [], $idtabla = "tabla_datos") {
+        $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
+        if ($idtabla !== 'tabla_datos') {
+            $CAMPOS_QUERY = [];
+            $cantidad_campos = mysql::num_fields($result);
+            for ($indice_campo = 0; $indice_campo < $cantidad_campos; $indice_campo++) {
+                $informacion_campo = mysql::fetch_field($result, $indice_campo);
+                $CAMPOS_QUERY[] = $informacion_campo->name;
+            }
+
+            $CONFIGURACION = $this->cargar_configuracion_datatable($idtabla);
+            if (is_array($CONFIGURACION)) {
+                $CAMPOS_GUARDADOS = isset($CONFIGURACION['query_fields']) && is_array($CONFIGURACION['query_fields'])
+                    ? array_values($CONFIGURACION['query_fields'])
+                    : [];
+                if ($CAMPOS_GUARDADOS !== $CAMPOS_QUERY) {
+                    $this->sincronizar_campos_query_datatable($idtabla, $CAMPOS_QUERY);
+                    $CONFIGURACION['query_fields'] = $CAMPOS_QUERY;
+                }
+                $PARAMETROS = $CONFIGURACION;
+                $style = (isset($CONFIGURACION['style']) && $CONFIGURACION['style'] !== false) ? $CONFIGURACION['style'] : '';
+                $special_columns = (isset($CONFIGURACION['special_columns']) && is_array($CONFIGURACION['special_columns'])) ? $CONFIGURACION['special_columns'] : [];
+                $aligments = (isset($CONFIGURACION['aligments']) && is_array($CONFIGURACION['aligments'])) ? $CONFIGURACION['aligments'] : [];
+                $hidden_columns = (isset($CONFIGURACION['hidden_columns']) && is_array($CONFIGURACION['hidden_columns'])) ? $CONFIGURACION['hidden_columns'] : [];
+            } else {
+                $PARAMETROS = is_array($PARAMETROS) ? $PARAMETROS : [];
+                $PARAMETROS_GUARDAR = $PARAMETROS;
+                $PARAMETROS_GUARDAR['query_fields'] = $CAMPOS_QUERY;
+                if ($CONFIGURACION === null && !empty($PARAMETROS)) {
+                    $this->guardar_configuracion_datatable($idtabla, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
+                } elseif ($CONFIGURACION === null) {
+                    $this->guardar_configuracion_datatable($idtabla, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
+                }
+            }
+        }
 
         //
         $add_filter    = isset($PARAMETROS['add_filter'])    ? $PARAMETROS['add_filter']    : false;
@@ -245,6 +617,7 @@ class datatables extends mysql {
         $titulo_tabla  = isset($PARAMETROS['titulotabla'])   ? $PARAMETROS['titulotabla']   : false;
         $file_name     = isset($PARAMETROS['filename'])      ? $PARAMETROS['filename']      : false;
         $titulo_tabla = ($titulo_tabla === false || $titulo_tabla === '') ? 'Listado' : $titulo_tabla;
+        $titulo_tabla_value = htmlspecialchars((string)$titulo_tabla, ENT_QUOTES, 'UTF-8');
         $file_name    = ($file_name    === false || $file_name === '')    ? 'Listado' : $file_name;
         $row_group    = ($rowgroup     === false || $rowgroup === '')     ? 'false'   : strtoupper(str_replace('_', ' ', (string)$rowgroup));
         $columncontrol_exclude = isset($PARAMETROS['columncontrolexclude']) ? $PARAMETROS['columncontrolexclude'] : false;
@@ -285,7 +658,7 @@ class datatables extends mysql {
         $data_ = "";
         $data_ .= " data-conf-columncontrol='" . ($columncontrol ? "true" : "false") . "' ";
         $data_ .= " data-conf-rowgroup='"      . $row_group . "' ";
-        $data_ .= " data-conf-titulotabla='"   . $titulo_tabla . "' ";
+        $data_ .= " data-conf-titulotabla='"   . $titulo_tabla_value . "' ";
         $data_ .= " data-conf-filename='"      . $file_name . "' ";
         // $data_ .= " data-conf-responsive='"    . ($responsive ? "true" : "false") . "' ";
         $data_ .= " data-conf-responsive='"    . htmlspecialchars($responsive_value, ENT_QUOTES, 'UTF-8') . "' ";
@@ -300,7 +673,6 @@ class datatables extends mysql {
         $data_ .= " data-conf-addfilter='"            . htmlspecialchars($add_filter_value, ENT_QUOTES, 'UTF-8') . "' ";
         $data_ .= " data-conf-columncontrolexclude='" . htmlspecialchars($columncontrol_exclude_value, ENT_QUOTES, 'UTF-8') . "' ";
 
-        $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
         if (in_array($idtabla, $this->IDS, true)) {
             return false;
         }

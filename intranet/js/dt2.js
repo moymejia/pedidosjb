@@ -768,18 +768,6 @@ function activar_tabla(idtabla) {
             }
         });
     }
-    if (rowGroupUser) {
-        botones.push({
-            text: 'Limpiar Agrupación',
-            action: function (e, dt) {
-                if (dt.rowGroup().enabled()) {
-                    dt.rowGroup().disable();
-                    dt.draw();
-                }
-            },
-            className: 'btn-limpiar'
-        });
-    }
     if (selectUser) {
         botones.push({
             text: 'Deseleccionar',
@@ -976,6 +964,7 @@ function activar_tabla(idtabla) {
         lengthChange: pagingUser,
         stateSave: true,
         stateDuration: 0,
+        orderFixed: rowGroupUser ? { pre: [[indiceReal, 'asc']] } : undefined,
         order: orderInicial,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
         columnControl: columnControlUser ? {
@@ -1062,7 +1051,13 @@ function activar_tabla(idtabla) {
                 selected: haySeleccion ? true : null
             });
 
-            exportOptionsActual.columns = ':visible';
+            exportOptionsActual.columns = function (idx, data, node) {
+                if (tabla_nueva.column(idx).visible()) {
+                    return true;
+                }
+                var header = tabla_nueva.column(idx).header();
+                return !!(header && header.className && header.className.indexOf('dtr-hidden') !== -1);
+            };
             if (esBotonImprimir || esBotonPdf || esBotonExcel) {
                 exportOptionsActual.stripHtml = false;
             }

@@ -1,0 +1,49 @@
+<input type="hidden" id="jsid" value="datatable_configuracion">
+
+<style>
+    #datatable_configuracion_app .select2-container--default .select2-selection--multiple {
+        min-height: 42px;
+        padding: 3px;
+        border-color: #9e9e9e;
+    }
+
+    #datatable_configuracion_app .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #1976d2;
+        border-color: #1565c0;
+        color: #ffffff;
+        font-weight: 500;
+        padding: 4px 8px;
+    }
+
+    #datatable_configuracion_app .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: #ffffff;
+        margin-right: 6px;
+    }
+
+    #datatable_configuracion_app label[title],
+    #datatable_configuracion_app h5[title] {
+        cursor: help;
+        border-bottom: 1px dotted #777777;
+    }
+
+    #datatable_configuracion_editor:not(:empty) ~ #datatable_configuracion_listado {
+        display: none !important;
+    }
+
+    #datatable_configuracion_editor:not(:empty) ~ #datatable_configuracion_encabezado {
+        display: none !important;
+    }
+</style>
+
+<div id="datatable_configuracion_app">
+    <div id="datatable_configuracion_editor" class="m-t-20" style="display:none;"></div>
+
+    <div id="datatable_configuracion_encabezado">
+        <h4 class="card-title m-b-5 header-titulo">Configuración de DataTables</h4>
+        <p class="text-muted">Seleccione una tabla para consultar y modificar sus parámetros.</p>
+    </div>
+
+    <div id="datatable_configuracion_listado" class="table-responsive">
+        [tabla_configuraciones]
+    </div>
+</div>
