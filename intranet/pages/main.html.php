@@ -43,6 +43,7 @@ $idubicacion = $row['idubicacion'];
     <!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet">
     <link href="css/dt2.css" rel="stylesheet">
+    <link href="css/buscador_opciones.css?x=<?php echo date('YmdHis'); ?>" rel="stylesheet">
 
     <link href="../assets/plugins/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css" />
     <!-- You can change the theme colors from here -->
@@ -136,6 +137,7 @@ $idubicacion = $row['idubicacion'];
     <script src="../js/chart.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
+    <script src="../js/buscador_opciones.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/dt2.js?x=<?php echo $version ?>"></script>
     <script src="../js/xlsx.full.min.js?x=<?php echo $version ?>"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -252,6 +254,20 @@ $idubicacion = $row['idubicacion'];
                                             <?php echo $nombre ?>
                                         </span>
                                     </a>
+                                </li>
+
+                                <li class="sidebar-search-option topbar-search-option">
+                                    <div class="sidebar-option-search">
+                                        <div class="sidebar-option-panel">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend" id="abrir_buscador_opciones" aria-label="Buscar opción" role="button" tabindex="0">
+                                                    <span class="input-group-text"><i class="ti-search"></i></span>
+                                                </div>
+                                                <input type="search" class="form-control" id="buscador_opciones" placeholder="Buscar opción" autocomplete="off" aria-label="Buscar opción">
+                                            </div>
+                                            <div class="list-group sidebar-option-results d-none" id="resultados_buscador_opciones"></div>
+                                        </div>
+                                    </div>
                                 </li>
 
                                 <input type="hidden" id="idopcion_actual">
