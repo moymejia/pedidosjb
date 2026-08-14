@@ -1,6 +1,346 @@
 // 
 var _dtAddFilterSelects = {}; // mapa global: tableId -> [nodo select, ...]
 var _dtFilterState = {}; // tableId_colIdx -> [valores seleccionados]
+var _dtAggregationState = {}; // tableId_col:nombreColumna -> "sum" | "count"
+
+function clave_estado_datatable(idtabla) {
+    var usuario = window.usuario_actual_datatables || 'sin_usuario';
+    return 'DataTables_' + encodeURIComponent(usuario) + '_' + idtabla;
+}
+
+function obtener_texto_agregacion(valor) {
+    if (valor === undefined || valor === null) {
+        return '';
+    }
+
+    var container = document.createElement('div');
+    container.innerHTML = String(valor);
+    container.querySelectorAll('input, select, textarea, button, script, style').forEach(function (elemento) {
+        elemento.parentNode.removeChild(elemento);
+    });
+    return (container.textContent || container.innerText || '').replace(/\u00a0/g, ' ').trim();
+}
+
+function parsear_numero_agregacion(valor) {
+    var texto = obtener_texto_agregacion(valor);
+    if (texto === '') {
+        return null;
+    }
+
+    var negativo_parentesis = /^\s*\(.*\)\s*$/.test(texto);
+    texto = texto
+        .replace(/[()]/g, '')
+        .trim()
+        .replace(/^(?:GTQ|USD|EUR|Q(?:UETZALES?)?\.?|US\$|\$|€|£)\s*/i, '')
+        .replace(/\s*(?:GTQ|USD|EUR|Q(?:UETZALES?)?\.?|US\$|\$|€|£|%)$/i, '')
+        .replace(/\s+/g, '');
+
+    // Rechazar texto con números incidentales, por ejemplo "Sector 4".
+    if (texto === '' || !/^[+-]?[0-9][0-9,.]*$/.test(texto)) {
+        return null;
+    }
+
+    var ultima_coma = texto.lastIndexOf(',');
+    var ultimo_punto = texto.lastIndexOf('.');
+    var separador_decimal = '';
+
+    if (ultima_coma !== -1 && ultimo_punto !== -1) {
+        separador_decimal = ultima_coma > ultimo_punto ? ',' : '.';
+    } else if (ultima_coma !== -1) {
+        var decimales_coma = texto.length - ultima_coma - 1;
+        separador_decimal = decimales_coma > 0 && decimales_coma <= 2 ? ',' : '';
+    } else if (ultimo_punto !== -1) {
+        var decimales_punto = texto.length - ultimo_punto - 1;
+        separador_decimal = decimales_punto > 0 && decimales_punto <= 2 ? '.' : '';
+    }
+
+    if (separador_decimal !== '') {
+        var posicion_decimal = texto.lastIndexOf(separador_decimal);
+        var parte_entera = texto.substring(0, posicion_decimal).replace(/[,.]/g, '');
+        var parte_decimal = texto.substring(posicion_decimal + 1).replace(/[,.]/g, '');
+        texto = parte_entera + '.' + parte_decimal;
+    } else {
+        texto = texto.replace(/[,.]/g, '');
+    }
+
+    var numero = Number(texto);
+    if (!Number.isFinite(numero)) {
+        return null;
+    }
+    return negativo_parentesis ? -Math.abs(numero) : numero;
+}
+
+function normalizar_columna_agregacion(titulo) {
+    return obtener_texto_agregacion(titulo).replace(/\s+/g, ' ').trim().toUpperCase();
+}
+
+function obtener_id_columna_agregacion(titulo) {
+    return 'col:' + encodeURIComponent(normalizar_columna_agregacion(titulo));
+}
+
+function obtener_indice_actual_agregacion(dt, columna_id) {
+    var nombre_buscado = '';
+    if (typeof columna_id === 'string' && columna_id.indexOf('col:') === 0) {
+        try {
+            nombre_buscado = decodeURIComponent(columna_id.substring(4));
+        } catch (e) {
+            nombre_buscado = '';
+        }
+    }
+    if (nombre_buscado === '') {
+        return -1;
+    }
+
+    var indice_actual = -1;
+    dt.columns().every(function (indice) {
+        if (normalizar_columna_agregacion(this.title()) === nombre_buscado) {
+            indice_actual = indice;
+            return false;
+        }
+    });
+    return indice_actual;
+}
+
+function calcular_agregacion_columna(dt, indices_filas, indice_columna, tipo) {
+    var resultado = 0;
+    var INDICES = indices_filas && typeof indices_filas.toArray === 'function'
+        ? indices_filas.toArray()
+        : Array.prototype.slice.call(indices_filas || []);
+
+    for (var i = 0; i < INDICES.length; i++) {
+        var valor = dt.cell(INDICES[i], indice_columna).render('filter');
+        if (tipo === 'count') {
+            if (obtener_texto_agregacion(valor) !== '') {
+                resultado++;
+            }
+        } else if (tipo === 'sum') {
+            var numero = parsear_numero_agregacion(valor);
+            if (numero !== null) {
+                resultado += numero;
+            }
+        }
+    }
+    return resultado;
+}
+
+function formatear_resultado_agregacion(valor, tipo) {
+    if (tipo === 'count') {
+        return String(valor);
+    }
+    // Limitar la salida para ocultar residuos binarios sin perder decimales significativos.
+    return new Intl.NumberFormat('es-GT', { maximumFractionDigits: 8 }).format(valor);
+}
+
+function contiene_resultado_agregacion(valor) {
+    var contenido = valor;
+    if (valor && typeof valor === 'object') {
+        contenido = valor.text;
+        if (Array.isArray(contenido)) {
+            contenido = contenido.map(function (parte) {
+                return parte && typeof parte === 'object' ? parte.text : parte;
+            }).join(' ');
+        }
+    }
+    var texto = obtener_texto_agregacion(contenido);
+    return /(^|\u2014\s)(Suma|Conteo)\s/i.test(texto);
+}
+
+function estilizar_filas_agregacion_pdf(doc) {
+    if (!doc || !Array.isArray(doc.content)) return;
+    doc.content.forEach(function (contenido) {
+        if (!contenido || !contenido.table || !Array.isArray(contenido.table.body)) return;
+        contenido.table.body.forEach(function (fila) {
+            if (!Array.isArray(fila) || !fila.some(contiene_resultado_agregacion)) return;
+            fila.forEach(function (celda, indice) {
+                if (typeof celda === 'string') {
+                    fila[indice] = { text: celda, bold: true, fillColor: '#E2E3E5' };
+                } else if (celda && typeof celda === 'object') {
+                    celda.bold = true;
+                    celda.fillColor = '#E2E3E5';
+                }
+            });
+        });
+    });
+}
+
+function estilizar_filas_agregacion_impresion(doc) {
+    if (!doc) return;
+    doc.querySelectorAll('table tbody tr, table tfoot tr').forEach(function (fila) {
+        if (!contiene_resultado_agregacion(fila.textContent)) return;
+        fila.style.fontWeight = '700';
+        fila.style.backgroundColor = '#e2e3e5';
+        fila.querySelectorAll('th, td').forEach(function (celda) {
+            celda.style.backgroundColor = '#e2e3e5';
+        });
+    });
+}
+
+function estilizar_filas_agregacion_excel(xlsx) {
+    if (!xlsx || !xlsx.xl || !xlsx.xl.worksheets) return;
+    var hoja = xlsx.xl.worksheets['sheet1.xml'];
+    // En Buttons el archivo se encuentra directamente bajo xl. Mantener el
+    // segundo acceso como compatibilidad con otras versiones de la extensión.
+    var estilos = xlsx.xl['styles.xml'] ||
+        (xlsx.xl.styles && xlsx.xl.styles['styles.xml']);
+    if (!hoja || !estilos) return;
+
+    var textos_compartidos = [];
+    var shared = xlsx.xl['sharedStrings.xml'];
+    if (shared) {
+        $('si', shared).each(function () { textos_compartidos.push($(this).text()); });
+    }
+    var filas_agregacion = {};
+    $('sheetData row c', hoja).each(function () {
+        var celda = $(this);
+        var texto = '';
+        if (celda.attr('t') === 's') {
+            texto = textos_compartidos[parseInt(celda.find('v').text(), 10)] || '';
+        } else {
+            // Buttons escribe normalmente las cadenas como inlineStr. Usar el
+            // contenido completo de la celda evita depender de selectores XML
+            // sensibles al namespace del documento.
+            texto = celda.text() || '';
+        }
+        if (contiene_resultado_agregacion(texto)) {
+            filas_agregacion[celda.closest('row').attr('r')] = true;
+        }
+    });
+    if (Object.keys(filas_agregacion).length === 0) return;
+
+    // DataTables Buttons incluye el estilo 7: negrita con fondo gris.
+    $('sheetData row', hoja).each(function () {
+        if (filas_agregacion[$(this).attr('r')]) {
+            $(this).find('c').attr('s', '7');
+        }
+    });
+}
+
+function obtener_agregaciones_estado_tabla(idtabla) {
+    var AGREGACIONES = [];
+    var prefijo = idtabla + '_';
+    Object.keys(_dtAggregationState).forEach(function (state_key) {
+        if (state_key.indexOf(prefijo) !== 0 || !_dtAggregationState[state_key]) {
+            return;
+        }
+        var columna_id = state_key.substring(prefijo.length);
+        if (columna_id.indexOf('col:') === 0) {
+            AGREGACIONES.push({
+                columna_id: columna_id,
+                tipo: _dtAggregationState[state_key]
+            });
+        }
+    });
+    return AGREGACIONES;
+}
+
+function construir_filas_reporte_datatable(dt) {
+    var INDICES_FILAS = dt.rows({ search: 'applied', order: 'applied', page: 'all' }).indexes().toArray();
+    var filas = [];
+    var agregar_fila_datos = function (indice_fila) {
+        var nodo = dt.row(indice_fila).node();
+        if (!nodo) {
+            return;
+        }
+        var fila = nodo.cloneNode(true);
+        fila.querySelectorAll('input, select, textarea, button').forEach(function (elemento) {
+            elemento.parentNode.removeChild(elemento);
+        });
+        filas.push(fila.outerHTML);
+    };
+
+    var rowgroup_activo = dt.rowGroup && dt.rowGroup().enabled();
+    var AGREGACIONES = obtener_agregaciones_estado_tabla(dt.table().node().id);
+    if (!rowgroup_activo) {
+        INDICES_FILAS.forEach(agregar_fila_datos);
+
+        if (AGREGACIONES.length > 0) {
+            var fila_total = document.createElement('tr');
+            fila_total.className = 'dt-aggregation-export-total';
+            for (var columna = 0; columna < dt.columns().count(); columna++) {
+                fila_total.appendChild(document.createElement('td'));
+            }
+            AGREGACIONES.forEach(function (agregacion) {
+                var indice_actual = obtener_indice_actual_agregacion(dt, agregacion.columna_id);
+                if (indice_actual === -1 || !fila_total.cells[indice_actual]) {
+                    return;
+                }
+                var resultado = calcular_agregacion_columna(dt, INDICES_FILAS, indice_actual, agregacion.tipo);
+                fila_total.cells[indice_actual].textContent = (agregacion.tipo === 'sum' ? 'Suma ' : 'Conteo ') +
+                    formatear_resultado_agregacion(resultado, agregacion.tipo);
+                fila_total.cells[indice_actual].classList.add('dt-aggregation-group-value');
+            });
+            filas.push(fila_total.outerHTML);
+        }
+        return filas.join('');
+    }
+
+    var fuente_grupo = dt.rowGroup().dataSrc();
+    if (Array.isArray(fuente_grupo)) {
+        fuente_grupo = fuente_grupo[0];
+    }
+    var indice_grupo = typeof fuente_grupo === 'number' ? fuente_grupo : -1;
+    if (indice_grupo === -1 && typeof fuente_grupo === 'string') {
+        dt.columns().every(function (indice) {
+            if (this.dataSrc() === fuente_grupo || normalizar_columna_agregacion(this.title()) === normalizar_columna_agregacion(fuente_grupo)) {
+                indice_grupo = indice;
+            }
+        });
+    }
+    if (indice_grupo === -1) {
+        INDICES_FILAS.forEach(agregar_fila_datos);
+        return filas.join('');
+    }
+
+    var grupo_anterior;
+    var INDICES_GRUPO = [];
+    var finalizar_grupo = function (grupo) {
+        if (INDICES_GRUPO.length === 0) {
+            return;
+        }
+        var fila_grupo = document.createElement('tr');
+        fila_grupo.className = 'dtrg-group dtrg-start dtrg-level-0 dt-aggregation-group-row';
+        var cantidad_columnas = dt.columns().count();
+        for (var c = 0; c < cantidad_columnas; c++) {
+            var celda = document.createElement(c === indice_grupo ? 'th' : 'td');
+            if (c === indice_grupo) {
+                celda.setAttribute('scope', 'row');
+                celda.appendChild(document.createTextNode(grupo + ' (' + INDICES_GRUPO.length + ' registros)'));
+            }
+            fila_grupo.appendChild(celda);
+        }
+        AGREGACIONES.forEach(function (agregacion) {
+            var indice_actual = obtener_indice_actual_agregacion(dt, agregacion.columna_id);
+            if (indice_actual === -1 || !fila_grupo.cells[indice_actual]) {
+                return;
+            }
+            var resultado = calcular_agregacion_columna(dt, INDICES_GRUPO, indice_actual, agregacion.tipo);
+            var elemento = document.createElement('span');
+            elemento.className = 'dt-aggregation-group-value';
+            elemento.textContent = (agregacion.tipo === 'sum' ? 'Suma ' : 'Conteo ') +
+                formatear_resultado_agregacion(resultado, agregacion.tipo);
+            if (indice_actual === indice_grupo) {
+                elemento.style.display = 'block';
+            } else {
+                fila_grupo.cells[indice_actual].classList.add('dt-aggregation-group-value');
+            }
+            fila_grupo.cells[indice_actual].appendChild(elemento);
+        });
+        filas.push(fila_grupo.outerHTML);
+        INDICES_GRUPO.forEach(agregar_fila_datos);
+        INDICES_GRUPO = [];
+    };
+
+    INDICES_FILAS.forEach(function (indice_fila) {
+        var grupo_actual = obtener_texto_agregacion(dt.cell(indice_fila, indice_grupo).render('display'));
+        if (grupo_anterior !== undefined && grupo_actual !== grupo_anterior) {
+            finalizar_grupo(grupo_anterior);
+        }
+        grupo_anterior = grupo_actual;
+        INDICES_GRUPO.push(indice_fila);
+    });
+    finalizar_grupo(grupo_anterior === undefined ? '' : grupo_anterior);
+    return filas.join('');
+}
 document.addEventListener('click', function (e) {
     const label = e.target.closest('.dt-search label');
     if (!label) return;
@@ -199,6 +539,7 @@ function print_all_datatables(dt) {
         resolve_print_asset_url("../css/dt2.print_all.css?x=" + version),
         false,
         function () {
+            estilizar_filas_agregacion_impresion(mywindow.document);
             mywindow.print();
         }
     );
@@ -215,15 +556,7 @@ function build_all_datatables_report_content() {
             if (!dtInst) return;
             var tbl = dtInst.table().node();
             if (!container.contains(tbl) || !tbl.id) return;
-            var filas = "";
-            dtInst.rows({ search: "applied", page: "all" }).every(function () {
-                var row = this.node().cloneNode(true);
-                row.querySelectorAll("input, select, textarea, button").forEach(function (elem) {
-                    elem.parentNode.removeChild(elem);
-                });
-                filas += row.outerHTML;
-            });
-            filasTablas[tbl.id] = filas;
+            filasTablas[tbl.id] = construir_filas_reporte_datatable(dtInst);
         });
     }
 
@@ -244,6 +577,12 @@ function build_all_datatables_report_content() {
         if (!tbl) return;
         var tbody = tbl.querySelector("tbody");
         if (tbody) tbody.innerHTML = filasTablas[id];
+
+        // El total general ya está en el tbody para que también lo procese Excel.
+        // Se retira únicamente su representación del pie del clon para no duplicarlo.
+        tbl.querySelectorAll("tfoot .dt-aggregation-result").forEach(function (resultado) {
+            resultado.parentNode.removeChild(resultado);
+        });
     });
 
     clone.querySelectorAll("table.datatable th, table.datatables th, table.dataTable th").forEach(function (th) {
@@ -337,11 +676,34 @@ function activar_tablas() {
 
     return tablas_activadas;
 }
-//
+function aplicar_estilos_compactos_datatables() {
+    var style_id = 'dt2-estilos-compactos';
+    if (document.getElementById(style_id)) return;
+
+    var style = document.createElement('style');
+    style.id = style_id;
+    style.type = 'text/css';
+    style.textContent =
+        'table.dataTable span.dtcc,div.dtcc-dropdown{font-size:75%;}' +
+        'div.dtcc-dropdown div.dtcc-dropdown-liner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;}' +
+        'div.dtcc-dropdown div.dtcc-dropdown-liner>button.dtcc-button_orderAsc,div.dtcc-dropdown div.dtcc-dropdown-liner>button.dtcc-button_orderDesc{width:auto;min-width:0;white-space:nowrap;}' +
+        'div.dtcc-dropdown div.dtcc-dropdown-liner>.dtcc-search{grid-column:1/-1;}' +
+        'div.dtcc-dropdown div.dtcc-dropdown-liner>.dtcc-aggregation{grid-column:1/-1;padding:.5em 1em;}' +
+        'div.dtcc-dropdown .dtcc-aggregation select{width:100%;}' +
+        'table.dataTable tr.dt-aggregation-group-row>.dt-aggregation-group-value{text-align:right;white-space:nowrap;}' +
+        'table.dataTable tr.dt-aggregation-group-row,table.dataTable tr.dt-aggregation-export-total,table.dataTable tfoot tr:has(.dt-aggregation-result){font-weight:700;background-color:#e2e3e5;}' +
+        'table.dataTable tr.dt-aggregation-group-row>*,table.dataTable tr.dt-aggregation-export-total>*,table.dataTable tfoot tr:has(.dt-aggregation-result)>*{background-color:#e2e3e5;}';
+    document.head.appendChild(style);
+}
 // Definir UNA SOLA VEZ el contenido base de columnControl
 var contenidoOrdenBase = [
     { extend: 'order', iconNone: '' },
-    ['orderAsc', 'orderDesc', 'search']
+    [
+        { extend: 'orderAsc', text: 'ASC' },
+        { extend: 'orderDesc', text: 'DES' },
+        'search',
+        'aggregationSelect'
+    ]
 ];
 //
 function obtenerValoresUnicosColumna(idtabla, indiceColumna) {
@@ -594,7 +956,10 @@ function activar_tabla(idtabla) {
                 className: "btn btn-success btn-sm",
                 title: exportTitle,
                 filename: exportFileName,
-                messageTop: exportCompany
+                messageTop: exportCompany,
+                customize: function (xlsx) {
+                    estilizar_filas_agregacion_excel(xlsx);
+                }
             });
         }
         if (exportButtonsRequested.pdf) { // BOTON PDF
@@ -674,6 +1039,7 @@ function activar_tabla(idtabla) {
                             }
                         }
                     }
+                    estilizar_filas_agregacion_pdf(doc);
                 }
             });
         }
@@ -697,6 +1063,7 @@ function activar_tabla(idtabla) {
                     );
 
                     prepare_print_window_styles(win, idtabla, function () {
+                        estilizar_filas_agregacion_impresion(doc);
                         win.print();
                     });
                 }
@@ -751,8 +1118,14 @@ function activar_tabla(idtabla) {
             titleAttr: 'Reiniciar tabla',
             className: 'btn btn-warning btn-sm',
             action: function (e, dt) {
-                localStorage.removeItem('DataTables_' + dt.settings()[0].sInstance);
+                localStorage.removeItem(clave_estado_datatable(dt.settings()[0].sInstance));
                 if (dt.state && typeof dt.state.clear === 'function') dt.state.clear();
+                Object.keys(_dtAggregationState).forEach(function (state_key) {
+                    if (state_key.indexOf(idtabla + '_') === 0) delete _dtAggregationState[state_key];
+                });
+                document.querySelectorAll('.dtcc-aggregation select[data-table-id="' + idtabla + '"]').forEach(function (select) {
+                    select.value = '';
+                });
                 dt.search('');
                 dt.columns().search('');
                 dt.columns().visible(true, false);
@@ -796,7 +1169,62 @@ function activar_tabla(idtabla) {
     configTopStart.push('search');
     //CODIGO DANIEL 
     var agregarAgrupacionAExportacion = function (data) {
-        if (!rowGroupUser || !data || !Array.isArray(data.body) || data.body.length === 0 || typeof tabla_nueva === "undefined" || !tabla_nueva) {
+        if (!data || !Array.isArray(data.body) || data.body.length === 0 || typeof tabla_nueva === "undefined" || !tabla_nueva) {
+            return;
+        }
+
+        var AGREGACIONES_EXPORTACION = {};
+        if (Array.isArray(data.header)) {
+            obtener_agregaciones_tabla().forEach(function (agregacion) {
+                for (var a = 0; a < data.header.length; a++) {
+                    if (obtener_id_columna_agregacion(data.header[a]) === agregacion.columna_id) {
+                        AGREGACIONES_EXPORTACION[a] = agregacion.tipo;
+                        break;
+                    }
+                }
+            });
+        }
+
+        var aplicar_valor_agregado = function (ACUMULADOS, indice_columna, tipo, valor) {
+            if (tipo === 'count') {
+                if (obtener_texto_agregacion(valor) !== '') {
+                    ACUMULADOS[indice_columna] = (ACUMULADOS[indice_columna] || 0) + 1;
+                }
+                return;
+            }
+            var numero = parsear_numero_agregacion(valor);
+            if (numero !== null) {
+                ACUMULADOS[indice_columna] = (ACUMULADOS[indice_columna] || 0) + numero;
+            }
+        };
+        var formatear_fila_agregada = function (fila_resultado, ACUMULADOS) {
+            Object.keys(AGREGACIONES_EXPORTACION).forEach(function (indice_columna) {
+                var tipo = AGREGACIONES_EXPORTACION[indice_columna];
+                var valor = ACUMULADOS[indice_columna] || 0;
+                var texto_agregado = (tipo === 'sum' ? 'Suma ' : 'Conteo ') + formatear_resultado_agregacion(valor, tipo);
+                fila_resultado[indice_columna] = fila_resultado[indice_columna]
+                    ? fila_resultado[indice_columna] + ' — ' + texto_agregado
+                    : texto_agregado;
+            });
+        };
+
+        var agrupacion_activa = rowGroupUser && tabla_nueva.rowGroup && tabla_nueva.rowGroup().enabled();
+        if (!agrupacion_activa) {
+            if (Object.keys(AGREGACIONES_EXPORTACION).length === 0) {
+                return;
+            }
+            var fila_total = new Array(data.header.length).fill('');
+            var ACUMULADOS_TOTAL = {};
+            data.body.forEach(function (fila) {
+                if (!Array.isArray(fila)) {
+                    return;
+                }
+                Object.keys(AGREGACIONES_EXPORTACION).forEach(function (indice_columna) {
+                    aplicar_valor_agregado(ACUMULADOS_TOTAL, indice_columna, AGREGACIONES_EXPORTACION[indice_columna], fila[indice_columna]);
+                });
+            });
+            formatear_fila_agregada(fila_total, ACUMULADOS_TOTAL);
+            data.body.push(fila_total);
             return;
         }
 
@@ -820,6 +1248,8 @@ function activar_tabla(idtabla) {
 
         var bodyConGrupos = [];
         var grupoAnterior = null;
+        var filaGrupoActual = null;
+        var ACUMULADOS_GRUPO = {};
         data.body.forEach(function (fila, indiceFila) {
             if (!Array.isArray(fila)) {
                 bodyConGrupos.push(fila);
@@ -828,14 +1258,27 @@ function activar_tabla(idtabla) {
 
             var grupoActual = (indiceGrupoExportado !== -1) ? fila[indiceGrupoExportado] : datosFilasOrdenadas[indiceFila][indiceReal];
             if (grupoActual !== grupoAnterior) {
+                if (filaGrupoActual) {
+                    formatear_fila_agregada(filaGrupoActual, ACUMULADOS_GRUPO);
+                }
                 var filaGrupo = new Array(fila.length).fill('');
-                filaGrupo[0] = grupoActual;
+                filaGrupo[indiceGrupoExportado !== -1 ? indiceGrupoExportado : 0] = grupoActual;
                 bodyConGrupos.push(filaGrupo);
+                filaGrupoActual = filaGrupo;
+                ACUMULADOS_GRUPO = {};
                 grupoAnterior = grupoActual;
             }
 
+            Object.keys(AGREGACIONES_EXPORTACION).forEach(function (indice_columna) {
+                aplicar_valor_agregado(ACUMULADOS_GRUPO, indice_columna, AGREGACIONES_EXPORTACION[indice_columna], fila[indice_columna]);
+            });
+
             bodyConGrupos.push(fila);
         });
+
+        if (filaGrupoActual) {
+            formatear_fila_agregada(filaGrupoActual, ACUMULADOS_GRUPO);
+        }
 
         data.body = bodyConGrupos;
     };
@@ -849,6 +1292,209 @@ function activar_tabla(idtabla) {
         top: null,
         bottom: null
     };
+    var asegurar_pie_agregaciones = function () {
+        var tfoot = tabla.tFoot;
+        if (!tfoot) {
+            tfoot = document.createElement('tfoot');
+            tfoot.setAttribute('data-dt-aggregation-created', 'true');
+            tabla.appendChild(tfoot);
+        }
+
+        var fila = tfoot.rows[0];
+        if (!fila) {
+            fila = tfoot.insertRow();
+            fila.setAttribute('data-dt-aggregation-created', 'true');
+        }
+
+        var cantidad_columnas = tabla.tHead && tabla.tHead.rows.length > 0
+            ? tabla.tHead.rows[tabla.tHead.rows.length - 1].cells.length
+            : 0;
+        while (fila.cells.length < cantidad_columnas) {
+            fila.appendChild(document.createElement('th'));
+        }
+    };
+    var obtener_agregaciones_tabla = function () {
+        // El estado usa el título normalizado para permanecer unido a la columna tras ColReorder.
+        return obtener_agregaciones_estado_tabla(idtabla);
+    };
+    var rowgroup_esta_activo = function () {
+        return tabla_nueva && tabla_nueva.rowGroup && tabla_nueva.rowGroup().enabled();
+    };
+    var renderizar_pie_agregaciones = function () {
+        // Sin RowGroup, el resultado considera todas las filas que superan los filtros.
+        if (!tabla_nueva) {
+            return;
+        }
+
+        var tfoot = tabla_nueva.table().footer();
+        if (!tfoot) {
+            return;
+        }
+
+        tfoot.querySelectorAll('.dt-aggregation-result').forEach(function (elemento) {
+            elemento.parentNode.removeChild(elemento);
+        });
+
+        var AGREGACIONES = obtener_agregaciones_tabla();
+        var agrupacion_activa = rowgroup_esta_activo();
+        var fila_creada = tfoot.querySelector('tr[data-dt-aggregation-created="true"]');
+        if (fila_creada) {
+            fila_creada.style.display = AGREGACIONES.length > 0 && !agrupacion_activa ? '' : 'none';
+        }
+        if (agrupacion_activa) {
+            return;
+        }
+
+        var indices_filas = tabla_nueva.rows({ search: 'applied', page: 'all' }).indexes();
+        AGREGACIONES.forEach(function (agregacion) {
+            var indice_actual = obtener_indice_actual_agregacion(tabla_nueva, agregacion.columna_id);
+            if (indice_actual === -1) {
+                return;
+            }
+            var footer = tabla_nueva.column(indice_actual).footer();
+            if (!footer) {
+                return;
+            }
+            var resultado = calcular_agregacion_columna(tabla_nueva, indices_filas, indice_actual, agregacion.tipo);
+            var titulo = tabla_nueva.column(indice_actual).title();
+            var elemento = document.createElement('span');
+            elemento.className = 'dt-aggregation-result';
+            elemento.textContent = (agregacion.tipo === 'sum' ? 'Suma' : 'Conteo') + ': ' +
+                formatear_resultado_agregacion(resultado, agregacion.tipo);
+            elemento.setAttribute('title', titulo);
+            footer.appendChild(elemento);
+        });
+    };
+    var renderizar_agregaciones_grupo = function (rows, group, level) {
+        // RowGroup entrega aquí los índices exactos de las filas del grupo renderizado.
+        var texto = group + ' (' + rows.count() + ' registros)';
+        var AGREGACIONES = obtener_agregaciones_tabla();
+        if (AGREGACIONES.length === 0) {
+            return texto;
+        }
+
+        var dt_grupo = rows.table();
+        var RESULTADOS = {};
+        AGREGACIONES.forEach(function (agregacion) {
+            var indice_actual = obtener_indice_actual_agregacion(dt_grupo, agregacion.columna_id);
+            if (indice_actual === -1) {
+                return;
+            }
+            var resultado = calcular_agregacion_columna(dt_grupo, rows.indexes(), indice_actual, agregacion.tipo);
+            RESULTADOS[indice_actual] = (agregacion.tipo === 'sum' ? 'Suma ' : 'Conteo ') +
+                formatear_resultado_agregacion(resultado, agregacion.tipo);
+        });
+
+        var INDICES_VISIBLES = dt_grupo.columns(':visible').indexes().toArray();
+        if (INDICES_VISIBLES.length === 0) {
+            return texto;
+        }
+
+        var indice_grupo = INDICES_VISIBLES[0];
+
+        var fila = document.createElement('tr');
+        fila.className = 'dt-aggregation-group-row';
+        INDICES_VISIBLES.forEach(function (indice_actual) {
+            var celda = document.createElement(indice_actual === indice_grupo ? 'th' : 'td');
+            if (indice_actual === indice_grupo) {
+                celda.setAttribute('scope', 'row');
+                celda.appendChild(document.createTextNode(texto));
+            }
+            if (RESULTADOS[indice_actual]) {
+                var resultado_elemento = document.createElement('span');
+                resultado_elemento.className = 'dt-aggregation-group-value';
+                resultado_elemento.textContent = RESULTADOS[indice_actual];
+                if (indice_actual === indice_grupo) {
+                    resultado_elemento.style.display = 'block';
+                } else {
+                    celda.classList.add('dt-aggregation-group-value');
+                }
+                celda.appendChild(resultado_elemento);
+            }
+            fila.appendChild(celda);
+        });
+        return fila;
+    };
+
+    if (columnControlUser) {
+        asegurar_pie_agregaciones();
+    }
+
+    // SELECT PERSONALIZADO - registro perezoso, garantizado antes de construir la tabla
+    if (typeof DataTable !== "undefined" && DataTable.ColumnControl && !DataTable.ColumnControl.content.aggregationSelect) {
+        DataTable.ColumnControl.content.aggregationSelect = {
+            defaults: {},
+            init: function () {
+                var dt = this.dt();
+                var indice_columna = this.idx();
+                var columna_id = obtener_id_columna_agregacion(dt.column(indice_columna).title());
+                var state_key = dt.table().node().id + '_' + columna_id;
+                var container = document.createElement('div');
+                container.className = 'dtcc-aggregation';
+
+                var select = document.createElement('select');
+                select.setAttribute('aria-label', 'Agregación de columna');
+                select.setAttribute('data-table-id', dt.table().node().id);
+                select.setAttribute('data-column-id', columna_id);
+                [
+                    { value: '', text: '-- Agregación --' },
+                    { value: 'sum', text: 'Suma' },
+                    { value: 'count', text: 'Conteo' }
+                ].forEach(function (opcion_config) {
+                    var opcion = document.createElement('option');
+                    opcion.value = opcion_config.value;
+                    opcion.textContent = opcion_config.text;
+                    select.appendChild(opcion);
+                });
+                select.value = _dtAggregationState[state_key] || '';
+
+                select.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+                select.addEventListener('change', function (e) {
+                    e.stopPropagation();
+                    if (select.value === 'sum' || select.value === 'count') {
+                        _dtAggregationState[state_key] = select.value;
+                    } else {
+                        delete _dtAggregationState[state_key];
+                    }
+                    dt.draw(false);
+                    if (dt.state && typeof dt.state.save === 'function') {
+                        dt.state.save();
+                    }
+                });
+
+                var namespace = '.dtAggregation_col' + indice_columna;
+                dt.on('stateSaveParams' + namespace, function (e, settings, data) {
+                    if (!data.customAggregations) {
+                        data.customAggregations = {};
+                    }
+                    if (_dtAggregationState[state_key]) {
+                        data.customAggregations[columna_id] = _dtAggregationState[state_key];
+                    } else {
+                        delete data.customAggregations[columna_id];
+                    }
+                });
+                dt.on('stateLoaded' + namespace, function (e, settings, data) {
+                    var tipo = data && data.customAggregations ? data.customAggregations[columna_id] : '';
+                    if (tipo === 'sum' || tipo === 'count') {
+                        _dtAggregationState[state_key] = tipo;
+                        select.value = tipo;
+                    } else {
+                        delete _dtAggregationState[state_key];
+                        select.value = '';
+                    }
+                    setTimeout(function () {
+                        dt.draw(false);
+                    }, 0);
+                });
+
+                container.appendChild(select);
+                return container;
+            }
+        };
+    }
+
     // SELECT PERSONALIZADO - registro perezoso, garantizado antes de construir la tabla
     if (typeof DataTable !== "undefined" && DataTable.ColumnControl && !DataTable.ColumnControl.content.addFilterSelect) {
         DataTable.ColumnControl.content.addFilterSelect = {
@@ -948,6 +1594,8 @@ function activar_tabla(idtabla) {
         };
     }
     //
+    aplicar_estilos_compactos_datatables();
+
     if ($.fn.DataTable.isDataTable('#' + idtabla)) {
         $('#' + idtabla).DataTable().destroy();
     }
@@ -1041,6 +1689,7 @@ function activar_tabla(idtabla) {
             var esBotonImprimir = configBtn.extend === 'print';
             var esBotonPdf = configBtn.extend === 'pdf' || configBtn.extend === 'pdfHtml5';
             var esBotonExcel = configBtn.extend === 'excel' || configBtn.extend === 'excelHtml5';
+            var esBotonDatos = esBotonImprimir || esBotonPdf || esBotonExcel || configBtn.extend === 'copy' || configBtn.extend === 'csv';
 
             var haySeleccion = selectUser && tabla_nueva && tabla_nueva.rows({ selected: true }).count() > 0;
 
@@ -1121,7 +1770,7 @@ function activar_tabla(idtabla) {
                 }
             };
             // CODIGO DANIEL2 
-            if (rowGroupUser && (esBotonImprimir || esBotonPdf || esBotonExcel || configBtn.extend === 'copy' || configBtn.extend === 'csv')) {
+            if (esBotonDatos) {
                 var customizeDataOriginal = exportOptionsActual.customizeData;
                 exportOptionsActual.customizeData = function (data) {
                     if (typeof customizeDataOriginal === 'function') {
@@ -1135,7 +1784,11 @@ function activar_tabla(idtabla) {
             return configBtn;
         }),
         language: {
-            url: "../assets/plugins/datatables2/dt2.spanish.json"
+            url: "../assets/plugins/datatables2/dt2.spanish.json",
+            columnControl: {
+                orderAsc: "ASC",
+                orderDesc: "DES"
+            }
         },        
         ordering: {
             handler: orderingUser,
@@ -1147,7 +1800,7 @@ function activar_tabla(idtabla) {
         rowGroup: rowGroupUser ? {
             dataSrc: indiceReal,
             enable: true,
-            startRender: function (rows, group) { return group + ' (' + rows.count() + ' registros)'; }
+            startRender: function (rows, group, level) { return renderizar_agregaciones_grupo(rows, group, level); }
         } : false,
         stateSaveCallback: function (settings, data) {
             if (settings.sTableId === 'tabla_datos') {
@@ -1160,7 +1813,11 @@ function activar_tabla(idtabla) {
             if (selectUser) {
                 data.selectedRows = tabla_nueva.rows({ selected: true }).indexes().toArray();
             }
-            localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data));
+            data.customAggregations = {};
+            obtener_agregaciones_tabla().forEach(function (agregacion) {
+                data.customAggregations[agregacion.columna_id] = agregacion.tipo;
+            });
+            localStorage.setItem(clave_estado_datatable(settings.sInstance), JSON.stringify(data));
             if (typeof upload_action === "function") {
                 upload_action('idtabla=' + settings.sTableId + ',estadotabla=' + encodeURIComponent(JSON.stringify(data)), 'datatables', 'guardar_estado_datatables');
             }
@@ -1169,8 +1826,19 @@ function activar_tabla(idtabla) {
             if (settings.sTableId === 'tabla_datos') {
                 return null;
             }
-            var data = JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance));
+            var data = JSON.parse(localStorage.getItem(clave_estado_datatable(settings.sInstance)));
             if (data) {
+                Object.keys(_dtAggregationState).forEach(function (state_key) {
+                    if (state_key.indexOf(idtabla + '_') === 0) delete _dtAggregationState[state_key];
+                });
+                if (data.customAggregations) {
+                    Object.keys(data.customAggregations).forEach(function (columna_id) {
+                        var tipo = data.customAggregations[columna_id];
+                        if (columna_id.indexOf('col:') === 0 && (tipo === 'sum' || tipo === 'count')) {
+                            _dtAggregationState[idtabla + '_' + columna_id] = tipo;
+                        }
+                    });
+                }
                 setTimeout(function () {
                     /*
                     if (rowGroupUser && data.rowGroup !== undefined) {
@@ -1188,6 +1856,11 @@ function activar_tabla(idtabla) {
             return data;
         }
     });
+    tabla_nueva.on('draw.dtAggregation column-reorder.dtAggregation column-visibility.dtAggregation rowgroup-datasrc.dtAggregation', function () {
+        renderizar_pie_agregaciones();
+    });
+    renderizar_pie_agregaciones();
     return tabla_nueva;
 }
 //
+

@@ -1264,6 +1264,7 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
     try {
         var AOA = [];
         var headerRowIndexes = {};
+        var aggregationRowIndexes = {};
 
         for (var t = 0; t < exportNodes.length; t++) {
             var node = exportNodes[t];
@@ -1284,6 +1285,16 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
 
                 var startRow = AOA.length;
                 headerRowIndexes[startRow] = true;
+
+                var exportTbody = getDirectSection(node, "tbody");
+                if (exportTbody) {
+                    for (var aggregationRow = 0; aggregationRow < exportTbody.rows.length; aggregationRow++) {
+                        if (exportTbody.rows[aggregationRow].classList.contains("dt-aggregation-group-row") ||
+                            exportTbody.rows[aggregationRow].classList.contains("dt-aggregation-export-total")) {
+                            aggregationRowIndexes[startRow + 1 + aggregationRow] = true;
+                        }
+                    }
+                }
 
                 for (var i2 = 0; i2 < tableAOA.length; i2++) {
                     AOA.push(tableAOA[i2]);
@@ -1320,6 +1331,18 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
                     delete cell.z;
                 }
             }
+
+            Object.keys(aggregationRowIndexes).forEach(function (rowIndex) {
+                var styledRow = parseInt(rowIndex, 10);
+                for (var styledCol = 0; styledCol <= range.e.c; styledCol++) {
+                    var styledAddr = XLSX.utils.encode_cell({ r: styledRow, c: styledCol });
+                    if (!ws[styledAddr]) ws[styledAddr] = { t: "s", v: "" };
+                    ws[styledAddr].s = {
+                        font: { bold: true },
+                        fill: { patternType: "solid", fgColor: { rgb: "E2E3E5" } }
+                    };
+                }
+            });
         }
 
         XLSX.utils.book_append_sheet(wb, ws, "Hoja 1");
@@ -1328,5 +1351,7 @@ function export_to_xlsx(idtabla, filename = "reporte.xlsx") {
         console.error("Error exportando la tabla:", error);
     }
 }
+
+
 
 

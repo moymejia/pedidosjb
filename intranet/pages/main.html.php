@@ -127,6 +127,9 @@ $idubicacion = $row['idubicacion'];
         }
     </style>
     <!-- inicio de data table -->
+    <script>
+        window.usuario_actual_datatables = <?php echo json_encode($_SESSION['usuario']); ?>;
+    </script>
     <link rel="stylesheet" href="../assets/plugins/datatables2/dataTables.dataTables.css" >
     <link rel="stylesheet" href="../assets/plugins/datatables2/columnControl.dataTables.min.css" >
     <link rel="stylesheet" href="../assets/plugins/datatables2/buttons.dataTables.min.css">
@@ -138,8 +141,8 @@ $idubicacion = $row['idubicacion'];
     <script src="../js/main.js?x=<?php echo date('YmdHis'); ?>"></script>
     <script src="../js/common.js?x=<?php echo date('YmdHis'); ?>""></script>
     <script src="../js/buscador_opciones.js?x=<?php echo date('YmdHis'); ?>"></script>
-    <script src="../js/dt2.js?x=<?php echo $version ?>"></script>
-    <script src="../js/xlsx.full.min.js?x=<?php echo $version ?>"></script>
+    <script src="../js/dt2.js?x=<?php echo date('YmdHis'); ?>"></script>
+    <script src="../js/xlsx.full.min.js?x=<?php echo date('YmdHis'); ?>"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -158,7 +161,7 @@ $idubicacion = $row['idubicacion'];
             let estado = estados[idtabla];
             if (!estado) return;
             if (idtabla === 'tabla_datos') {
-                localStorage.removeItem('DataTables_' + idtabla);
+                localStorage.removeItem(clave_estado_datatable(idtabla));
                 return;
             }
             if (Array.isArray(estado.columnControl)) {
@@ -172,7 +175,7 @@ $idubicacion = $row['idubicacion'];
             estado.columns?.forEach(col => {
                 if (col.visible === undefined) col.visible = true;
             });
-            let key = 'DataTables_' + idtabla;
+            let key = clave_estado_datatable(idtabla);
             localStorage.setItem(key, JSON.stringify(estado));
             console.log('Estado listo:', estado);
         });
@@ -569,3 +572,4 @@ $idubicacion = $row['idubicacion'];
 </body>
 
 </html>
+

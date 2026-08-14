@@ -1,8 +1,10 @@
 <?php
 require_once 'mysql.php';
 require_once 'security.php';
+require_once 'utils.php';
 
 class datatables extends mysql {
+    use utils;
     private $base_datos;
     private $html = "";
     private $IDS = [];
@@ -192,16 +194,18 @@ class datatables extends mysql {
         $status = $db->getvalue($sql, 'status');
         return $status !== null ? $status : '';
     }
-    private function cargar_configuracion_datatable($idtabla) {
+    private function cargar_configuracion_datatable($idtabla, $usuario) {
         $idtabla_sql = $this->escape_sql($idtabla);
+        $usuario_sql = $this->escape_sql($usuario);
         $_MYSQL = new mysql($this->base_datos);
 
         $sql = "SELECT idtabla
             FROM {$this->base_datos}.datatable_configuracion
-            WHERE idtabla = '$idtabla_sql'
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'
             LIMIT 1";
         $resultado = $_MYSQL->getresult($sql);
         if ($resultado === false) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible consultar la configuración DataTables.');
             return false;
         }
 
@@ -212,10 +216,11 @@ class datatables extends mysql {
 
         $sql = "SELECT idtabla_detalle, parametro, valor
             FROM {$this->base_datos}.datatable_configuracion_detalle
-            WHERE idtabla = '$idtabla_sql'
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'
             ORDER BY idtabla_detalle";
         $resultado = $_MYSQL->getresult($sql);
         if ($resultado === false) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible consultar los parámetros DataTables.');
             return false;
         }
 
@@ -238,11 +243,12 @@ class datatables extends mysql {
                 WHERE idtabla_detalle IN (
                     SELECT idtabla_detalle
                     FROM {$this->base_datos}.datatable_configuracion_detalle
-                    WHERE idtabla = '$idtabla_sql'
+                    WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'
                 )
                 ORDER BY idtabla_detalle, orden";
             $resultado = $_MYSQL->getresult($sql);
             if ($resultado === false) {
+                utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible consultar los valores de configuración DataTables.');
                 return false;
             }
 
@@ -286,7 +292,7 @@ class datatables extends mysql {
 
         return $CONFIGURACION;
     }
-    private function guardar_configuracion_datatable($idtabla, $PARAMETROS, $style, $special_columns, $aligments, $hidden_columns) {
+    private function guardar_configuracion_datatable($idtabla, $usuario, $PARAMETROS, $style, $special_columns, $aligments, $hidden_columns) {
         $PARAMETROS = is_array($PARAMETROS) ? $PARAMETROS : [];
         $CONFIGURACION = array_fill_keys($this->obtener_parametros_configuracion_datatable(), false);
         foreach ($PARAMETROS as $parametro => $valor) {
@@ -298,19 +304,21 @@ class datatables extends mysql {
         $CONFIGURACION['hidden_columns'] = empty($hidden_columns) ? false : $hidden_columns;
 
         $_SECURITY = new security($this->ACCIONES['actualizar_vista']);
-        $usuario = $this->escape_sql($_SECURITY->get_actual_user());
+        $usuario = $this->escape_sql($usuario);
         $idtabla_sql = $this->escape_sql($idtabla);
         $_MYSQL = new mysql($this->base_datos);
 
         if (!$_MYSQL->put('START TRANSACTION')) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible iniciar la creación de la configuración DataTables.');
             return false;
         }
 
         $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion
-            (idtabla, creado_por)
-            VALUES ('$idtabla_sql', '$usuario')";
+            (usuario, idtabla, creado_por)
+            VALUES ('$usuario', '$idtabla_sql', '$usuario')";
         if (!$_MYSQL->put($sql)) {
             $_MYSQL->put('ROLLBACK');
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible crear la configuración DataTables.');
             return false;
         }
 
@@ -322,10 +330,11 @@ class datatables extends mysql {
                 : "'" . $this->escape_sql($this->convertir_valor_configuracion_texto($valor)) . "'";
 
             $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle
-                (idtabla, parametro, valor, creado_por)
-                VALUES ('$idtabla_sql', '$parametro_sql', $valor_sql, '$usuario')";
+                (usuario, idtabla, parametro, valor, creado_por)
+                VALUES ('$usuario', '$idtabla_sql', '$parametro_sql', $valor_sql, '$usuario')";
             if (!$_MYSQL->put($sql)) {
                 $_MYSQL->put('ROLLBACK');
+                utils::report_error(bd_error, [$usuario, $idtabla, $parametro], 'No fue posible crear el parámetro DataTables.');
                 return false;
             }
 
@@ -345,6 +354,7 @@ class datatables extends mysql {
                     VALUES ('$idtabla_detalle', $clave_sql, '$valor_listado_sql', '$orden', '$usuario')";
                 if (!$_MYSQL->put($sql)) {
                     $_MYSQL->put('ROLLBACK');
+                    utils::report_error(bd_error, [$usuario, $idtabla, $parametro], 'No fue posible crear el valor del parámetro DataTables.');
                     return false;
                 }
                 $orden++;
@@ -353,6 +363,7 @@ class datatables extends mysql {
 
         if (!$_MYSQL->put('COMMIT')) {
             $_MYSQL->put('ROLLBACK');
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible finalizar la creación de la configuración DataTables.');
             return false;
         }
 
@@ -442,41 +453,45 @@ class datatables extends mysql {
         }
         return (string)$valor;
     }
-    private function sincronizar_campos_query_datatable($idtabla, $CAMPOS_QUERY) {
+    private function sincronizar_campos_query_datatable($idtabla, $usuario, $CAMPOS_QUERY) {
         if (empty($CAMPOS_QUERY)) {
+            utils::report_error(validation_error, [$usuario, $idtabla], 'No se recibieron campos para sincronizar la configuración DataTables.');
             return false;
         }
 
         $_SECURITY = new security($this->ACCIONES['actualizar_vista']);
-        $usuario = $this->escape_sql($_SECURITY->get_actual_user());
+        $usuario = $this->escape_sql($usuario);
         $idtabla_sql = $this->escape_sql($idtabla);
         $_MYSQL = new mysql($this->base_datos);
 
         if (!$_MYSQL->put('START TRANSACTION')) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible iniciar la sincronización de campos DataTables.');
             return false;
         }
 
         $sql = "SELECT idtabla_detalle
             FROM {$this->base_datos}.datatable_configuracion_detalle
-            WHERE idtabla = '$idtabla_sql' AND parametro = 'query_fields'
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario' AND parametro = 'query_fields'
             LIMIT 1";
         $idtabla_detalle = $_MYSQL->getvalue($sql, 'idtabla_detalle');
 
         if ($idtabla_detalle === false) {
             $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle
-                (idtabla, parametro, valor, creado_por)
-                VALUES ('$idtabla_sql', 'query_fields', NULL, '$usuario')";
+                (usuario, idtabla, parametro, valor, creado_por)
+                VALUES ('$usuario', '$idtabla_sql', 'query_fields', NULL, '$usuario')";
             if (!$_MYSQL->put($sql)) {
                 $_MYSQL->put('ROLLBACK');
+                utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible crear query_fields para DataTables.');
                 return false;
             }
             $idtabla_detalle = $_MYSQL->last_id();
         } else {
             $sql = "UPDATE {$this->base_datos}.datatable_configuracion_detalle
-                SET valor = NULL, actualizado_por = '$usuario'
+                SET valor = NULL, actualizado_en = NOW(), actualizado_por = '$usuario'
                 WHERE idtabla_detalle = '$idtabla_detalle'";
             if (!$_MYSQL->put($sql)) {
                 $_MYSQL->put('ROLLBACK');
+                utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible actualizar query_fields para DataTables.');
                 return false;
             }
 
@@ -484,6 +499,7 @@ class datatables extends mysql {
                 WHERE idtabla_detalle = '$idtabla_detalle'";
             if (!$_MYSQL->put($sql)) {
                 $_MYSQL->put('ROLLBACK');
+                utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible reemplazar los campos de query_fields.');
                 return false;
             }
         }
@@ -496,6 +512,7 @@ class datatables extends mysql {
                 VALUES ('$idtabla_detalle', NULL, '$campo_sql', '$orden', '$usuario')";
             if (!$_MYSQL->put($sql)) {
                 $_MYSQL->put('ROLLBACK');
+                utils::report_error(bd_error, [$usuario, $idtabla, $campo], 'No fue posible guardar un campo de query_fields.');
                 return false;
             }
             $orden++;
@@ -503,6 +520,7 @@ class datatables extends mysql {
 
         if (!$_MYSQL->put('COMMIT')) {
             $_MYSQL->put('ROLLBACK');
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible finalizar la sincronización de campos DataTables.');
             return false;
         }
 
@@ -533,6 +551,8 @@ class datatables extends mysql {
     public function addTable($result, $PARAMETROS = [], $style = "", $special_columns = [], $aligments = [], $hidden_columns = [], $idtabla = "tabla_datos") {
         $idtabla = ($idtabla === null || $idtabla === '') ? 'tabla_datos' : $idtabla;
         if ($idtabla !== 'tabla_datos') {
+            $_SECURITY_CONFIGURACION = new security();
+            $usuario_configuracion = $_SECURITY_CONFIGURACION->get_actual_user();
             $CAMPOS_QUERY = [];
             $cantidad_campos = mysql::num_fields($result);
             for ($indice_campo = 0; $indice_campo < $cantidad_campos; $indice_campo++) {
@@ -540,13 +560,13 @@ class datatables extends mysql {
                 $CAMPOS_QUERY[] = $informacion_campo->name;
             }
 
-            $CONFIGURACION = $this->cargar_configuracion_datatable($idtabla);
+            $CONFIGURACION = $this->cargar_configuracion_datatable($idtabla, $usuario_configuracion);
             if (is_array($CONFIGURACION)) {
                 $CAMPOS_GUARDADOS = isset($CONFIGURACION['query_fields']) && is_array($CONFIGURACION['query_fields'])
                     ? array_values($CONFIGURACION['query_fields'])
                     : [];
                 if ($CAMPOS_GUARDADOS !== $CAMPOS_QUERY) {
-                    $this->sincronizar_campos_query_datatable($idtabla, $CAMPOS_QUERY);
+                    $this->sincronizar_campos_query_datatable($idtabla, $usuario_configuracion, $CAMPOS_QUERY);
                     $CONFIGURACION['query_fields'] = $CAMPOS_QUERY;
                 }
                 $PARAMETROS = $CONFIGURACION;
@@ -559,9 +579,9 @@ class datatables extends mysql {
                 $PARAMETROS_GUARDAR = $PARAMETROS;
                 $PARAMETROS_GUARDAR['query_fields'] = $CAMPOS_QUERY;
                 if ($CONFIGURACION === null && !empty($PARAMETROS)) {
-                    $this->guardar_configuracion_datatable($idtabla, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
+                    $this->guardar_configuracion_datatable($idtabla, $usuario_configuracion, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
                 } elseif ($CONFIGURACION === null) {
-                    $this->guardar_configuracion_datatable($idtabla, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
+                    $this->guardar_configuracion_datatable($idtabla, $usuario_configuracion, $PARAMETROS_GUARDAR, $style, $special_columns, $aligments, $hidden_columns);
                 }
             }
         }
@@ -1016,3 +1036,4 @@ class datatables extends mysql {
     }
 
 }
+

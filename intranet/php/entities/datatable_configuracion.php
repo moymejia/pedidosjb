@@ -33,13 +33,13 @@ class datatable_configuracion extends table
                 self::end_error('tabla_datos no utiliza configuración almacenada.');
             }
             $_SECURITY = new security($this->ACCIONES['opcion']);
-            echo '|correcto|' . $this->cargar_editor($PARAMETROS['idtabla']);
+            echo '|correcto|' . $this->cargar_editor($PARAMETROS['idtabla'], $_SECURITY->get_actual_user());
             return;
         }
 
         if ($PARAMETROS['operacion'] === 'cargar_listado') {
             $_SECURITY = new security($this->ACCIONES['opcion']);
-            echo '|correcto|' . $this->tabla_listado();
+            echo '|correcto|' . $this->tabla_listado($_SECURITY->get_actual_user());
             return;
         }
 
@@ -54,23 +54,26 @@ class datatable_configuracion extends table
 
     public function cargar_opcion()
     {
-        $DATA = ['tabla_configuraciones' => $this->tabla_listado()];
+        $_SECURITY = new security($this->ACCIONES['opcion']);
+        $DATA = ['tabla_configuraciones' => $this->tabla_listado($_SECURITY->get_actual_user())];
         $_HTML = new html('datatable_configuracion', $DATA);
         return $_HTML->get_html();
     }
 
-    private function tabla_listado()
+    private function tabla_listado($usuario)
     {
         $_MYSQL = new mysql($this->base_datos);
+        $usuario_sql = $this->escape_sql($usuario);
         $sql = "SELECT idtabla acciones, idtabla, creado_en, creado_por, actualizado_en, actualizado_por,
                 (SELECT COUNT(1)
                  FROM {$this->base_datos}.datatable_configuracion_detalle d
-                 WHERE d.idtabla = c.idtabla) cantidad_parametros
+                 WHERE d.idtabla = c.idtabla AND d.usuario = c.usuario) cantidad_parametros
             FROM {$this->base_datos}.datatable_configuracion c
-            WHERE c.idtabla <> 'tabla_datos'
+            WHERE c.idtabla <> 'tabla_datos' AND c.usuario = '$usuario_sql'
             ORDER BY idtabla";
         $resultado = $_MYSQL->getresult($sql);
         if ($resultado === false) {
+            utils::report_error(bd_error, $usuario, 'No fue posible cargar las configuraciones DataTables del usuario.');
             return "<div class='alert alert-danger'>No fue posible cargar las configuraciones.</div>";
         }
 
@@ -102,9 +105,9 @@ class datatable_configuracion extends table
         );
     }
 
-    private function cargar_editor($idtabla)
+    private function cargar_editor($idtabla, $usuario)
     {
-        $CONFIGURACION = $this->obtener_configuracion($idtabla);
+        $CONFIGURACION = $this->obtener_configuracion($idtabla, $usuario);
         if ($CONFIGURACION === false) {
             return "<div class='alert alert-danger'>No fue posible cargar la configuración.</div>";
         }
@@ -288,6 +291,8 @@ class datatable_configuracion extends table
 
     private function guardar_seccion($PARAMETROS)
     {
+        $_SECURITY = new security($this->ACCIONES['modificar']);
+        $usuario = $_SECURITY->get_actual_user();
         if (!isset($PARAMETROS['idtabla'], $PARAMETROS['seccion'])) {
             $this->last_error = 'Datos incompletos.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -301,7 +306,7 @@ class datatable_configuracion extends table
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
             return false;
         }
-        $CONFIGURACION_ACTUAL = $this->obtener_configuracion($idtabla);
+        $CONFIGURACION_ACTUAL = $this->obtener_configuracion($idtabla, $usuario);
         if ($idtabla === '' || $CONFIGURACION_ACTUAL === false) {
             $this->last_error = 'Configuración no encontrada.';
             utils::report_error(validation_error, $PARAMETROS, $this->last_error);
@@ -315,11 +320,10 @@ class datatable_configuracion extends table
         }
         $CAMBIOS['export_all'] = false;
 
-        $_SECURITY = new security($this->ACCIONES['modificar']);
-        $usuario = $_SECURITY->get_actual_user();
         $_MYSQL = new mysql($this->base_datos);
         if (!$_MYSQL->put('START TRANSACTION')) {
             $this->last_error = 'No fue posible iniciar la operación.';
+            utils::report_error(bd_error, [$usuario, $idtabla], $this->last_error);
             return false;
         }
 
@@ -343,6 +347,7 @@ class datatable_configuracion extends table
             if (!$_MYSQL->put('COMMIT')) {
                 $_MYSQL->put('ROLLBACK');
                 $this->last_error = 'No fue posible finalizar la operación.';
+                utils::report_error(bd_error, [$usuario, $idtabla], $this->last_error);
                 return false;
             }
             return true;
@@ -351,11 +356,12 @@ class datatable_configuracion extends table
         $idtabla_sql = $this->escape_sql($idtabla);
         $usuario_sql = $this->escape_sql($usuario);
         $sql = "UPDATE {$this->base_datos}.datatable_configuracion
-            SET actualizado_por = '$usuario_sql'
-            WHERE idtabla = '$idtabla_sql'";
+            SET actualizado_en = NOW(), actualizado_por = '$usuario_sql'
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'";
         if (!$_MYSQL->put($sql) || !$_MYSQL->put('COMMIT')) {
             $_MYSQL->put('ROLLBACK');
             $this->last_error = 'No fue posible guardar la configuración.';
+            utils::report_error(bd_error, [$usuario, $idtabla], $this->last_error);
             return false;
         }
 
@@ -475,32 +481,35 @@ class datatable_configuracion extends table
         $usuario_sql = $this->escape_sql($usuario);
         $idtabla_detalle = $_MYSQL->getvalue("SELECT idtabla_detalle
             FROM {$this->base_datos}.datatable_configuracion_detalle
-            WHERE idtabla = '$idtabla_sql' AND parametro = '$parametro_sql' LIMIT 1", 'idtabla_detalle');
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql' AND parametro = '$parametro_sql' LIMIT 1", 'idtabla_detalle');
 
         $es_lista = is_array($VALOR);
         $tiene_valores = $es_lista && !empty($VALOR);
         $valor_sql = $tiene_valores ? 'NULL' : "'" . $this->escape_sql($this->valor_texto($VALOR)) . "'";
         if ($idtabla_detalle === false) {
             $sql = "INSERT INTO {$this->base_datos}.datatable_configuracion_detalle
-                (idtabla, parametro, valor, creado_por)
-                VALUES ('$idtabla_sql', '$parametro_sql', $valor_sql, '$usuario_sql')";
+                (usuario, idtabla, parametro, valor, creado_por)
+                VALUES ('$usuario_sql', '$idtabla_sql', '$parametro_sql', $valor_sql, '$usuario_sql')";
             if (!$_MYSQL->put($sql)) {
                 $this->last_error = 'No fue posible crear el parámetro ' . $parametro . '.';
+                utils::report_error(bd_error, [$usuario, $idtabla, $parametro], $this->last_error);
                 return false;
             }
             $idtabla_detalle = $_MYSQL->last_id();
         } else {
             $sql = "UPDATE {$this->base_datos}.datatable_configuracion_detalle
-                SET valor = $valor_sql, actualizado_por = '$usuario_sql'
+                SET valor = $valor_sql, actualizado_en = NOW(), actualizado_por = '$usuario_sql'
                 WHERE idtabla_detalle = '$idtabla_detalle'";
             if (!$_MYSQL->put($sql)) {
                 $this->last_error = 'No fue posible actualizar el parámetro ' . $parametro . '.';
+                utils::report_error(bd_error, [$usuario, $idtabla, $parametro], $this->last_error);
                 return false;
             }
         }
 
         if (!$_MYSQL->put("DELETE FROM {$this->base_datos}.datatable_configuracion_detalle_valor WHERE idtabla_detalle = '$idtabla_detalle'")) {
             $this->last_error = 'No fue posible actualizar los valores de ' . $parametro . '.';
+            utils::report_error(bd_error, [$usuario, $idtabla, $parametro], $this->last_error);
             return false;
         }
 
@@ -515,6 +524,7 @@ class datatable_configuracion extends table
                 VALUES ('$idtabla_detalle', $clave_sql, '$valor_item_sql', '$orden', '$usuario_sql')";
             if (!$_MYSQL->put($sql)) {
                 $this->last_error = 'No fue posible guardar los valores de ' . $parametro . '.';
+                utils::report_error(bd_error, [$usuario, $idtabla, $parametro], $this->last_error);
                 return false;
             }
             $orden++;
@@ -522,19 +532,23 @@ class datatable_configuracion extends table
         return true;
     }
 
-    private function obtener_configuracion($idtabla)
+    private function obtener_configuracion($idtabla, $usuario)
     {
         $_MYSQL = new mysql($this->base_datos);
         $idtabla_sql = $this->escape_sql($idtabla);
-        if (!$_MYSQL->getvalue("SELECT COUNT(1) existe FROM {$this->base_datos}.datatable_configuracion WHERE idtabla = '$idtabla_sql'", 'existe')) {
+        $usuario_sql = $this->escape_sql($usuario);
+        if (!$_MYSQL->getvalue("SELECT COUNT(1) existe FROM {$this->base_datos}.datatable_configuracion WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'", 'existe')) {
             return false;
         }
 
         $resultado = $_MYSQL->getresult("SELECT idtabla_detalle, parametro, valor
             FROM {$this->base_datos}.datatable_configuracion_detalle
-            WHERE idtabla = '$idtabla_sql'
+            WHERE idtabla = '$idtabla_sql' AND usuario = '$usuario_sql'
             ORDER BY idtabla_detalle");
-        if ($resultado === false) return false;
+        if ($resultado === false) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible consultar los parámetros DataTables.');
+            return false;
+        }
 
         $CONFIGURACION = [];
         $DETALLES = [];
@@ -550,7 +564,10 @@ class datatable_configuracion extends table
             FROM {$this->base_datos}.datatable_configuracion_detalle_valor
             WHERE idtabla_detalle IN ($IDS)
             ORDER BY idtabla_detalle, orden");
-        if ($resultado === false) return false;
+        if ($resultado === false) {
+            utils::report_error(bd_error, [$usuario, $idtabla], 'No fue posible consultar los valores DataTables.');
+            return false;
+        }
 
         $LISTAS = [];
         while ($FILA = $_MYSQL->getrowresult($resultado)) {
@@ -765,3 +782,5 @@ class datatable_configuracion extends table
         return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
     }
 }
+
+
