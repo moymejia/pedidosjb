@@ -178,7 +178,7 @@ class despacho extends table
 			$cliente = $row['cliente'];
 			$temporada = $row['temporada'];
 			$marca = $row['marca'];
-			$fecha = $row['fecha'];
+			$fecha = date('d/m/Y', strtotime($row['fecha']));
 			$numero_factura = trim($row['numero_factura'] . '');
 			$monto_total = number_format((float)$row['monto_total'], 2);
 			$lineas_pendientes = (int)$row['lineas_pendientes'];
@@ -193,7 +193,7 @@ class despacho extends table
 				<td>" . $cliente . "</td>
 				<td>" . $temporada . "</td>
 				<td>" . $marca . "</td>
-				<td>" . $fecha . "</td>
+				<td data-order='" . $row['fecha'] . "'>" . $fecha . "</td>
 				<td class='text-right'>Q " . $monto_total . "</td>
 				<td class='text-center'>" . $lineas_pendientes . "</td>
 				<td class='text-center'>" . $estado . "</td>
@@ -266,8 +266,8 @@ class despacho extends table
 			$cliente     = $row['cliente'];
 			$temporada   = $row['temporada'];
 			$marca       = $row['marca'];
-			$fecha_desde = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d-m-Y', strtotime($row['fecha_desde'])) : '';
-			$fecha_hasta = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d-m-Y', strtotime($row['fecha_hasta'])) : '';
+			$fecha_desde = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d/m/Y', strtotime($row['fecha_desde'])) : '';
+			$fecha_hasta = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d/m/Y', strtotime($row['fecha_hasta'])) : '';
 			$estado      = $row['estado'];
 
 			$tabla .= "<tr>
@@ -278,8 +278,8 @@ class despacho extends table
 				<td>" . $cliente . "</td>
 				<td>" . $temporada . "</td>
 				<td>" . $marca . "</td>
-				<td>" . $fecha_desde . "</td>
-				<td>" . $fecha_hasta . "</td>
+				<td data-order='" . $row['fecha_desde'] . "'>" . $fecha_desde . "</td>
+				<td data-order='" . $row['fecha_hasta'] . "'>" . $fecha_hasta . "</td>
 				<td>" . $estado . "</td>
 			</tr>";
 		}
@@ -932,7 +932,7 @@ class despacho extends table
 		if ($idtipo_reporte == 'detallado') {
 			$sql_detallado = mysql::getresult("SELECT iddespacho, nombre_cliente, numero_factura,
 					fecha_factura AS fecha_factura_raw,
-					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					DATE_FORMAT(fecha_factura, '%d/%m/%Y') AS fecha_factura,
 					monto_total,
 					estado_pago,
 					monto_pago,
@@ -941,7 +941,7 @@ class despacho extends table
 					referencia_pago,
 					numero_recuperado,
 					fecha_pago AS fecha_pago_raw,
-					DATE_FORMAT(fecha_pago, '%d-%m-%Y') AS fecha_pago,
+					DATE_FORMAT(fecha_pago, '%d/%m/%Y') AS fecha_pago,
 					tipo_pago,
 					estado_pago_individual
 				FROM view_estado_cuenta_despacho_detallado
@@ -1128,7 +1128,7 @@ class despacho extends table
 					iddespacho,
 					numero_factura,
 					fecha_factura AS fecha_factura_raw,
-					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					DATE_FORMAT(fecha_factura, '%d/%m/%Y') AS fecha_factura,
 					nombre_cliente,
 					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
 					CONCAT('Q ', FORMAT(monto_total_pagado, 2)) AS monto_total_pagado,
@@ -1145,7 +1145,7 @@ class despacho extends table
 					iddespacho,
 					numero_factura,
 					fecha_factura AS fecha_factura_raw,
-					DATE_FORMAT(fecha_factura, '%d-%m-%Y') AS fecha_factura,
+					DATE_FORMAT(fecha_factura, '%d/%m/%Y') AS fecha_factura,
 					nombre_cliente,
 					CONCAT('Q ', FORMAT(monto_total, 2)) AS monto_total_facturado,
 					CONCAT('Q ', FORMAT(monto_total_pagado, 2)) AS monto_total_pagado,

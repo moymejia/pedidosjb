@@ -120,6 +120,19 @@ class despacho_pago extends table
                 }
             }
 
+            if ($PARAMETROS['operacion'] == 'obtener_info_anticipo') {
+                if (table::validate_parameter_existence(['idcliente_anticipo'], $PARAMETROS, false)) {
+                    $_CLIENTE_ANTICIPO = new cliente_anticipo();
+                    if ($resultado = $_CLIENTE_ANTICIPO->obtener_info_anticipo($PARAMETROS['idcliente_anticipo'])) {
+                        self::end_success($resultado);
+                    } else {
+                        self::end_error($_CLIENTE_ANTICIPO->last_error);
+                    }
+                } else {
+                    self::end_error('Datos incompletos.');
+                }
+            }
+
             if ($PARAMETROS['operacion'] == 'validar_numero_recuperado') {
                 if (table::validate_parameter_existence(['numero_recuperado'], $PARAMETROS, false)) {
                     if ($this->validar_numero_recuperado($PARAMETROS['numero_recuperado'])) {
@@ -197,7 +210,7 @@ class despacho_pago extends table
                 <td><button type='button' class='btn btn-sm btn-primary waves-effect waves-light' onclick='despachoPagoSeleccionarDespacho(" . (int)$row['iddespacho'] . ")'>Seleccionar</button></td>
                 <td>" . (($numero_factura !== '') ? $numero_factura : ('#' . (int)$row['iddespacho'])) . "</td>
                 <td>" . $row['nopedido'] . "</td>
-                <td>" . $row['fecha'] . "</td>
+                <td data-order='" . $row['fecha'] . "'>" . date('d/m/Y', strtotime($row['fecha'])) . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['monto_despacho'], 2) . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['total_pagado_ejecutado'], 2) . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['total_programado_neto'], 2) . "</td>
@@ -371,7 +384,7 @@ class despacho_pago extends table
                 <td>" . $row['referencia_pago'] . "</td>
                 <td class='text-right'>Q " . number_format((float)$row['monto'], 2) . "</td>
                 <td>" . $row['observaciones'] . "</td>
-                <td>" . $row['fecha'] . "</td>
+                <td data-order='" . $row['fecha'] . "'>" . date('d/m/Y', strtotime($row['fecha'])) . "</td>
                 <td>" . $estado_actual . "</td>
                 <td>" . $row['usuario_creacion'] . "</td>
             </tr>";
@@ -1138,7 +1151,7 @@ class despacho_pago extends table
 
             $hay_imagenes = true;
             $src_imagen = '../' . htmlspecialchars($ruta_imagen, ENT_QUOTES, 'UTF-8');
-            $fecha_doc = htmlspecialchars((string)$row['fecha'], ENT_QUOTES, 'UTF-8');
+            $fecha_doc = htmlspecialchars(date('d/m/Y', strtotime($row['fecha'])), ENT_QUOTES, 'UTF-8');
             $tipo_doc = htmlspecialchars((string)$row['tipo_documento'], ENT_QUOTES, 'UTF-8');
             $correlativo_doc = htmlspecialchars((string)$row['correlativo_documento'], ENT_QUOTES, 'UTF-8');
 

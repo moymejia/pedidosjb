@@ -151,8 +151,8 @@ class ventas_temporada extends table
 
         $texto_filtro_fecha = '';
         if ($fecha_desde != '' || $fecha_hasta != '') {
-            $fecha_desde_texto = ($fecha_desde != '') ? date('d-m-Y', strtotime($fecha_desde)) : 'inicio';
-            $fecha_hasta_texto = ($fecha_hasta != '') ? date('d-m-Y', strtotime($fecha_hasta)) : 'fin';
+            $fecha_desde_texto = ($fecha_desde != '') ? date('d/m/Y', strtotime($fecha_desde)) : 'inicio';
+            $fecha_hasta_texto = ($fecha_hasta != '') ? date('d/m/Y', strtotime($fecha_hasta)) : 'fin';
             $texto_filtro_fecha = " (Rango por fecha de creacion: $fecha_desde_texto a $fecha_hasta_texto)";
         }
         

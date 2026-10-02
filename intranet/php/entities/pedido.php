@@ -162,9 +162,9 @@ class pedido extends table{
             $transporte      = $row['transporte'];
             $monto_descuento = $row['monto_descuento'];
             $estado          = $row['estado'];
-            $fecha_desde     = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d-m-Y', strtotime($row['fecha_desde'])) : '';
-            $fecha_hasta     = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d-m-Y', strtotime($row['fecha_hasta'])) : '';
-            $fecha_pedido    = ($row['fecha_pedido'] != '' && $row['fecha_pedido'] != null) ? date('d-m-Y', strtotime($row['fecha_pedido'])) : '';
+            $fecha_desde     = ($row['fecha_desde'] != '' && $row['fecha_desde'] != null) ? date('d/m/Y', strtotime($row['fecha_desde'])) : '';
+            $fecha_hasta     = ($row['fecha_hasta'] != '' && $row['fecha_hasta'] != null) ? date('d/m/Y', strtotime($row['fecha_hasta'])) : '';
+            $fecha_pedido    = ($row['fecha_pedido'] != '' && $row['fecha_pedido'] != null) ? date('d/m/Y', strtotime($row['fecha_pedido'])) : '';
             $observaciones_pedido  = date('Y-m-d', strtotime($row['observaciones_pedido']));
 
             $str_data = "";
@@ -198,9 +198,9 @@ class pedido extends table{
                     <td>$cliente</td>
                     <td>$temporada</td>
                     <td style='text-align: center;'>$marca</td>
-                    <td>$fecha_desde</td>
-                    <td>$fecha_hasta</td>
-                    <td>$fecha_pedido</td>
+                    <td data-order=\"{$row['fecha_desde']}\">$fecha_desde</td>
+                    <td data-order=\"{$row['fecha_hasta']}\">$fecha_hasta</td>
+                    <td data-order=\"{$row['fecha_pedido']}\">$fecha_pedido</td>
                     <td style='text-align: center;'>$estado</td>
                 </tr>";
         }
@@ -541,12 +541,6 @@ class pedido extends table{
             return false;
         }
 
-        $meses = [
-            '01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril',
-            '05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto',
-            '09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'
-        ];
-
         $productos = [];
 
         while ($row = mysql::getrowresult($sql)) {
@@ -745,7 +739,7 @@ class pedido extends table{
             if (!$fecha) {
                 $fecha = time();
             }
-            $DATA['fecha']                  = date('d', $fecha).' '.$meses[date('m', $fecha)].' '.date('Y', $fecha);
+            $DATA['fecha']                  = date('d/m/Y', $fecha);
             $DATA['vendedor']               = $nombre_usuario;
             $nombre_cliente                 = (new cliente())->obtener_nombre($PEDIDO['idcliente']);
             $DATA['cliente']                = $nombre_cliente ? $nombre_cliente : $PEDIDO['cliente'];
@@ -761,8 +755,7 @@ class pedido extends table{
             if (($PEDIDO['idtemporada'] . '') == '100') {
                 $DATA['fecha_entrega'] = 'Despacho inmediato';
             } else {
-                $DATA['fecha_entrega'] = date('d', $fecha1).' '.$meses[date('m', $fecha1)].' - '.
-                    date('d', $fecha2).' '.$meses[date('m', $fecha2)].' '.date('Y', $fecha2);
+                $DATA['fecha_entrega'] = date('d/m/Y', $fecha1).' - '.date('d/m/Y', $fecha2);
             }
             $DATA['transporte']             = $PEDIDO['transporte'];
             $DATA['nopedido']               = $PEDIDO['nopedido'];

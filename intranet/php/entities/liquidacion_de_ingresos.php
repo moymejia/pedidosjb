@@ -52,8 +52,6 @@ class liquidacion_de_ingresos extends table
         }
 
         $where_fechas = "DATE(fecha_pago) >= '$fecha_desde' AND DATE(fecha_pago) <= '$fecha_hasta'";
-        $where_excluir_tipo_documento = "UPPER(TRIM(IFNULL(tipo_documento, ''))) <> 'DESCUENTO'";
-        $where_excluir_tipos_pago = "UPPER(TRIM(IFNULL(tipo_pago, ''))) NOT IN ('DESCUENTO', 'DEVOLUCION')";
 
         $sql_ejecutados = mysql::getresult("SELECT
                 iddespacho,
@@ -71,8 +69,6 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
               AND $where_fechas
-                            AND $where_excluir_tipo_documento
-                            AND $where_excluir_tipos_pago
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
         if (!$sql_ejecutados) {
@@ -95,8 +91,6 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
                 AND $where_fechas
-                AND $where_excluir_tipo_documento
-                AND $where_excluir_tipos_pago
                 AND UPPER(TRIM(estado_pago_individual)) = 'PROGRAMADO'
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
@@ -121,8 +115,6 @@ class liquidacion_de_ingresos extends table
             FROM view_estado_cuenta_despacho_detallado
             WHERE fecha_pago IS NOT NULL
                 AND $where_fechas
-                AND $where_excluir_tipo_documento
-                AND $where_excluir_tipos_pago
                 AND UPPER(TRIM(IFNULL(tipo_documento, ''))) = 'RECUPERACION'
             ORDER BY fecha_pago ASC, iddespacho ASC");
 
@@ -147,11 +139,17 @@ class liquidacion_de_ingresos extends table
             'total_depositos'                        => '0.00',
             'total_recibos_provisionales'            => '0.00',
             'total_cheques_posfecha'                 => '0.00',
+            'total_anticipos'                        => '0.00',
+            'total_descuentos'                       => '0.00',
+            'total_devoluciones'                     => '0.00',
             'total_cobrado'                          => '0.00',
             'detalle_total_flete'                    => '0.00',
             'detalle_total_deposito'                 => '0.00',
             'detalle_total_cheque_vista'             => '0.00',
             'detalle_total_cheque_posfechado'        => '0.00',
+            'detalle_total_anticipo'                 => '0.00',
+            'detalle_total_descuento'                => '0.00',
+            'detalle_total_devolucion'               => '0.00',
             'detalle_total_general'                  => '0.00',
             'total_programados'                      => '0.00',
             'total_recuperacion'                     => '0.00'
@@ -161,7 +159,10 @@ class liquidacion_de_ingresos extends table
             'flete' => 0,
             'deposito' => 0,
             'cheque_vista' => 0,
-            'cheque_posfechado' => 0
+            'cheque_posfechado' => 0,
+            'anticipo' => 0,
+            'descuento' => 0,
+            'devolucion' => 0
         ];
 
         $RECIBOS_ORDENABLES = [];
@@ -182,6 +183,9 @@ class liquidacion_de_ingresos extends table
             $valor_deposito = '';
             $valor_cheque_vista = '';
             $valor_cheque_posfechado = '';
+            $valor_anticipo = '';
+            $valor_descuento = '';
+            $valor_devolucion = '';
 
             // El flete se toma del despacho y se aplica una sola vez por iddespacho.
             if (!isset($DESPACHOS_FLETE[$iddespacho])) {
@@ -202,6 +206,15 @@ class liquidacion_de_ingresos extends table
             } elseif ($categoria_pago == 'DEPOSITO') {
                 $valor_deposito = $this->formatear_moneda($monto);
                 $TOTALES_DETALLE['deposito'] += $monto;
+            } elseif ($categoria_pago == 'ANTICIPO') {
+                $valor_anticipo = $this->formatear_moneda($monto);
+                $TOTALES_DETALLE['anticipo'] += $monto;
+            } elseif ($categoria_pago == 'DESCUENTO') {
+                $valor_descuento = $this->formatear_moneda($monto);
+                $TOTALES_DETALLE['descuento'] += $monto;
+            } elseif ($categoria_pago == 'DEVOLUCION') {
+                $valor_devolucion = $this->formatear_moneda($monto);
+                $TOTALES_DETALLE['devolucion'] += $monto;
             }
 
             $numero_documento = trim((string)$row['numero_documento']);
@@ -217,12 +230,15 @@ class liquidacion_de_ingresos extends table
             $filas_ejecutados .= '<td class="text-right">' . (($valor_deposito != '') ? ('Q ' . $valor_deposito) : '') . '</td>';
             $filas_ejecutados .= '<td class="text-right">' . (($valor_cheque_vista != '') ? ('Q ' . $valor_cheque_vista) : '') . '</td>';
             $filas_ejecutados .= '<td class="text-right">' . (($valor_cheque_posfechado != '') ? ('Q ' . $valor_cheque_posfechado) : '') . '</td>';
+            $filas_ejecutados .= '<td class="text-right">' . (($valor_anticipo != '') ? ('Q ' . $valor_anticipo) : '') . '</td>';
+            $filas_ejecutados .= '<td class="text-right">' . (($valor_descuento != '') ? ('Q ' . $valor_descuento) : '') . '</td>';
+            $filas_ejecutados .= '<td class="text-right">' . (($valor_devolucion != '') ? ('Q ' . $valor_devolucion) : '') . '</td>';
             $filas_ejecutados .= '<td class="text-right">Q ' . $this->formatear_moneda($monto) . '</td>';
             $filas_ejecutados .= '</tr>';
         }
 
         if ($filas_ejecutados == '') {
-            $filas_ejecutados = '<tr><td colspan="8" class="text-center">No hay documentos ejecutados para el rango seleccionado.</td></tr>';
+            $filas_ejecutados = '<tr><td colspan="11" class="text-center">No hay documentos ejecutados para el rango seleccionado.</td></tr>';
         }
 
         $filas_programados = '';
@@ -260,6 +276,9 @@ class liquidacion_de_ingresos extends table
             if ($categoria_pago == '') {
                 continue;
             }
+            if ($categoria_pago != 'DEPOSITO' && $categoria_pago != 'CHEQUE_POSFECHADO' && $categoria_pago != 'CHEQUE_VISTA') {
+                continue;
+            }
 
             $monto = (float)$row['monto_pago'];
             $total_recuperacion += $monto;
@@ -292,18 +311,27 @@ class liquidacion_de_ingresos extends table
             $TOTALES_DETALLE['flete'] +
             $TOTALES_DETALLE['deposito'] +
             $TOTALES_DETALLE['cheque_vista'] +
-            $total_programados;
+            $TOTALES_DETALLE['cheque_posfechado'] +
+            $TOTALES_DETALLE['anticipo'] +
+            $TOTALES_DETALLE['descuento'] +
+            $TOTALES_DETALLE['devolucion'];
 
         $DATOS['detalle_total_flete'] = $this->formatear_moneda($TOTALES_DETALLE['flete']);
         $DATOS['detalle_total_deposito'] = $this->formatear_moneda($TOTALES_DETALLE['deposito']);
         $DATOS['detalle_total_cheque_vista'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_vista']);
         $DATOS['detalle_total_cheque_posfechado'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_posfechado']);
+        $DATOS['detalle_total_anticipo'] = $this->formatear_moneda($TOTALES_DETALLE['anticipo']);
+        $DATOS['detalle_total_descuento'] = $this->formatear_moneda($TOTALES_DETALLE['descuento']);
+        $DATOS['detalle_total_devolucion'] = $this->formatear_moneda($TOTALES_DETALLE['devolucion']);
         $DATOS['detalle_total_general'] = $this->formatear_moneda($total_cobrado);
 
         $DATOS['total_fletes'] = $this->formatear_moneda($TOTALES_DETALLE['flete']);
         $DATOS['total_depositos'] = $this->formatear_moneda($TOTALES_DETALLE['deposito']);
         $DATOS['total_recibos_provisionales'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_vista']);
         $DATOS['total_cheques_posfecha'] = $this->formatear_moneda($TOTALES_DETALLE['cheque_posfechado']);
+        $DATOS['total_anticipos'] = $this->formatear_moneda($TOTALES_DETALLE['anticipo']);
+        $DATOS['total_descuentos'] = $this->formatear_moneda($TOTALES_DETALLE['descuento']);
+        $DATOS['total_devoluciones'] = $this->formatear_moneda($TOTALES_DETALLE['devolucion']);
         $DATOS['total_cobrado'] = $this->formatear_moneda($total_cobrado);
 
         if (count($RECIBOS_ORDENABLES) > 0) {
@@ -386,6 +414,18 @@ class liquidacion_de_ingresos extends table
 
         if (strpos($tipo_pago_normalizado, 'CHEQUE') !== false) {
             return ($estado_pago_normalizado == 'PROGRAMADO') ? 'CHEQUE_POSFECHADO' : 'CHEQUE_VISTA';
+        }
+
+        if (strpos($tipo_pago_normalizado, 'ANTICIPO') !== false) {
+            return 'ANTICIPO';
+        }
+
+        if (strpos($tipo_pago_normalizado, 'DESCUENTO') !== false) {
+            return 'DESCUENTO';
+        }
+
+        if (strpos($tipo_pago_normalizado, 'DEVOLUCION') !== false) {
+            return 'DEVOLUCION';
         }
 
         if (

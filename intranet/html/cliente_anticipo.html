@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <!-- Fila 2: saldo_disponible, estado, referencia_pago (todos col-md-3) -->
+    <!-- Fila 2: saldo_disponible, estado, banco, referencia_pago -->
     <div class="row">
         <div class="form-group m-b-5 col-md-3">
             <label for="saldo_disponible">Saldo disponible:</label>
@@ -49,6 +49,11 @@
         <div class="form-group m-b-5 col-md-3">
             <label for="estado">Estado:</label>
             <input type="text" class="form-control" id="estado" name="estado" value="ACTIVO" readonly>
+            <span class="bar"></span>
+        </div>
+        <div class="form-group m-b-5 col-md-3">
+            <label for="banco">Banco:</label>
+            <input type="text" class="form-control" id="banco" name="banco" maxlength="100">
             <span class="bar"></span>
         </div>
         <div class="form-group m-b-5 col-md-3">

@@ -779,12 +779,22 @@
         if (idtipo_pago === '10') {
             selectAnticipo.removeAttribute('disabled');
             selectAnticipo.setAttribute('required', 'required');
+            despachoPagoSeleccionarReciboCaja();
             despachoPagoCargarAnticiposCliente(idcliente_anticipo_seleccionado || selectAnticipo.value || '');
         } else {
             selectAnticipo.setAttribute('disabled', 'disabled');
             selectAnticipo.removeAttribute('required');
             selectAnticipo.value = '';
         }
+    };
+
+    window.despachoPagoSeleccionarReciboCaja = function () {
+        if (objeto('idtipo_documento') === undefined) {
+            return;
+        }
+
+        objeto('idtipo_documento').value = '1';
+        aplicarReglasTipoDocumento();
     };
 
     window.despachoPagoCargarAnticiposCliente = function (idcliente_anticipo_seleccionado) {
@@ -804,6 +814,45 @@
         };
 
         upload_action('idcliente=' + idcliente, 'despacho_pago', 'obtener_anticipos_cliente', callback_cargar_anticipos);
+    };
+
+    window.despachoPagoAplicarInfoAnticipo = function () {
+        var idcliente_anticipo = elementValue('idcliente_anticipo');
+
+        if (!idcliente_anticipo) {
+            return;
+        }
+
+        despachoPagoSeleccionarReciboCaja();
+
+        callback_info_anticipo = function (respuesta) {
+            var anticipo;
+
+            try {
+                anticipo = JSON.parse(respuesta);
+            } catch (e) {
+                notify_error('No se pudo cargar la informacion del anticipo.');
+                return;
+            }
+
+            if (objeto('monto') !== undefined) {
+                objeto('monto').value = formatearMontoMiles(anticipo.saldo_disponible || anticipo.monto || 0);
+            }
+
+            if (objeto('banco') !== undefined) {
+                objeto('banco').value = anticipo.banco || '';
+            }
+
+            if (objeto('referencia_pago') !== undefined) {
+                objeto('referencia_pago').value = anticipo.referencia_pago || '';
+            }
+
+            if (objeto('observaciones') !== undefined && String(objeto('observaciones').value || '').trim() === '') {
+                objeto('observaciones').value = anticipo.observaciones || '';
+            }
+        };
+
+        upload_action('idcliente_anticipo=' + idcliente_anticipo, 'despacho_pago', 'obtener_info_anticipo', callback_info_anticipo);
     };
 
 })();

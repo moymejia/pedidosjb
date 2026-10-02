@@ -75,8 +75,8 @@ class temporada extends table
 
         while ($row = mysql::getrowresult($result)) {
             $nombre = $row['nombre'];
-            $fecha_inicio = $row['fecha_inicio'];
-            $fecha_fin = $row['fecha_fin'];
+            $fecha_inicio = date('d/m/Y', strtotime($row['fecha_inicio']));
+            $fecha_fin = ($row['fecha_fin'] ? date('d/m/Y', strtotime($row['fecha_fin'])) : '');
             $estado = $row['estado'];
             $row_data = $row;
             $str_data = "";
@@ -89,8 +89,8 @@ class temporada extends table
             $tabla_temporada .= "<tr>
 				<td>$boton_editar</td>
                 <td>$nombre</td>
-                <td style='text-align: left;'>$fecha_inicio</td>
-                <td style='text-align: left;'>$fecha_fin</td>
+                <td data-order=\"{$row['fecha_inicio']}\" style='text-align: left;'>$fecha_inicio</td>
+                <td data-order=\"{$row['fecha_fin']}\" style='text-align: left;'>$fecha_fin</td>
                 <td>$estado</td>
 			</tr>";
         }

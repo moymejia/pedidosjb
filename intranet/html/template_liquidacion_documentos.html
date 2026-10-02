@@ -43,6 +43,21 @@
             <td class="amount">[total_cheques_posfecha]</td>
           </tr>
           <tr>
+            <td>Anticipos</td>
+            <td class="currency">Q</td>
+            <td class="amount">[total_anticipos]</td>
+          </tr>
+          <tr>
+            <td>Descuentos</td>
+            <td class="currency">Q</td>
+            <td class="amount">[total_descuentos]</td>
+          </tr>
+          <tr>
+            <td>Devoluciones</td>
+            <td class="currency">Q</td>
+            <td class="amount">[total_devoluciones]</td>
+          </tr>
+          <tr>
             <td class="strong">Total Cobrado</td>
             <td class="currency strong">Q</td>
             <td class="amount strong">[total_cobrado]</td>
@@ -69,17 +84,20 @@
       <thead>
         <tr>
           <th colspan="4">DETALLE DE RECIBOS</th>
-          <th colspan="4">FORMA DE PAGO</th>
+          <th colspan="7">FORMA DE PAGO</th>
         </tr>
         <tr class="subhead">
-          <th style="width: 9%;">DIA</th>
-          <th style="width: 12%;">NUMERO DE RECIBO</th>
-          <th style="width: 24%;">CLIENTE</th>
-          <th style="width: 10%;">FLETE</th>
-          <th style="width: 12%;">DEPOSITO</th>
-          <th style="width: 12%;">CHEQUE A LA VISTA</th>
-          <th style="width: 12%;">CHEQUES POS-FECHADOS</th>
-          <th style="width: 12%;">TOTAL</th>
+          <th style="width: 8%;">DIA</th>
+          <th style="width: 10%;">NUMERO DE RECIBO</th>
+          <th style="width: 19%;">CLIENTE</th>
+          <th style="width: 8%;">FLETE</th>
+          <th style="width: 9%;">DEPOSITO</th>
+          <th style="width: 9%;">CHEQUE A LA VISTA</th>
+          <th style="width: 9%;">CHEQUES POS-FECHADOS</th>
+          <th style="width: 8%;">ANTICIPO</th>
+          <th style="width: 8%;">DESCUENTO</th>
+          <th style="width: 8%;">DEVOLUCION</th>
+          <th style="width: 8%;">TOTAL</th>
         </tr>
       </thead>
       <tbody>
@@ -91,6 +109,9 @@
           <td class="text-right strong">Q [detalle_total_deposito]</td>
           <td class="text-right strong">Q [detalle_total_cheque_vista]</td>
           <td class="text-right strong">Q [detalle_total_cheque_posfechado]</td>
+          <td class="text-right strong">Q [detalle_total_anticipo]</td>
+          <td class="text-right strong">Q [detalle_total_descuento]</td>
+          <td class="text-right strong">Q [detalle_total_devolucion]</td>
           <td class="text-right strong">Q [detalle_total_general]</td>
         </tr>
       </tbody>

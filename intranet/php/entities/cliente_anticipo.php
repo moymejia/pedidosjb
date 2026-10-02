@@ -60,7 +60,7 @@ class cliente_anticipo extends table
         $DATA['options_tipos_pago'] = $_TIPO_PAGO->option_activas();
         $DATA['fecha_hoy'] = date('Y-m-d');
 
-        $result = mysql::getresult("SELECT idcliente_anticipo, idcliente, fecha, idtipo_pago, monto, saldo_disponible, referencia_pago, observaciones,
+        $result = mysql::getresult("SELECT idcliente_anticipo, idcliente, fecha, idtipo_pago, monto, saldo_disponible, banco, referencia_pago, observaciones,
                 estado, cliente, tipo_pago
             FROM view_cliente_anticipo
             ORDER BY idcliente_anticipo DESC");
@@ -80,6 +80,7 @@ class cliente_anticipo extends table
                 <th style="text-align: center;">Tipo pago</th>
                 <th style="text-align: center;">Monto</th>
                 <th style="text-align: center;">Saldo disponible</th>
+                <th style="text-align: center;">Banco</th>
                 <th style="text-align: center;">Referencia</th>
                 <th style="text-align: center;">Estado</th>
 			</tr>
@@ -88,10 +89,11 @@ class cliente_anticipo extends table
 
         while ($row = mysql::getrowresult($result)) {
             $cliente = $row['cliente'];
-            $fecha = $row['fecha'];
+            $fecha = date('d/m/Y', strtotime($row['fecha']));
             $tipo_pago = $row['tipo_pago'];
             $monto = number_format((float)$row['monto'], 2, '.', ',');
             $saldo_disponible = number_format((float)$row['saldo_disponible'], 2, '.', ',');
+            $banco = $row['banco'];
             $referencia_pago = $row['referencia_pago'];
             $estado = $row['estado'];
             $row_data = $row;
@@ -105,10 +107,11 @@ class cliente_anticipo extends table
             $tabla_cliente_anticipo .= "<tr>
 				<td>$boton_editar</td>
                 <td>$cliente</td>
-                <td>$fecha</td>
+                <td data-order=\"{$row['fecha']}\">$fecha</td>
                 <td>$tipo_pago</td>
                 <td style='text-align: right;'>$monto</td>
                 <td style='text-align: right;'>$saldo_disponible</td>
+                <td>$banco</td>
                 <td>$referencia_pago</td>
                 <td>$estado</td>
 			</tr>";
@@ -157,8 +160,15 @@ class cliente_anticipo extends table
             return false;
         }
 
+        $banco           = isset($PARAMETROS['banco']) ? trim($PARAMETROS['banco']) : '';
         $referencia_pago = isset($PARAMETROS['referencia_pago']) ? trim($PARAMETROS['referencia_pago']) : '';
         $observaciones   = isset($PARAMETROS['observaciones']) ? trim($PARAMETROS['observaciones']) : '';
+
+        if (strlen($banco) > 100) {
+            $this->last_error = 'El nombre del banco no puede tener mas de 100 caracteres.';
+            utils::report_error(validation_error, $banco, $this->last_error);
+            return false;
+        }
 
         if (strlen($referencia_pago) > 100) {
             $this->last_error = 'La referencia de pago no puede tener mas de 100 caracteres.';
@@ -181,6 +191,7 @@ class cliente_anticipo extends table
             $DATOS['idtipo_pago']       = $PARAMETROS['idtipo_pago'];
             $DATOS['monto']             = number_format($monto, 2, '.', '');
             $DATOS['saldo_disponible']  = number_format($monto, 2, '.', '');
+            $DATOS['banco']             = $banco == '' ? 'NULL' : $banco;
             $DATOS['referencia_pago']   = $referencia_pago == '' ? 'NULL' : $referencia_pago;
             $DATOS['observaciones']     = $observaciones == '' ? 'NULL' : $observaciones;
             $DATOS['estado']            = 'ACTIVO';
@@ -225,6 +236,7 @@ class cliente_anticipo extends table
         $DATOS['idtipo_pago']                   = $PARAMETROS['idtipo_pago'];
         $DATOS['monto']                         = number_format($monto, 2, '.', '');
         $DATOS['saldo_disponible']              = number_format($monto, 2, '.', '');
+        $DATOS['banco']                         = $banco == '' ? 'NULL' : $banco;
         $DATOS['referencia_pago']               = $referencia_pago == '' ? 'NULL' : $referencia_pago;
         $DATOS['observaciones']                 = $observaciones == '' ? 'NULL' : $observaciones;
         $DATOS['estado']                        = isset($PARAMETROS['estado']) ? $PARAMETROS['estado'] : 'ACTIVO';
@@ -282,12 +294,53 @@ class cliente_anticipo extends table
     {
         $idcliente = trim($idcliente . '');
 
-        return mysql::getoptions("SELECT idcliente_anticipo AS id, CONCAT('Q ', FORMAT(saldo_disponible, 2), ' - ', tipo_pago) AS descripcion 
+        return mysql::getoptions("SELECT idcliente_anticipo AS id, CONCAT('Q ', FORMAT(saldo_disponible, 2), ' - ', tipo_pago, IF(IFNULL(banco, '') = '', '', CONCAT(' - ', banco))) AS descripcion
             FROM view_cliente_anticipo 
             WHERE idcliente = '$idcliente' 
                 AND estado = 'ACTIVO' 
                 AND saldo_disponible > 0 
             ORDER BY fecha DESC");
+    }
+
+    public function obtener_info_anticipo($idcliente_anticipo)
+    {
+        $security = new security($this->ACCIONES['consultar_cliente_anticipo']);
+        $security->get_actual_user();
+
+        $idcliente_anticipo = trim($idcliente_anticipo . '');
+
+        if ($idcliente_anticipo == '') {
+            $this->last_error = 'Debe seleccionar un anticipo.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
+            return false;
+        }
+
+        $row = mysql::getrow("SELECT idcliente_anticipo, idcliente, fecha, idtipo_pago, monto, saldo_disponible, banco, referencia_pago, observaciones, estado, tipo_pago
+            FROM view_cliente_anticipo
+            WHERE idcliente_anticipo = '$idcliente_anticipo'
+            LIMIT 1");
+
+        if (! $row) {
+            $this->last_error = 'El anticipo indicado no existe.';
+            utils::report_error(validation_error, $idcliente_anticipo, $this->last_error);
+            return false;
+        }
+
+        $security->registrar_bitacora($this->ACCIONES['consultar_cliente_anticipo'], $idcliente_anticipo, $row['idcliente'], $row['saldo_disponible']);
+
+        return json_encode([
+            'idcliente_anticipo' => $row['idcliente_anticipo'],
+            'idcliente' => $row['idcliente'],
+            'fecha' => $row['fecha'],
+            'idtipo_pago' => $row['idtipo_pago'],
+            'monto' => $row['monto'],
+            'saldo_disponible' => $row['saldo_disponible'],
+            'banco' => $row['banco'],
+            'referencia_pago' => $row['referencia_pago'],
+            'observaciones' => $row['observaciones'],
+            'estado' => $row['estado'],
+            'tipo_pago' => $row['tipo_pago']
+        ]);
     }
 
     public function obtener_saldo_disponible($idcliente_anticipo)
