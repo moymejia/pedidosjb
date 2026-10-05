@@ -33,9 +33,9 @@
             <td class="amount">[total_depositos]</td>
           </tr>
           <tr>
-            <td>Recibos Provisionales</td>
+            <td>Cheques a la vista</td>
             <td class="currency">Q</td>
-            <td class="amount">[total_recibos_provisionales]</td>
+            <td class="amount">[total_cheques_vista]</td>
           </tr>
           <tr>
             <td>Cheques Pos-Fecha</td>
@@ -46,16 +46,6 @@
             <td>Anticipos</td>
             <td class="currency">Q</td>
             <td class="amount">[total_anticipos]</td>
-          </tr>
-          <tr>
-            <td>Descuentos</td>
-            <td class="currency">Q</td>
-            <td class="amount">[total_descuentos]</td>
-          </tr>
-          <tr>
-            <td>Devoluciones</td>
-            <td class="currency">Q</td>
-            <td class="amount">[total_devoluciones]</td>
           </tr>
           <tr>
             <td class="strong">Total Cobrado</td>
@@ -84,20 +74,19 @@
       <thead>
         <tr>
           <th colspan="4">DETALLE DE RECIBOS</th>
-          <th colspan="7">FORMA DE PAGO</th>
+          <th colspan="6">FORMA DE PAGO</th>
         </tr>
         <tr class="subhead">
           <th style="width: 8%;">DIA</th>
           <th style="width: 10%;">NUMERO DE RECIBO</th>
-          <th style="width: 19%;">CLIENTE</th>
+          <th style="width: 17%;">CLIENTE</th>
           <th style="width: 8%;">FLETE</th>
           <th style="width: 9%;">DEPOSITO</th>
           <th style="width: 9%;">CHEQUE A LA VISTA</th>
           <th style="width: 9%;">CHEQUES POS-FECHADOS</th>
-          <th style="width: 8%;">ANTICIPO</th>
-          <th style="width: 8%;">DESCUENTO</th>
-          <th style="width: 8%;">DEVOLUCION</th>
           <th style="width: 8%;">TOTAL</th>
+          <th style="width: 8%;">ANTICIPO</th>
+          <th style="width: 12%;">Inf. anticipo</th>
         </tr>
       </thead>
       <tbody>
@@ -109,10 +98,9 @@
           <td class="text-right strong">Q [detalle_total_deposito]</td>
           <td class="text-right strong">Q [detalle_total_cheque_vista]</td>
           <td class="text-right strong">Q [detalle_total_cheque_posfechado]</td>
-          <td class="text-right strong">Q [detalle_total_anticipo]</td>
-          <td class="text-right strong">Q [detalle_total_descuento]</td>
-          <td class="text-right strong">Q [detalle_total_devolucion]</td>
           <td class="text-right strong">Q [detalle_total_general]</td>
+          <td class="text-right strong">Q [detalle_total_anticipo]</td>
+          <td></td>
         </tr>
       </tbody>
     </table>
@@ -157,6 +145,148 @@
         <tr>
           <td colspan="7" class="text-right strong">TOTAL</td>
           <td class="text-right strong">Q [total_recuperacion]</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sheet">
+    <h1 class="title">RECIBOS PROVISIONALES</h1>
+
+    <div class="top-grid">
+      <div>
+        <div><span class="label">Vendedor</span> <span class="line-value">[vendedor]</span></div>
+        <div><span class="label">Semanal de</span> <span class="line-value small">[fecha_desde]</span></div>
+      </div>
+
+      <div class="line-wrap">
+        <span>AL</span>
+        <span class="line-value small">[fecha_hasta]</span>
+      </div>
+
+      <div class="line-wrap" style="justify-content: flex-end;">
+        <span>H. L. No.:</span>
+        <span class="line-value small">[hl_no]</span>
+      </div>
+    </div>
+
+    <div class="summary">
+      <table aria-label="Resumen de totales recibos provisionales">
+        <tbody>
+          <tr>
+            <td>Fletes</td>
+            <td class="currency">Q</td>
+            <td class="amount">[provisional_total_fletes]</td>
+          </tr>
+          <tr>
+            <td>Depositos</td>
+            <td class="currency">Q</td>
+            <td class="amount">[provisional_total_depositos]</td>
+          </tr>
+          <tr>
+            <td>Cheques a la vista</td>
+            <td class="currency">Q</td>
+            <td class="amount">[provisional_total_cheques_vista]</td>
+          </tr>
+          <tr>
+            <td>Cheques Pos-Fecha</td>
+            <td class="currency">Q</td>
+            <td class="amount">[provisional_total_cheques_posfecha]</td>
+          </tr>
+          <tr>
+            <td class="strong">Total Cobrado</td>
+            <td class="currency strong">Q</td>
+            <td class="amount strong">[provisional_total_cobrado]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="receipt-block" aria-label="Datos de recibos provisionales">
+        <div class="receipt-title">RECIBO CAJA</div>
+        <div class="inline-row">
+          <span>Recibos Serie:</span>
+          <span class="fill-line">[recibos_serie]</span>
+        </div>
+        <div class="inline-row">
+          <span>DEL</span>
+          <span class="fill-line">[provisional_recibos_del]</span>
+          <span>AL</span>
+          <span class="fill-line">[provisional_recibos_al]</span>
+        </div>
+      </div>
+    </div>
+
+    <table class="main-table" aria-label="Detalle de recibos provisionales">
+      <thead>
+        <tr>
+          <th colspan="4">DETALLE DE RECIBOS</th>
+          <th colspan="4">FORMA DE PAGO</th>
+        </tr>
+        <tr class="subhead">
+          <th style="width: 9%;">DIA</th>
+          <th style="width: 12%;">NUMERO DE RECIBO</th>
+          <th style="width: 24%;">CLIENTE</th>
+          <th style="width: 10%;">FLETE</th>
+          <th style="width: 12%;">DEPOSITO</th>
+          <th style="width: 12%;">CHEQUE A LA VISTA</th>
+          <th style="width: 12%;">CHEQUES POS-FECHADOS</th>
+          <th style="width: 9%;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        [provisional_tabla_documentos_ejecutados_rows]
+
+        <tr>
+          <td colspan="3" class="text-right strong">TOTALES</td>
+          <td class="text-right strong">Q [provisional_detalle_total_flete]</td>
+          <td class="text-right strong">Q [provisional_detalle_total_deposito]</td>
+          <td class="text-right strong">Q [provisional_detalle_total_cheque_vista]</td>
+          <td class="text-right strong">Q [provisional_detalle_total_cheque_posfechado]</td>
+          <td class="text-right strong">Q [provisional_detalle_total_general]</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-title">DETALLE DE CHEQUES POSFECHADOS</h2>
+    <table class="small-table" aria-label="Detalle de cheques posfechados provisionales">
+      <thead>
+        <tr>
+          <th style="width: 12%;">CODIGO</th>
+          <th style="width: 30%;">CLIENTE</th>
+          <th style="width: 14%;">CHEQUE NO.</th>
+          <th style="width: 14%;">BANCO</th>
+          <th style="width: 14%;">FECHA</th>
+          <th style="width: 16%;">VALOR</th>
+        </tr>
+      </thead>
+      <tbody>
+        [provisional_tabla_documentos_programados_rows]
+        <tr>
+          <td colspan="5" class="text-right strong">TOTAL</td>
+          <td class="text-right strong">Q [provisional_total_programados]</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="section-title">DETALLE DE RECUP. DE CHEQUES</h2>
+    <table class="small-table" aria-label="Detalle de recuperacion de cheques provisionales">
+      <thead>
+        <tr>
+          <th style="width: 12%;">FECHA</th>
+          <th style="width: 12%;">RECIBO DE RECUPERACION</th>
+          <th style="width: 24%;">CLIENTE</th>
+          <th style="width: 12%;">CODIGO</th>
+          <th style="width: 12%;">DEPOSITO</th>
+          <th style="width: 12%;">CHEQUES</th>
+          <th style="width: 10%;">CHEQUE RECUPERADO NO.</th>
+          <th style="width: 16%;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        [provisional_tabla_documentos_recuperacion_rows]
+        <tr>
+          <td colspan="7" class="text-right strong">TOTAL</td>
+          <td class="text-right strong">Q [provisional_total_recuperacion]</td>
         </tr>
       </tbody>
     </table>

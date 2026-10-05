@@ -56,7 +56,7 @@ function imprimir_liquidacion_de_ingresos() {
 
     var estilos_impresion = '<style>' +
         ':root{--line:#222;--light:#d9d9d9;--font:Arial,Helvetica,sans-serif;}*{box-sizing:border-box;}body{margin:0;padding:14px;font-family:var(--font);color:#000;background:#fff;}' +
-        '.sheet{max-width:1050px;margin:0 auto;}.title{text-align:center;font-size:24px;letter-spacing:.4px;margin:0 0 10px;font-weight:700;text-transform:uppercase;text-decoration:underline;}' +
+        '.sheet{max-width:1050px;margin:0 auto;}.sheet+.sheet{margin-top:18px;}.title{text-align:center;font-size:24px;letter-spacing:.4px;margin:0 0 10px;font-weight:700;text-transform:uppercase;text-decoration:underline;}' +
         '.top-grid{display:grid;grid-template-columns:1.25fr 1fr 1.25fr;gap:14px;align-items:end;margin-bottom:8px;font-size:14px;}.label{font-weight:700;text-transform:uppercase;}' +
         '.line-value{border-bottom:1px solid #000;min-height:20px;display:inline-block;min-width:190px;text-align:center;font-weight:700;padding:0 6px 2px;text-transform:uppercase;}.line-value.small{min-width:120px;}' +
         '.line-wrap{display:flex;align-items:flex-end;gap:8px;justify-content:center;font-weight:700;text-transform:uppercase;}.summary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;}' +
@@ -70,7 +70,7 @@ function imprimir_liquidacion_de_ingresos() {
         '.main-table td.text-right,.small-table td.text-right{white-space:nowrap;font-variant-numeric:tabular-nums;}' +
         '.main-table th{font-size:11px;line-height:1.2;background:#d9d9d9;}.main-table .subhead{background:#d9d9d9;font-size:10px;}.small-table thead th{background:#d9d9d9;}.section-title{margin:10px 0 0;background:#d9d9d9;border:1px solid var(--line);border-bottom:none;text-align:center;font-size:20px;text-transform:uppercase;font-weight:700;padding:5px;letter-spacing:.3px;}' +
         '.small-table{margin-bottom:12px;}.small-table th{font-size:11px;}' +
-        '.spacer-rows td{height:28px;}@media print{body{padding:8px;}.sheet{max-width:none;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+        '.spacer-rows td{height:28px;}@media print{body{padding:8px;}.sheet{max-width:none;}.sheet+.sheet{break-before:page;page-break-before:always;margin-top:0;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
     '</style>';
 
     ventana.document.open();

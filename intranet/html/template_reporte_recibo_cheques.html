@@ -1,0 +1,30 @@
+<div class="sheet">
+  <h1 class="report-title">Reporte de recibos</h1>
+
+  <div class="report-range">
+    <span>Cliente</span>
+    <strong>[cliente_reporte]</strong>
+    <span>Fecha cheque de</span>
+    <strong>[fecha_desde]</strong>
+    <span>a</span>
+    <strong>[fecha_hasta]</strong>
+  </div>
+
+  <table class="recibos-table" aria-label="Reporte de recibos">
+    <thead>
+      <tr>
+        <th style="width: 11%;">Cheque No.</th>
+        <th style="width: 15%;">Banco</th>
+        <th style="width: 13%;">Fecha<br>Cheque</th>
+        <th style="width: 13%;">Recibo</th>
+        <th style="width: 13%;">Tipo<br>Recibo</th>
+        <th style="width: 12%;">Estado<br>Cheque</th>
+        <th style="width: 12%;">Monto<br>Recibo</th>
+        <th style="width: 11%;">Valor<br>Cheque</th>
+      </tr>
+    </thead>
+    <tbody>
+      [filas_cheques]
+    </tbody>
+  </table>
+</div>
