@@ -154,15 +154,11 @@
                 <div class='row'>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='correlativo_documento'>Correlativo <span class='text-danger'>*</span></label>
-                        <input type='text' id='correlativo_documento' class='form-control' maxlength='50' placeholder='Serie/numero' required>
-                    </div>
-                    <div class='col-md-4 form-group m-b-5' id='div_numero_recuperado' style='display:none;'>
-                        <label for='numero_recuperado'>No. Recuperado <span class='text-danger'>*</span></label>
-                        <input type='text' id='numero_recuperado' class='form-control' maxlength='50' placeholder='Cheque recuperado' onchange='despachoPagoValidarNumeroRecuperado();'>
+                        <input type='text' id='correlativo_documento' class='form-control' maxlength='50' placeholder='No. Recibo' required>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
-                        <label for='fecha'>Fecha <span class='text-danger'>*</span></label>
-                        <input type='date' id='fecha' class='form-control' value='[fecha_hoy]' required>
+                        <label for='banco'>Banco</label>
+                        <input type='text' id='banco' class='form-control' maxlength='100' placeholder='Nombre del banco'>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='estado'>Estado <span class='text-danger'>*</span></label>
@@ -172,16 +168,20 @@
                         </select>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
-                        <label for='monto'>Monto <span class='text-danger'>*</span></label>
-                        <input type='text' id='monto' class='form-control' inputmode='decimal' placeholder='0.00' required>
-                    </div>
-                    <div class='col-md-4 form-group m-b-5'>
-                        <label for='banco'>Banco</label>
-                        <input type='text' id='banco' class='form-control' maxlength='100' placeholder='Nombre del banco'>
-                    </div>
-                    <div class='col-md-4 form-group m-b-5'>
                         <label for='referencia_pago'>Referencia</label>
-                        <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='Cheque, transferencia, nota, etc.' required>
+                        <input type='text' id='referencia_pago' class='form-control' maxlength='100' placeholder='No. cheque/transferencia' tabindex='1' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='fecha'>Fecha <span class='text-danger'>*</span></label>
+                        <input type='date' id='fecha' class='form-control' value='[fecha_hoy]' tabindex='2' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5'>
+                        <label for='monto'>Monto <span class='text-danger'>*</span></label>
+                        <input type='text' id='monto' class='form-control' inputmode='decimal' placeholder='0.00' tabindex='3' required>
+                    </div>
+                    <div class='col-md-4 form-group m-b-5' id='div_numero_recuperado' style='display:none;'>
+                        <label for='numero_recuperado'>No. Recuperado <span class='text-danger'>*</span></label>
+                        <input type='text' id='numero_recuperado' class='form-control' maxlength='50' placeholder='Cheque recuperado' onchange='despachoPagoValidarNumeroRecuperado();'>
                     </div>
                     <div class='col-md-4 form-group m-b-5'>
                         <label for='descuento'>Descuento</label>
@@ -195,7 +195,7 @@
                 <div class='row'>
                     <div class='col-md-12 form-group m-b-5'>
                         <label for='observaciones'>Observaciones</label>
-                        <input type='text' id='observaciones' class='form-control' maxlength='500' placeholder='Observaciones del documento'>
+                        <input type='text' id='observaciones' class='form-control' maxlength='500' placeholder='Observaciones del documento' tabindex='4'>
                     </div>
                 </div>
                 <div class='row'>
@@ -216,7 +216,7 @@
                     <div class='col-md-12 form-group m-b-5 d-flex align-items-end'>
                         <div>
                             <button type='submit' id='btn_guardar_documento' class='btn btn-success waves-effect waves-light m-r-10'>Guardar documento</button>
-                            <button type='button' id='btn_agregar_documento' class='btn btn-primary waves-effect waves-light m-r-10' onclick='despachoPagoAgregar();'>Agregar</button>
+                            <button type='button' id='btn_agregar_documento' class='btn btn-primary waves-effect waves-light m-r-10' tabindex='5' onclick='despachoPagoAgregar();'>Agregar</button>
                             <button type='button' class='btn btn-inverse waves-effect waves-light' onclick='despachoPagoLimpiarFormulario();'>Limpiar</button>
                             <button type='button' id='btn_imprimir_documento' class='btn btn-warning waves-effect waves-light m-l-10' style='display:none;' onclick='despachoPagoImprimirRegistro();'>
                                 <i class='fas fa-print'></i>

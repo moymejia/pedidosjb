@@ -67,6 +67,7 @@ class reporte_recibo_cheques extends table
         $cliente_reporte = $this->obtener_nombre_cliente_reporte($idcliente);
 
         $sql = mysql::getresult("SELECT
+                cliente,
                 cheque_no,
                 banco,
                 DATE_FORMAT(fecha_cheque_raw, '%d/%m/%Y') AS fecha_cheque,
@@ -79,7 +80,7 @@ class reporte_recibo_cheques extends table
             WHERE DATE(fecha_cheque_raw) >= '$fecha_desde_sql'
                 AND DATE(fecha_cheque_raw) <= '$fecha_hasta_sql'
                 $where_cliente
-            ORDER BY recibo_caja ASC, tipo_recibo ASC, fecha_orden ASC, cheque_no ASC");
+            ORDER BY recibo_caja ASC, fecha_orden ASC, cheque_no ASC");
 
         if (!$sql) {
             $this->last_error = 'No fue posible obtener recibos con cheques.';
@@ -95,12 +96,11 @@ class reporte_recibo_cheques extends table
             }
 
             $tipo_recibo = $this->formatear_tipo_recibo($row['tipo_recibo']);
-            $grupo_recibo = $tipo_recibo . '|' . $recibo_caja;
+            $grupo_recibo = $recibo_caja;
 
             if (!isset($GRUPOS_RECIBO[$grupo_recibo])) {
                 $GRUPOS_RECIBO[$grupo_recibo] = [
                     'recibo_caja' => $recibo_caja,
-                    'tipo_recibo' => $tipo_recibo,
                     'total_recibo' => 0,
                     'cheques' => []
                 ];
@@ -112,9 +112,11 @@ class reporte_recibo_cheques extends table
             $cheque_no = trim((string)$row['cheque_no']);
 
             $GRUPOS_RECIBO[$grupo_recibo]['cheques'][] = [
+                'cliente' => $row['cliente'],
                 'cheque_no' => $cheque_no,
                 'banco' => $row['banco'],
                 'fecha_cheque' => $row['fecha_cheque'],
+                'tipo_recibo' => $tipo_recibo,
                 'estado_cheque' => $estado_cheque,
                 'valor_cheque' => $valor_pago_recibo
             ];
@@ -129,11 +131,12 @@ class reporte_recibo_cheques extends table
 
             foreach ($GRUPO['cheques'] as $indice => $CHEQUE) {
                 $filas .= '<tr>';
+                $filas .= '<td class="text-left">' . htmlspecialchars($CHEQUE['cliente'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas .= '<td class="text-center">' . htmlspecialchars($CHEQUE['cheque_no'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas .= '<td class="text-center">' . htmlspecialchars($CHEQUE['banco'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas .= '<td class="text-center">' . htmlspecialchars($CHEQUE['fecha_cheque'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas .= '<td class="text-center">' . htmlspecialchars($GRUPO['recibo_caja'], ENT_QUOTES, 'UTF-8') . '</td>';
-                $filas .= '<td class="text-center">' . htmlspecialchars($GRUPO['tipo_recibo'], ENT_QUOTES, 'UTF-8') . '</td>';
+                $filas .= '<td class="text-center">' . htmlspecialchars($CHEQUE['tipo_recibo'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas .= '<td class="text-center">' . htmlspecialchars($CHEQUE['estado_cheque'], ENT_QUOTES, 'UTF-8') . '</td>';
 
                 if ($indice == 0) {
@@ -146,10 +149,10 @@ class reporte_recibo_cheques extends table
         }
 
         if ($filas == '') {
-            $filas = '<tr><td colspan="8" class="text-center">No hay recibos con cheques cobrados o por cobrar para el rango seleccionado.</td></tr>';
+            $filas = '<tr><td colspan="9" class="text-center">No hay recibos con cheques cobrados o por cobrar para el rango seleccionado.</td></tr>';
         } else {
             $filas .= '<tr class="fila-total">';
-            $filas .= '<td colspan="6" class="text-right">TOTAL</td>';
+            $filas .= '<td colspan="7" class="text-right">TOTAL</td>';
             $filas .= '<td colspan="2" class="amount"><span class="amount-box"><span>Q</span><span>' . $this->formatear_moneda($total_general) . '</span></span></td>';
             $filas .= '</tr>';
         }

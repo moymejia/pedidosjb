@@ -725,13 +725,14 @@
     };
 
     window.despachoPagoLimpiarSoloMontos = function () {
+        if (objeto('referencia_pago') !== undefined) objeto('referencia_pago').value = '';
         if (objeto('monto') !== undefined) objeto('monto').value = '';
         if (objeto('descuento') !== undefined) objeto('descuento').value = '';
         if (objeto('devolucion') !== undefined) objeto('devolucion').value = '';
         activarFormatoMonto();
         aplicarReglasEstadoDocumento();
-        if (objeto('monto') !== undefined) {
-            objeto('monto').focus();
+        if (objeto('referencia_pago') !== undefined) {
+            objeto('referencia_pago').focus();
         }
     };
 

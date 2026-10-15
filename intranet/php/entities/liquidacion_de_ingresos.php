@@ -304,6 +304,8 @@ class liquidacion_de_ingresos extends table
             }
 
             if (!$es_recibo_provisional) {
+                $valor_total = ($categoria_pago == 'ANTICIPO') ? '' : ('Q ' . $this->formatear_moneda($monto));
+
                 $filas_ejecutados .= '<tr>';
                 $filas_ejecutados .= '<td class="text-center">' . htmlspecialchars($row['fecha_pago'], ENT_QUOTES, 'UTF-8') . '</td>';
                 $filas_ejecutados .= '<td class="text-center">' . htmlspecialchars($row['numero_documento'], ENT_QUOTES, 'UTF-8') . '</td>';
@@ -312,7 +314,7 @@ class liquidacion_de_ingresos extends table
                 $filas_ejecutados .= '<td class="text-right">' . (($valor_deposito != '') ? ('Q ' . $valor_deposito) : '') . '</td>';
                 $filas_ejecutados .= '<td class="text-right">' . (($valor_cheque_vista != '') ? ('Q ' . $valor_cheque_vista) : '') . '</td>';
                 $filas_ejecutados .= '<td class="text-right">' . (($valor_cheque_posfechado != '') ? ('Q ' . $valor_cheque_posfechado) : '') . '</td>';
-                $filas_ejecutados .= '<td class="text-right">Q ' . $this->formatear_moneda($monto) . '</td>';
+                $filas_ejecutados .= '<td class="text-right">' . $valor_total . '</td>';
                 $filas_ejecutados .= '<td class="text-right">' . (($valor_anticipo != '') ? ('Q ' . $valor_anticipo) : '') . '</td>';
                 $filas_ejecutados .= '<td>' . nl2br(htmlspecialchars($informacion_anticipo, ENT_QUOTES, 'UTF-8')) . '</td>';
                 $filas_ejecutados .= '</tr>';
@@ -452,7 +454,6 @@ class liquidacion_de_ingresos extends table
             $TOTALES_DETALLE['deposito'] +
             $TOTALES_DETALLE['cheque_vista'] +
             $TOTALES_DETALLE['cheque_posfechado'] +
-            $TOTALES_DETALLE['anticipo'] +
             $TOTALES_DETALLE['descuento'] +
             $TOTALES_DETALLE['devolucion'];
 
